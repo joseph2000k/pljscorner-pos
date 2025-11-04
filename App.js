@@ -47,6 +47,8 @@ export default function App() {
   // Cart state
   const [cartItems, setCartItems] = useState([]);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [lastScannedBarcode, setLastScannedBarcode] = useState("");
+  const [scanCooldown, setScanCooldown] = useState(false);
 
   useEffect(() => {
     // Initialize database on app start
@@ -76,15 +78,21 @@ export default function App() {
   };
 
   const handleBarCodeScanned = ({ type, data }) => {
-    // Prevent multiple scans
-    if (scanned) return;
+    // Prevent multiple scans and cooldown
+    if (scanned || scanCooldown) return;
+
+    // Prevent scanning the same barcode repeatedly within 300ms
+    if (data === lastScannedBarcode) {
+      return;
+    }
 
     setScanned(true);
     setScannedData(data);
+    setLastScannedBarcode(data);
+    setScanCooldown(true);
 
     // Look up product by barcode
     const product = getProductByBarcode(data);
-    setScannedProduct(product);
 
     if (product) {
       // Check stock availability
@@ -93,8 +101,20 @@ export default function App() {
           "Out of Stock",
           `${product.name} is currently out of stock.`,
           [
-            { text: "Scan Again", onPress: () => setScanned(false) },
-            { text: "Back to POS", onPress: () => setCurrentScreen("pos") },
+            { 
+              text: "Scan Again", 
+              onPress: () => {
+                setScanned(false);
+                setScanCooldown(false);
+              }
+            },
+            { 
+              text: "Back to POS", 
+              onPress: () => {
+                setCurrentScreen("pos");
+                setScanCooldown(false);
+              }
+            },
           ]
         );
         return;
@@ -103,18 +123,40 @@ export default function App() {
       // Add to cart automatically
       addToCart(product);
 
-      // Reset scanner after a short delay to allow the next scan
+      // Reset scanner immediately for faster scanning
+      setScanned(false);
+      
+      // Clear cooldown and last scanned after 300ms
       setTimeout(() => {
-        setScanned(false);
-      }, 500);
+        setScanCooldown(false);
+        setLastScannedBarcode("");
+      }, 300);
     } else {
       Alert.alert(
         "Product Not Found",
         `Barcode: ${data}\nProduct not in database.`,
         [
-          { text: "Scan Again", onPress: () => setScanned(false) },
-          { text: "Add Product", onPress: () => addNewProduct(data) },
-          { text: "Back to POS", onPress: () => setCurrentScreen("pos") },
+          { 
+            text: "Scan Again", 
+            onPress: () => {
+              setScanned(false);
+              setScanCooldown(false);
+            }
+          },
+          { 
+            text: "Add Product", 
+            onPress: () => {
+              addNewProduct(data);
+              setScanCooldown(false);
+            }
+          },
+          { 
+            text: "Back to POS", 
+            onPress: () => {
+              setCurrentScreen("pos");
+              setScanCooldown(false);
+            }
+          },
         ]
       );
     }
