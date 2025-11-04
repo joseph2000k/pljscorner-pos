@@ -78,7 +78,7 @@ export default function App() {
   const handleBarCodeScanned = ({ type, data }) => {
     // Prevent multiple scans
     if (scanned) return;
-    
+
     setScanned(true);
     setScannedData(data);
 
@@ -102,7 +102,7 @@ export default function App() {
 
       // Add to cart automatically
       addToCart(product);
-      
+
       // Reset scanner after a short delay to allow the next scan
       setTimeout(() => {
         setScanned(false);
@@ -131,7 +131,7 @@ export default function App() {
         // Product already in cart, increase quantity
         const updatedItems = [...prevItems];
         const currentQty = updatedItems[existingItemIndex].quantity;
-        
+
         // Check if we have enough stock
         if (currentQty >= product.stock_quantity) {
           Alert.alert(
@@ -192,7 +192,10 @@ export default function App() {
   };
 
   const calculateCartTotal = () => {
-    return cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+    return cartItems.reduce(
+      (total, item) => total + item.price * item.quantity,
+      0
+    );
   };
 
   const clearCart = () => {
@@ -209,13 +212,13 @@ export default function App() {
 
   const completeCheckout = (paymentMethod = "cash") => {
     const totalAmount = calculateCartTotal();
-    
+
     // Create sale record
     const saleResult = createSale(totalAmount, paymentMethod);
-    
+
     if (saleResult.success) {
       const saleId = saleResult.id;
-      
+
       // Add sale items and update stock
       cartItems.forEach((item) => {
         addSaleItem(
@@ -225,15 +228,17 @@ export default function App() {
           item.price,
           item.price * item.quantity
         );
-        
+
         // Update product stock
         const newStock = item.stock_quantity - item.quantity;
         updateProductStock(item.id, newStock);
       });
-      
+
       Alert.alert(
         "Sale Complete!",
-        `Total: $${totalAmount.toFixed(2)}\nPayment: ${paymentMethod}\nThank you!`,
+        `Total: $${totalAmount.toFixed(
+          2
+        )}\nPayment: ${paymentMethod}\nThank you!`,
         [
           {
             text: "OK",
@@ -533,7 +538,7 @@ export default function App() {
   // POS Screen with Cart
   else if (currentScreen === "pos") {
     const cartTotal = calculateCartTotal();
-    
+
     screenContent = (
       <View style={styles.container}>
         <View style={styles.header}>
@@ -546,10 +551,7 @@ export default function App() {
 
         <View style={styles.posContainer}>
           {/* Scan Button */}
-          <TouchableOpacity
-            style={styles.scanButtonLarge}
-            onPress={openCamera}
-          >
+          <TouchableOpacity style={styles.scanButtonLarge} onPress={openCamera}>
             <Text style={styles.scanButtonLargeText}>📷 Scan Product</Text>
           </TouchableOpacity>
 
@@ -566,7 +568,11 @@ export default function App() {
                       "Are you sure you want to clear the cart?",
                       [
                         { text: "Cancel", style: "cancel" },
-                        { text: "Clear", onPress: clearCart, style: "destructive" },
+                        {
+                          text: "Clear",
+                          onPress: clearCart,
+                          style: "destructive",
+                        },
                       ]
                     );
                   }}
@@ -690,7 +696,14 @@ export default function App() {
             style={styles.camera}
             facing="back"
             barcodeScannerSettings={{
-              barcodeTypes: ["qr", "pdf417", "ean13", "ean8", "code128", "code39"],
+              barcodeTypes: [
+                "qr",
+                "pdf417",
+                "ean13",
+                "ean8",
+                "code128",
+                "code39",
+              ],
             }}
             onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
           />
