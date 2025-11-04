@@ -386,9 +386,7 @@ export default function App() {
         </Text>
       </View>
     );
-  }
-
-  else if (hasPermission === false) {
+  } else if (hasPermission === false) {
     screenContent = (
       <View style={styles.container}>
         <Text style={styles.permissionText}>No access to camera</Text>
@@ -397,64 +395,62 @@ export default function App() {
         </TouchableOpacity>
       </View>
     );
-  }
-
-  else {
+  } else {
     screenContent = (
       <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={goBackHome}>
-          <Text style={styles.backButtonText}>← Back</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerText}>QR Code Scanner</Text>
-        <View style={styles.placeholder} />
-      </View>
-
-      <View style={styles.cameraContainer}>
-        <CameraView
-          style={styles.camera}
-          facing="back"
-          barcodeScannerSettings={{
-            barcodeTypes: ["qr", "pdf417"],
-          }}
-          onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
-        />
-
-        <View style={styles.overlay}>
-          <View style={styles.scanArea} />
-        </View>
-      </View>
-
-      <View style={styles.footer}>
-        {scannedData ? (
-          <View style={styles.resultContainer}>
-            <Text style={styles.resultLabel}>Last Scanned:</Text>
-            <Text style={styles.resultText}>{scannedData}</Text>
-          </View>
-        ) : (
-          <Text style={styles.instructionText}>Point camera at QR code</Text>
-        )}
-
-        {scanned && (
-          <TouchableOpacity
-            style={styles.scanButton}
-            onPress={() => setScanned(false)}
-          >
-            <Text style={styles.scanButtonText}>Scan Again</Text>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={goBackHome}>
+            <Text style={styles.backButtonText}>← Back</Text>
           </TouchableOpacity>
-        )}
-      </View>
+          <Text style={styles.headerText}>QR Code Scanner</Text>
+          <View style={styles.placeholder} />
+        </View>
 
-      <StatusBar style="light" />
-    </View>
-  );
+        <View style={styles.cameraContainer}>
+          <CameraView
+            style={styles.camera}
+            facing="back"
+            barcodeScannerSettings={{
+              barcodeTypes: ["qr", "pdf417"],
+            }}
+            onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+          />
+
+          <View style={styles.overlay}>
+            <View style={styles.scanArea} />
+          </View>
+        </View>
+
+        <View style={styles.footer}>
+          {scannedData ? (
+            <View style={styles.resultContainer}>
+              <Text style={styles.resultLabel}>Last Scanned:</Text>
+              <Text style={styles.resultText}>{scannedData}</Text>
+            </View>
+          ) : (
+            <Text style={styles.instructionText}>Point camera at QR code</Text>
+          )}
+
+          {scanned && (
+            <TouchableOpacity
+              style={styles.scanButton}
+              onPress={() => setScanned(false)}
+            >
+              <Text style={styles.scanButtonText}>Scan Again</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        <StatusBar style="light" />
+      </View>
+    );
   }
 
   // Return the screen content with the modal
   return (
     <>
       {screenContent}
-      
+
       {/* Add Product Modal - Available on all screens */}
       <Modal
         visible={showAddProductModal}
