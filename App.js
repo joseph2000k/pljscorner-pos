@@ -23,7 +23,9 @@ import {
   createSale,
   addSaleItem,
   updateProductStock,
-} from "./database";
+} from "./src/services/database";
+import CheckoutModal from "./src/components/CheckoutModal";
+import ReceiptModal from "./src/components/ReceiptModal";
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState("home"); // 'home', 'camera', 'products', 'add-product', 'pos'
@@ -49,6 +51,8 @@ export default function App() {
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [lastScannedBarcode, setLastScannedBarcode] = useState("");
   const [scanCooldown, setScanCooldown] = useState(false);
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [receiptData, setReceiptData] = useState(null);
 
   useEffect(() => {
     // Initialize database on app start
@@ -101,19 +105,19 @@ export default function App() {
           "Out of Stock",
           `${product.name} is currently out of stock.`,
           [
-            { 
-              text: "Scan Again", 
+            {
+              text: "Scan Again",
               onPress: () => {
                 setScanned(false);
                 setScanCooldown(false);
-              }
+              },
             },
-            { 
-              text: "Back to POS", 
+            {
+              text: "Back to POS",
               onPress: () => {
                 setCurrentScreen("pos");
                 setScanCooldown(false);
-              }
+              },
             },
           ]
         );
@@ -125,7 +129,7 @@ export default function App() {
 
       // Reset scanner immediately for faster scanning
       setScanned(false);
-      
+
       // Clear cooldown and last scanned after 300ms
       setTimeout(() => {
         setScanCooldown(false);
@@ -136,26 +140,26 @@ export default function App() {
         "Product Not Found",
         `Barcode: ${data}\nProduct not in database.`,
         [
-          { 
-            text: "Scan Again", 
+          {
+            text: "Scan Again",
             onPress: () => {
               setScanned(false);
               setScanCooldown(false);
-            }
+            },
           },
-          { 
-            text: "Add Product", 
+          {
+            text: "Add Product",
             onPress: () => {
               addNewProduct(data);
               setScanCooldown(false);
-            }
+            },
           },
-          { 
-            text: "Back to POS", 
+          {
+            text: "Back to POS",
             onPress: () => {
               setCurrentScreen("pos");
               setScanCooldown(false);
-            }
+            },
           },
         ]
       );
@@ -252,7 +256,7 @@ export default function App() {
     setShowCheckoutModal(true);
   };
 
-  const completeCheckout = (paymentMethod = "cash") => {
+  const completeCheckout = (paymentMethod = "cash", amountPaid = 0, change = 0) => {
     const totalAmount = calculateCartTotal();
 
     // Create sale record
@@ -276,22 +280,23 @@ export default function App() {
         updateProductStock(item.id, newStock);
       });
 
-      Alert.alert(
-        "Sale Complete!",
-        `Total: $${totalAmount.toFixed(
-          2
-        )}\nPayment: ${paymentMethod}\nThank you!`,
-        [
-          {
-            text: "OK",
-            onPress: () => {
-              clearCart();
-              setShowCheckoutModal(false);
-              loadDashboardData();
-            },
-          },
-        ]
-      );
+      // Create receipt data
+      const receipt = {
+        saleId,
+        items: [...cartItems],
+        totalAmount,
+        paymentMethod,
+        amountPaid: paymentMethod === "cash" ? amountPaid : totalAmount,
+        change: paymentMethod === "cash" ? change : 0,
+        date: new Date().toISOString(),
+      };
+
+      // Clear cart and show receipt
+      clearCart();
+      setShowCheckoutModal(false);
+      setReceiptData(receipt);
+      setShowReceipt(true);
+      loadDashboardData();
     } else {
       Alert.alert("Error", "Failed to complete sale: " + saleResult.error);
     }
@@ -907,63 +912,20 @@ export default function App() {
       </Modal>
 
       {/* Checkout Modal */}
-      <Modal
+      <CheckoutModal
         visible={showCheckoutModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={() => setShowCheckoutModal(false)}>
-              <Text style={styles.modalCancelText}>Cancel</Text>
-            </TouchableOpacity>
-            <Text style={styles.modalTitle}>Checkout</Text>
-            <View style={styles.placeholder} />
-          </View>
+        onClose={() => setShowCheckoutModal(false)}
+        cartItems={cartItems}
+        cartTotal={calculateCartTotal()}
+        onCompleteCheckout={completeCheckout}
+      />
 
-          <View style={styles.checkoutContent}>
-            <Text style={styles.checkoutTotal}>
-              Total: ${calculateCartTotal().toFixed(2)}
-            </Text>
-
-            <View style={styles.checkoutItems}>
-              <Text style={styles.checkoutItemsTitle}>Items:</Text>
-              {cartItems.map((item) => (
-                <View key={item.id} style={styles.checkoutItem}>
-                  <Text style={styles.checkoutItemName}>
-                    {item.name} x {item.quantity}
-                  </Text>
-                  <Text style={styles.checkoutItemPrice}>
-                    ${(item.price * item.quantity).toFixed(2)}
-                  </Text>
-                </View>
-              ))}
-            </View>
-
-            <Text style={styles.paymentMethodTitle}>Payment Method:</Text>
-            <View style={styles.paymentMethods}>
-              <TouchableOpacity
-                style={styles.paymentButton}
-                onPress={() => completeCheckout("cash")}
-              >
-                <Text style={styles.paymentButtonText}>💵 Cash</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.paymentButton}
-                onPress={() => completeCheckout("card")}
-              >
-                <Text style={styles.paymentButtonText}>💳 Card</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.paymentButton}
-                onPress={() => completeCheckout("gcash")}
-              >
-                <Text style={styles.paymentButtonText}>📱 GCash</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      {/* Receipt Modal */}
+      <ReceiptModal
+        visible={showReceipt}
+        onClose={() => setShowReceipt(false)}
+        receipt={receiptData}
+      />
     </>
   );
 }
@@ -1654,73 +1616,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0,
   },
   checkoutButtonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-
-  // Checkout Modal Styles
-  checkoutContent: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "#f5f5f5",
-  },
-  checkoutTotal: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#4CAF50",
-    textAlign: "center",
-    marginVertical: 20,
-  },
-  checkoutItems: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 20,
-  },
-  checkoutItemsTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 10,
-  },
-  checkoutItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-  },
-  checkoutItemName: {
-    fontSize: 16,
-    color: "#333",
-  },
-  checkoutItemPrice: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#007AFF",
-  },
-  paymentMethodTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 15,
-  },
-  paymentMethods: {
-    gap: 12,
-  },
-  paymentButton: {
-    backgroundColor: "#007AFF",
-    paddingVertical: 18,
-    borderRadius: 12,
-    alignItems: "center",
-    shadowColor: "#007AFF",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  paymentButtonText: {
     color: "#fff",
     fontSize: 18,
     fontWeight: "bold",
