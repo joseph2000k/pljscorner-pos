@@ -3,6 +3,7 @@
 ## How to Use the New Categories Feature
 
 ### 1. Access Categories from Home Screen
+
 ```
 Home Screen
 ├── 📱 Open POS
@@ -11,7 +12,9 @@ Home Screen
 ```
 
 ### 2. Manage Categories
+
 **Steps:**
+
 1. Tap "🏷️ Categories" button on home screen
 2. See list of all categories with details
 3. Tap "New" to add a category
@@ -22,7 +25,9 @@ Home Screen
 6. Done! Category is now available
 
 ### 3. Use Categories When Adding Products
+
 **Steps:**
+
 1. Tap "➕ Add Product"
 2. Fill in product details
 3. Scroll the category chips horizontally
@@ -32,16 +37,17 @@ Home Screen
 
 ### 4. Category Features at a Glance
 
-| Feature | Description |
-|---------|-------------|
-| View All | See complete list of categories |
-| Add New | Create custom categories |
+| Feature            | Description                                 |
+| ------------------ | ------------------------------------------- |
+| View All           | See complete list of categories             |
+| Add New            | Create custom categories                    |
 | Linked to Products | Select from categories when adding products |
-| Default Categories | 7 pre-loaded categories included |
-| Smart Validation | Can't delete categories in use |
-| Real-time Updates | Changes appear immediately |
+| Default Categories | 7 pre-loaded categories included            |
+| Smart Validation   | Can't delete categories in use              |
+| Real-time Updates  | Changes appear immediately                  |
 
 ### Default Categories Included:
+
 ✅ Food & Beverages
 ✅ Electronics  
 ✅ Clothing
@@ -51,6 +57,7 @@ Home Screen
 ✅ Sports & Recreation
 
 ### Tips:
+
 💡 Categories help organize your products
 💡 You can have as many categories as needed
 💡 Category names must be unique
@@ -60,6 +67,7 @@ Home Screen
 ## Button Layout Changes
 
 ### Home Screen (Updated):
+
 ```
 ┌─────────────────────────────┐
 │     📱 Open POS             │
@@ -71,6 +79,7 @@ Home Screen
 ```
 
 ### Add Product Form (Updated):
+
 ```
 Product Name: _______________
 Barcode: ____________________
@@ -78,13 +87,14 @@ Price: ______________________
 Stock: ______________________
 
 Category:           [Manage Categories] ← NEW LINK!
-[Food...] [Electro...] [Cloth...] → 
+[Food...] [Electro...] [Cloth...] →
 
 Description: ________________
             ________________
 ```
 
 ## Benefits:
+
 ✨ Better product organization
 ✨ Easier inventory management
 ✨ Professional categorization

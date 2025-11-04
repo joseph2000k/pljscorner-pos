@@ -45,7 +45,7 @@ const CategoriesModal = ({ visible, onClose, onCategoryAdded }) => {
       setNewCategoryDescription("");
       setIsAddingCategory(false);
       loadCategories();
-      
+
       // Notify parent component
       if (onCategoryAdded) {
         onCategoryAdded();
@@ -53,7 +53,8 @@ const CategoriesModal = ({ visible, onClose, onCategoryAdded }) => {
     } else {
       Alert.alert(
         "Error",
-        result.error || "Failed to add category. Category name might already exist."
+        result.error ||
+          "Failed to add category. Category name might already exist."
       );
     }
   };
@@ -155,7 +156,8 @@ const CategoriesModal = ({ visible, onClose, onCategoryAdded }) => {
                       </Text>
                     ) : null}
                     <Text style={styles.categoryDate}>
-                      Added: {new Date(category.created_at).toLocaleDateString()}
+                      Added:{" "}
+                      {new Date(category.created_at).toLocaleDateString()}
                     </Text>
                   </View>
                 </View>
