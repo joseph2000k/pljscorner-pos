@@ -48,7 +48,7 @@ const ReceiptHistoryModal = ({ visible, onClose }) => {
   const handleViewReceipt = (sale) => {
     // Get full sale details with items
     const { sale: saleDetail, items } = getSaleDetails(sale.id);
-    
+
     if (!saleDetail) {
       return;
     }
@@ -68,7 +68,7 @@ const ReceiptHistoryModal = ({ visible, onClose }) => {
       change: 0,
       date: saleDetail.created_at,
     };
-    
+
     setSelectedReceipt(receipt);
     setShowReceiptDetail(true);
   };
@@ -88,7 +88,11 @@ const ReceiptHistoryModal = ({ visible, onClose }) => {
 
   return (
     <>
-      <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
+      <Modal
+        visible={visible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
         <View style={styles.modalContainer}>
           <View style={styles.header}>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
@@ -122,7 +126,10 @@ const ReceiptHistoryModal = ({ visible, onClose }) => {
                   <View style={styles.statDivider} />
                   <View style={styles.statItem}>
                     <Text style={styles.statValue}>
-                      ${sales.reduce((sum, sale) => sum + sale.total_amount, 0).toFixed(2)}
+                      $
+                      {sales
+                        .reduce((sum, sale) => sum + sale.total_amount, 0)
+                        .toFixed(2)}
                     </Text>
                     <Text style={styles.statLabel}>Total Revenue</Text>
                   </View>
@@ -175,7 +182,10 @@ const ReceiptHistoryModal = ({ visible, onClose }) => {
 
                     {sale.products && (
                       <View style={styles.productsPreview}>
-                        <Text style={styles.productsPreviewText} numberOfLines={1}>
+                        <Text
+                          style={styles.productsPreviewText}
+                          numberOfLines={1}
+                        >
                           {sale.products}
                         </Text>
                       </View>
