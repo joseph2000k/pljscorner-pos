@@ -1,14 +1,14 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  Modal,
-  TouchableOpacity,
-  StyleSheet,
-} from "react-native";
+import { View, Text, Modal, TouchableOpacity, StyleSheet } from "react-native";
 import CashPaymentModal from "./CashPaymentModal";
 
-const CheckoutModal = ({ visible, onClose, cartItems, cartTotal, onCompleteCheckout }) => {
+const CheckoutModal = ({
+  visible,
+  onClose,
+  cartItems,
+  cartTotal,
+  onCompleteCheckout,
+}) => {
   const [showCashModal, setShowCashModal] = useState(false);
 
   const handleCashPayment = (amountPaid, change) => {
@@ -26,7 +26,11 @@ const CheckoutModal = ({ visible, onClose, cartItems, cartTotal, onCompleteCheck
 
   return (
     <>
-      <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
+      <Modal
+        visible={visible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <TouchableOpacity onPress={onClose}>
@@ -37,7 +41,9 @@ const CheckoutModal = ({ visible, onClose, cartItems, cartTotal, onCompleteCheck
           </View>
 
           <View style={styles.checkoutContent}>
-            <Text style={styles.checkoutTotal}>Total: ${cartTotal.toFixed(2)}</Text>
+            <Text style={styles.checkoutTotal}>
+              Total: ${cartTotal.toFixed(2)}
+            </Text>
 
             <View style={styles.checkoutItems}>
               <Text style={styles.checkoutItemsTitle}>Items:</Text>

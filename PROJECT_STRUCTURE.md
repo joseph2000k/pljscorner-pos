@@ -38,15 +38,18 @@ PLJSCORNERPOS/
 ## Components Created
 
 ### ✅ Components (src/components/)
+
 1. **CartComponent.js** - Displays shopping cart with items, quantities, and totals
 2. **CheckoutModal.js** - Checkout interface with payment method selection
 3. **AddProductModal.js** - Form to add new products
 
 ### ✅ Hooks (src/hooks/)
+
 1. **useCart.js** - Manages cart state (add, remove, update, checkout)
 2. **useBarcodeScanner.js** - Handles barcode scanning logic and validation
 
 ### ✅ Services (src/services/)
+
 1. **database.js** - All SQLite database operations
 
 ## Next Steps

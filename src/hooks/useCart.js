@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { Alert } from "react-native";
-import { createSale, addSaleItem, updateProductStock } from "../services/database";
+import {
+  createSale,
+  addSaleItem,
+  updateProductStock,
+} from "../services/database";
 
 export const useCart = (onCheckoutComplete) => {
   const [cartItems, setCartItems] = useState([]);
@@ -87,7 +91,11 @@ export const useCart = (onCheckoutComplete) => {
     setCartItems([]);
   };
 
-  const completeCheckout = (paymentMethod = "cash", amountPaid = 0, onChange = 0) => {
+  const completeCheckout = (
+    paymentMethod = "cash",
+    amountPaid = 0,
+    onChange = 0
+  ) => {
     const totalAmount = calculateCartTotal();
 
     // Create sale record

@@ -256,7 +256,11 @@ export default function App() {
     setShowCheckoutModal(true);
   };
 
-  const completeCheckout = (paymentMethod = "cash", amountPaid = 0, change = 0) => {
+  const completeCheckout = (
+    paymentMethod = "cash",
+    amountPaid = 0,
+    change = 0
+  ) => {
     const totalAmount = calculateCartTotal();
 
     // Create sale record

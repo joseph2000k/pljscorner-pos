@@ -14,7 +14,7 @@ const CashPaymentModal = ({ visible, onClose, total, onComplete }) => {
 
   const handleComplete = () => {
     const paid = parseFloat(amountPaid);
-    
+
     if (!amountPaid || isNaN(paid) || paid <= 0) {
       Alert.alert("Invalid Amount", "Please enter a valid amount.");
       return;
@@ -23,7 +23,9 @@ const CashPaymentModal = ({ visible, onClose, total, onComplete }) => {
     if (paid < total) {
       Alert.alert(
         "Insufficient Amount",
-        `Amount paid ($${paid.toFixed(2)}) is less than total ($${total.toFixed(2)})`
+        `Amount paid ($${paid.toFixed(2)}) is less than total ($${total.toFixed(
+          2
+        )})`
       );
       return;
     }
@@ -46,9 +48,10 @@ const CashPaymentModal = ({ visible, onClose, total, onComplete }) => {
     Math.ceil(total / 50) * 50,
   ].filter((val, idx, arr) => arr.indexOf(val) === idx); // Remove duplicates
 
-  const change = amountPaid && !isNaN(parseFloat(amountPaid)) 
-    ? parseFloat(amountPaid) - total 
-    : 0;
+  const change =
+    amountPaid && !isNaN(parseFloat(amountPaid))
+      ? parseFloat(amountPaid) - total
+      : 0;
 
   return (
     <Modal visible={visible} animationType="slide" transparent={true}>
@@ -92,15 +95,19 @@ const CashPaymentModal = ({ visible, onClose, total, onComplete }) => {
 
           {/* Change Display */}
           {amountPaid && !isNaN(parseFloat(amountPaid)) && (
-            <View style={[
-              styles.changeSection,
-              change < 0 && styles.changeNegative
-            ]}>
+            <View
+              style={[
+                styles.changeSection,
+                change < 0 && styles.changeNegative,
+              ]}
+            >
               <Text style={styles.changeLabel}>Change:</Text>
-              <Text style={[
-                styles.changeAmount,
-                change < 0 && styles.changeAmountNegative
-              ]}>
+              <Text
+                style={[
+                  styles.changeAmount,
+                  change < 0 && styles.changeAmountNegative,
+                ]}
+              >
                 ${Math.abs(change).toFixed(2)}
               </Text>
             </View>

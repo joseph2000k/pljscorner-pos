@@ -23,7 +23,11 @@ const ReceiptModal = ({ visible, onClose, receipt }) => {
   };
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="pageSheet"
+    >
       <View style={styles.modalContainer}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Receipt</Text>
@@ -91,7 +95,7 @@ const ReceiptModal = ({ visible, onClose, receipt }) => {
                   ${receipt.totalAmount.toFixed(2)}
                 </Text>
               </View>
-              
+
               <View style={[styles.totalRow, styles.grandTotal]}>
                 <Text style={styles.grandTotalLabel}>TOTAL:</Text>
                 <Text style={styles.grandTotalValue}>
@@ -121,7 +125,9 @@ const ReceiptModal = ({ visible, onClose, receipt }) => {
 
             {/* Footer */}
             <View style={styles.footer}>
-              <Text style={styles.footerText}>Thank you for your purchase!</Text>
+              <Text style={styles.footerText}>
+                Thank you for your purchase!
+              </Text>
               <Text style={styles.footerText}>Please come again</Text>
             </View>
           </View>

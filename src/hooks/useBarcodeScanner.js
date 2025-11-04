@@ -28,24 +28,28 @@ export const useBarcodeScanner = (addToCart, onProductNotFound) => {
     if (product) {
       // Check stock availability
       if (product.stock_quantity <= 0) {
-        Alert.alert("Out of Stock", `${product.name} is currently out of stock.`, [
-          {
-            text: "Scan Again",
-            onPress: () => {
-              setScanned(false);
-              setScanCooldown(false);
+        Alert.alert(
+          "Out of Stock",
+          `${product.name} is currently out of stock.`,
+          [
+            {
+              text: "Scan Again",
+              onPress: () => {
+                setScanned(false);
+                setScanCooldown(false);
+              },
             },
-          },
-          {
-            text: "Back to POS",
-            onPress: () => {
-              if (onProductNotFound) {
-                onProductNotFound();
-              }
-              setScanCooldown(false);
+            {
+              text: "Back to POS",
+              onPress: () => {
+                if (onProductNotFound) {
+                  onProductNotFound();
+                }
+                setScanCooldown(false);
+              },
             },
-          },
-        ]);
+          ]
+        );
         return;
       }
 
@@ -61,33 +65,37 @@ export const useBarcodeScanner = (addToCart, onProductNotFound) => {
         setLastScannedBarcode("");
       }, 300);
     } else {
-      Alert.alert("Product Not Found", `Barcode: ${data}\nProduct not in database.`, [
-        {
-          text: "Scan Again",
-          onPress: () => {
-            setScanned(false);
-            setScanCooldown(false);
+      Alert.alert(
+        "Product Not Found",
+        `Barcode: ${data}\nProduct not in database.`,
+        [
+          {
+            text: "Scan Again",
+            onPress: () => {
+              setScanned(false);
+              setScanCooldown(false);
+            },
           },
-        },
-        {
-          text: "Add Product",
-          onPress: () => {
-            if (onProductNotFound) {
-              onProductNotFound(data);
-            }
-            setScanCooldown(false);
+          {
+            text: "Add Product",
+            onPress: () => {
+              if (onProductNotFound) {
+                onProductNotFound(data);
+              }
+              setScanCooldown(false);
+            },
           },
-        },
-        {
-          text: "Back to POS",
-          onPress: () => {
-            if (onProductNotFound) {
-              onProductNotFound();
-            }
-            setScanCooldown(false);
+          {
+            text: "Back to POS",
+            onPress: () => {
+              if (onProductNotFound) {
+                onProductNotFound();
+              }
+              setScanCooldown(false);
+            },
           },
-        },
-      ]);
+        ]
+      );
     }
   };
 
