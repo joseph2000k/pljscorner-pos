@@ -27,6 +27,8 @@ import {
 import CheckoutModal from "./src/components/CheckoutModal";
 import ReceiptModal from "./src/components/ReceiptModal";
 import ReceiptHistoryModal from "./src/components/ReceiptHistoryModal";
+import CategoriesModal from "./src/components/CategoriesModal";
+import AddProductModal from "./src/components/AddProductModal";
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState("home"); // 'home', 'camera', 'products', 'add-product', 'pos'
@@ -43,7 +45,7 @@ export default function App() {
     barcode: "",
     price: "",
     stock: "",
-    category: "General",
+    category: "Food & Beverages",
     description: "",
   });
 
@@ -55,6 +57,7 @@ export default function App() {
   const [showReceipt, setShowReceipt] = useState(false);
   const [receiptData, setReceiptData] = useState(null);
   const [showReceiptHistory, setShowReceiptHistory] = useState(false);
+  const [showCategoriesModal, setShowCategoriesModal] = useState(false);
 
   useEffect(() => {
     // Initialize database on app start
@@ -346,7 +349,7 @@ export default function App() {
       barcode: "",
       price: "",
       stock: "",
-      category: "General",
+      category: "Food & Beverages",
       description: "",
     });
     setShowAddProductModal(true);
@@ -354,6 +357,20 @@ export default function App() {
 
   const closeAddProductModal = () => {
     setShowAddProductModal(false);
+  };
+
+  const handleProductFormChange = (field, value) => {
+    setNewProduct({ ...newProduct, [field]: value });
+  };
+
+  const handleOpenCategoriesFromProduct = () => {
+    // Keep the product modal open, just show categories modal
+    setShowCategoriesModal(true);
+  };
+
+  const handleCategoryAdded = () => {
+    // Reload categories when a new one is added
+    loadDashboardData();
   };
 
   const handleAddProduct = () => {
@@ -479,12 +496,21 @@ export default function App() {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity
-              style={[styles.secondaryButton, styles.fullButton]}
-              onPress={() => setShowReceiptHistory(true)}
-            >
-              <Text style={styles.secondaryButtonText}>📋 Receipt History</Text>
-            </TouchableOpacity>
+            <View style={styles.buttonRow}>
+              <TouchableOpacity
+                style={[styles.secondaryButton, styles.halfButton]}
+                onPress={() => setShowCategoriesModal(true)}
+              >
+                <Text style={styles.secondaryButtonText}>🏷️ Categories</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.secondaryButton, styles.halfButton]}
+                onPress={() => setShowReceiptHistory(true)}
+              >
+                <Text style={styles.secondaryButtonText}>📋 History</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Last Scanned Product */}
@@ -795,134 +821,21 @@ export default function App() {
       {screenContent}
 
       {/* Add Product Modal - Available on all screens */}
-      <Modal
+      <AddProductModal
         visible={showAddProductModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={closeAddProductModal}>
-              <Text style={styles.modalCancelText}>Cancel</Text>
-            </TouchableOpacity>
-            <Text style={styles.modalTitle}>Add New Product</Text>
-            <TouchableOpacity onPress={handleAddProduct}>
-              <Text style={styles.modalSaveText}>Save</Text>
-            </TouchableOpacity>
-          </View>
+        onClose={closeAddProductModal}
+        onSave={handleAddProduct}
+        productData={newProduct}
+        onChangeText={handleProductFormChange}
+        onOpenCategories={handleOpenCategoriesFromProduct}
+      />
 
-          <ScrollView style={styles.modalContent}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Product Name *</Text>
-              <TextInput
-                style={styles.textInput}
-                value={newProduct.name}
-                onChangeText={(text) =>
-                  setNewProduct({ ...newProduct, name: text })
-                }
-                placeholder="Enter product name"
-                placeholderTextColor="#999"
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Barcode *</Text>
-              <TextInput
-                style={styles.textInput}
-                value={newProduct.barcode}
-                onChangeText={(text) =>
-                  setNewProduct({ ...newProduct, barcode: text })
-                }
-                placeholder="Enter or scan barcode"
-                placeholderTextColor="#999"
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Price *</Text>
-              <TextInput
-                style={styles.textInput}
-                value={newProduct.price}
-                onChangeText={(text) =>
-                  setNewProduct({ ...newProduct, price: text })
-                }
-                placeholder="0.00"
-                placeholderTextColor="#999"
-                keyboardType="decimal-pad"
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Stock Quantity</Text>
-              <TextInput
-                style={styles.textInput}
-                value={newProduct.stock}
-                onChangeText={(text) =>
-                  setNewProduct({ ...newProduct, stock: text })
-                }
-                placeholder="0"
-                placeholderTextColor="#999"
-                keyboardType="number-pad"
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Category</Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.categoryScroll}
-              >
-                {[
-                  "General",
-                  "Food & Beverages",
-                  "Electronics",
-                  "Clothing",
-                  "Health & Beauty",
-                  "Home & Garden",
-                ].map((category) => (
-                  <TouchableOpacity
-                    key={category}
-                    style={[
-                      styles.categoryChip,
-                      newProduct.category === category &&
-                        styles.categoryChipSelected,
-                    ]}
-                    onPress={() =>
-                      setNewProduct({ ...newProduct, category: category })
-                    }
-                  >
-                    <Text
-                      style={[
-                        styles.categoryChipText,
-                        newProduct.category === category &&
-                          styles.categoryChipTextSelected,
-                      ]}
-                    >
-                      {category}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Description (Optional)</Text>
-              <TextInput
-                style={[styles.textInput, styles.textArea]}
-                value={newProduct.description}
-                onChangeText={(text) =>
-                  setNewProduct({ ...newProduct, description: text })
-                }
-                placeholder="Enter product description"
-                placeholderTextColor="#999"
-                multiline={true}
-                numberOfLines={3}
-              />
-            </View>
-          </ScrollView>
-        </View>
-      </Modal>
+      {/* Categories Modal */}
+      <CategoriesModal
+        visible={showCategoriesModal}
+        onClose={() => setShowCategoriesModal(false)}
+        onCategoryAdded={handleCategoryAdded}
+      />
 
       {/* Checkout Modal */}
       <CheckoutModal

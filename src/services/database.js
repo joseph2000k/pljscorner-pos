@@ -291,6 +291,30 @@ export const addCategory = (name, description = "") => {
   }
 };
 
+export const deleteCategory = (categoryId) => {
+  try {
+    // Check if category is being used by products
+    const productsCount =
+      db.getFirstSync(
+        "SELECT COUNT(*) as count FROM products WHERE category = (SELECT name FROM categories WHERE id = ?)",
+        [categoryId]
+      )?.count || 0;
+
+    if (productsCount > 0) {
+      return {
+        success: false,
+        error: "Cannot delete category that is being used by products",
+      };
+    }
+
+    db.runSync("DELETE FROM categories WHERE id = ?", [categoryId]);
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting category:", error);
+    return { success: false, error: error.message };
+  }
+};
+
 // Dashboard/Analytics operations
 export const getDashboardStats = () => {
   try {

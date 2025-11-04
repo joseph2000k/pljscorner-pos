@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   TextInput,
   StyleSheet,
 } from "react-native";
+import { getAllCategories } from "../services/database";
 
 const AddProductModal = ({
   visible,
@@ -15,15 +16,20 @@ const AddProductModal = ({
   onSave,
   productData,
   onChangeText,
+  onOpenCategories,
 }) => {
-  const categories = [
-    "General",
-    "Food & Beverages",
-    "Electronics",
-    "Clothing",
-    "Health & Beauty",
-    "Home & Garden",
-  ];
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    if (visible) {
+      loadCategories();
+    }
+  }, [visible]);
+
+  const loadCategories = () => {
+    const allCategories = getAllCategories();
+    setCategories(allCategories.map((cat) => cat.name));
+  };
 
   return (
     <Modal
@@ -90,33 +96,51 @@ const AddProductModal = ({
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Category</Text>
+            <View style={styles.categoryHeader}>
+              <Text style={styles.inputLabel}>Category</Text>
+              {onOpenCategories && (
+                <TouchableOpacity onPress={onOpenCategories}>
+                  <Text style={styles.manageCategoriesLink}>
+                    Manage Categories
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               style={styles.categoryScroll}
             >
-              {categories.map((category) => (
+              {categories.length === 0 ? (
                 <TouchableOpacity
-                  key={category}
-                  style={[
-                    styles.categoryChip,
-                    productData.category === category &&
-                      styles.categoryChipSelected,
-                  ]}
-                  onPress={() => onChangeText("category", category)}
+                  style={styles.categoryChip}
+                  onPress={onOpenCategories}
                 >
-                  <Text
-                    style={[
-                      styles.categoryChipText,
-                      productData.category === category &&
-                        styles.categoryChipTextSelected,
-                    ]}
-                  >
-                    {category}
-                  </Text>
+                  <Text style={styles.categoryChipText}>+ Add Categories</Text>
                 </TouchableOpacity>
-              ))}
+              ) : (
+                categories.map((category) => (
+                  <TouchableOpacity
+                    key={category}
+                    style={[
+                      styles.categoryChip,
+                      productData.category === category &&
+                        styles.categoryChipSelected,
+                    ]}
+                    onPress={() => onChangeText("category", category)}
+                  >
+                    <Text
+                      style={[
+                        styles.categoryChipText,
+                        productData.category === category &&
+                          styles.categoryChipTextSelected,
+                      ]}
+                    >
+                      {category}
+                    </Text>
+                  </TouchableOpacity>
+                ))
+              )}
             </ScrollView>
           </View>
 
@@ -174,6 +198,17 @@ const styles = StyleSheet.create({
   },
   inputGroup: {
     marginBottom: 20,
+  },
+  categoryHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  manageCategoriesLink: {
+    fontSize: 14,
+    color: "#007AFF",
+    fontWeight: "500",
   },
   inputLabel: {
     fontSize: 16,
