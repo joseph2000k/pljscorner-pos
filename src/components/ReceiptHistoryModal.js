@@ -1,0 +1,400 @@
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  Modal,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+  RefreshControl,
+} from "react-native";
+import { getAllSales, getSaleDetails } from "../services/database";
+import ReceiptModal from "./ReceiptModal";
+
+const ReceiptHistoryModal = ({ visible, onClose }) => {
+  const [sales, setSales] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedReceipt, setSelectedReceipt] = useState(null);
+  const [showReceiptDetail, setShowReceiptDetail] = useState(false);
+
+  useEffect(() => {
+    if (visible) {
+      loadSales();
+    }
+  }, [visible]);
+
+  const loadSales = () => {
+    const allSales = getAllSales();
+    setSales(allSales);
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadSales();
+    setRefreshing(false);
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const handleViewReceipt = (sale) => {
+    // Get full sale details with items
+    const { sale: saleDetail, items } = getSaleDetails(sale.id);
+    
+    if (!saleDetail) {
+      return;
+    }
+
+    // Convert sale data to receipt format
+    const receipt = {
+      saleId: saleDetail.id,
+      items: items.map((item) => ({
+        id: item.product_id,
+        name: item.product_name,
+        quantity: item.quantity,
+        price: item.unit_price,
+      })),
+      totalAmount: saleDetail.total_amount,
+      paymentMethod: saleDetail.payment_method,
+      amountPaid: saleDetail.total_amount,
+      change: 0,
+      date: saleDetail.created_at,
+    };
+    
+    setSelectedReceipt(receipt);
+    setShowReceiptDetail(true);
+  };
+
+  const getPaymentIcon = (method) => {
+    switch (method?.toLowerCase()) {
+      case "cash":
+        return "💵";
+      case "card":
+        return "💳";
+      case "gcash":
+        return "📱";
+      default:
+        return "💰";
+    }
+  };
+
+  return (
+    <>
+      <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
+        <View style={styles.modalContainer}>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <Text style={styles.closeButtonText}>✕</Text>
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Receipt History</Text>
+            <View style={styles.placeholder} />
+          </View>
+
+          <ScrollView
+            style={styles.content}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+          >
+            {sales.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyStateIcon}>📋</Text>
+                <Text style={styles.emptyStateText}>No sales yet</Text>
+                <Text style={styles.emptyStateSubtext}>
+                  Completed transactions will appear here
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.salesList}>
+                <View style={styles.statsCard}>
+                  <View style={styles.statItem}>
+                    <Text style={styles.statValue}>{sales.length}</Text>
+                    <Text style={styles.statLabel}>Total Sales</Text>
+                  </View>
+                  <View style={styles.statDivider} />
+                  <View style={styles.statItem}>
+                    <Text style={styles.statValue}>
+                      ${sales.reduce((sum, sale) => sum + sale.total_amount, 0).toFixed(2)}
+                    </Text>
+                    <Text style={styles.statLabel}>Total Revenue</Text>
+                  </View>
+                </View>
+
+                {sales.map((sale) => (
+                  <TouchableOpacity
+                    key={sale.id}
+                    style={styles.saleCard}
+                    onPress={() => handleViewReceipt(sale)}
+                  >
+                    <View style={styles.saleHeader}>
+                      <View style={styles.saleLeft}>
+                        <Text style={styles.saleId}>Receipt #{sale.id}</Text>
+                        <Text style={styles.saleDate}>
+                          {formatDate(sale.created_at)}
+                        </Text>
+                      </View>
+                      <View style={styles.saleRight}>
+                        <Text style={styles.saleAmount}>
+                          ${sale.total_amount.toFixed(2)}
+                        </Text>
+                        <View style={styles.paymentBadge}>
+                          <Text style={styles.paymentIcon}>
+                            {getPaymentIcon(sale.payment_method)}
+                          </Text>
+                          <Text style={styles.paymentText}>
+                            {sale.payment_method?.toUpperCase() || "CASH"}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+
+                    <View style={styles.saleDetails}>
+                      <View style={styles.saleInfo}>
+                        <Text style={styles.saleInfoLabel}>Items:</Text>
+                        <Text style={styles.saleInfoValue}>
+                          {sale.item_count || 0}
+                        </Text>
+                      </View>
+                      {sale.customer_name && (
+                        <View style={styles.saleInfo}>
+                          <Text style={styles.saleInfoLabel}>Customer:</Text>
+                          <Text style={styles.saleInfoValue}>
+                            {sale.customer_name}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+
+                    {sale.products && (
+                      <View style={styles.productsPreview}>
+                        <Text style={styles.productsPreviewText} numberOfLines={1}>
+                          {sale.products}
+                        </Text>
+                      </View>
+                    )}
+
+                    <View style={styles.viewReceiptButton}>
+                      <Text style={styles.viewReceiptText}>View Receipt →</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </ScrollView>
+        </View>
+      </Modal>
+
+      <ReceiptModal
+        visible={showReceiptDetail}
+        onClose={() => setShowReceiptDetail(false)}
+        receipt={selectedReceipt}
+      />
+    </>
+  );
+};
+
+const styles = StyleSheet.create({
+  modalContainer: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingTop: 50,
+    paddingBottom: 15,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e0e0e0",
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  closeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#f5f5f5",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  closeButtonText: {
+    fontSize: 20,
+    color: "#666",
+  },
+  placeholder: {
+    width: 32,
+  },
+  content: {
+    flex: 1,
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: 100,
+    paddingHorizontal: 40,
+  },
+  emptyStateIcon: {
+    fontSize: 64,
+    marginBottom: 20,
+  },
+  emptyStateText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 8,
+  },
+  emptyStateSubtext: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+  },
+  salesList: {
+    padding: 15,
+  },
+  statsCard: {
+    backgroundColor: "#fff",
+    borderRadius: 15,
+    padding: 20,
+    marginBottom: 20,
+    flexDirection: "row",
+    justifyContent: "space-around",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  statItem: {
+    alignItems: "center",
+    flex: 1,
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#007AFF",
+    marginBottom: 5,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: "#666",
+    textAlign: "center",
+  },
+  statDivider: {
+    width: 1,
+    backgroundColor: "#e0e0e0",
+    marginHorizontal: 15,
+  },
+  saleCard: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  saleHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 12,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  saleLeft: {
+    flex: 1,
+  },
+  saleId: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 4,
+  },
+  saleDate: {
+    fontSize: 13,
+    color: "#666",
+  },
+  saleRight: {
+    alignItems: "flex-end",
+  },
+  saleAmount: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#4CAF50",
+    marginBottom: 6,
+  },
+  paymentBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  paymentIcon: {
+    fontSize: 14,
+    marginRight: 4,
+  },
+  paymentText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#666",
+  },
+  saleDetails: {
+    flexDirection: "row",
+    marginBottom: 10,
+    gap: 20,
+  },
+  saleInfo: {
+    flexDirection: "row",
+  },
+  saleInfoLabel: {
+    fontSize: 14,
+    color: "#666",
+    marginRight: 5,
+  },
+  saleInfoValue: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+  },
+  productsPreview: {
+    backgroundColor: "#f8f9fa",
+    padding: 8,
+    borderRadius: 6,
+    marginBottom: 10,
+  },
+  productsPreviewText: {
+    fontSize: 13,
+    color: "#666",
+  },
+  viewReceiptButton: {
+    alignItems: "center",
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: "#f0f0f0",
+  },
+  viewReceiptText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#007AFF",
+  },
+});
+
+export default ReceiptHistoryModal;

@@ -26,6 +26,7 @@ import {
 } from "./src/services/database";
 import CheckoutModal from "./src/components/CheckoutModal";
 import ReceiptModal from "./src/components/ReceiptModal";
+import ReceiptHistoryModal from "./src/components/ReceiptHistoryModal";
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState("home"); // 'home', 'camera', 'products', 'add-product', 'pos'
@@ -53,6 +54,7 @@ export default function App() {
   const [scanCooldown, setScanCooldown] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
   const [receiptData, setReceiptData] = useState(null);
+  const [showReceiptHistory, setShowReceiptHistory] = useState(false);
 
   useEffect(() => {
     // Initialize database on app start
@@ -476,6 +478,13 @@ export default function App() {
                 <Text style={styles.secondaryButtonText}>➕ Add Product</Text>
               </TouchableOpacity>
             </View>
+
+            <TouchableOpacity
+              style={[styles.secondaryButton, styles.fullButton]}
+              onPress={() => setShowReceiptHistory(true)}
+            >
+              <Text style={styles.secondaryButtonText}>📋 Receipt History</Text>
+            </TouchableOpacity>
           </View>
 
           {/* Last Scanned Product */}
@@ -930,6 +939,12 @@ export default function App() {
         onClose={() => setShowReceipt(false)}
         receipt={receiptData}
       />
+
+      {/* Receipt History Modal */}
+      <ReceiptHistoryModal
+        visible={showReceiptHistory}
+        onClose={() => setShowReceiptHistory(false)}
+      />
     </>
   );
 }
@@ -1124,6 +1139,10 @@ const styles = StyleSheet.create({
   },
   halfButton: {
     width: "48%",
+  },
+  fullButton: {
+    width: "100%",
+    marginTop: 10,
   },
 
   // Recent Products
