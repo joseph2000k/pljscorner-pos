@@ -20,10 +20,13 @@ import {
   deleteProduct,
   updateProduct,
   getAllCategories,
+  createSale,
+  addSaleItem,
+  updateProductStock,
 } from "./database";
 
 export default function App() {
-  const [currentScreen, setCurrentScreen] = useState("home"); // 'home', 'camera', 'products', 'add-product'
+  const [currentScreen, setCurrentScreen] = useState("home"); // 'home', 'camera', 'products', 'add-product', 'pos'
   const [hasPermission, setHasPermission] = useState(null);
   const [scanned, setScanned] = useState(false);
   const [scannedData, setScannedData] = useState("");
@@ -40,6 +43,10 @@ export default function App() {
     category: "General",
     description: "",
   });
+
+  // Cart state
+  const [cartItems, setCartItems] = useState([]);
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
 
   useEffect(() => {
     // Initialize database on app start
@@ -69,6 +76,9 @@ export default function App() {
   };
 
   const handleBarCodeScanned = ({ type, data }) => {
+    // Prevent multiple scans
+    if (scanned) return;
+    
     setScanned(true);
     setScannedData(data);
 
@@ -77,15 +87,26 @@ export default function App() {
     setScannedProduct(product);
 
     if (product) {
-      Alert.alert(
-        "Product Found!",
-        `Name: ${product.name}\nPrice: $${product.price}\nStock: ${product.stock_quantity}`,
-        [
-          { text: "Scan Again", onPress: () => setScanned(false) },
-          { text: "Add to Cart", onPress: () => addToCart(product) },
-          { text: "Back to Home", onPress: () => setCurrentScreen("home") },
-        ]
-      );
+      // Check stock availability
+      if (product.stock_quantity <= 0) {
+        Alert.alert(
+          "Out of Stock",
+          `${product.name} is currently out of stock.`,
+          [
+            { text: "Scan Again", onPress: () => setScanned(false) },
+            { text: "Back to POS", onPress: () => setCurrentScreen("pos") },
+          ]
+        );
+        return;
+      }
+
+      // Add to cart automatically
+      addToCart(product);
+      
+      // Reset scanner after a short delay to allow the next scan
+      setTimeout(() => {
+        setScanned(false);
+      }, 500);
     } else {
       Alert.alert(
         "Product Not Found",
@@ -93,16 +114,140 @@ export default function App() {
         [
           { text: "Scan Again", onPress: () => setScanned(false) },
           { text: "Add Product", onPress: () => addNewProduct(data) },
-          { text: "Back to Home", onPress: () => setCurrentScreen("home") },
+          { text: "Back to POS", onPress: () => setCurrentScreen("pos") },
         ]
       );
     }
   };
 
   const addToCart = (product) => {
-    // For now, just show an alert. In a full POS system, this would add to cart
-    Alert.alert("Added to Cart", `${product.name} added to cart!`);
-    setScanned(false);
+    setCartItems((prevItems) => {
+      // Check if product already in cart
+      const existingItemIndex = prevItems.findIndex(
+        (item) => item.id === product.id
+      );
+
+      if (existingItemIndex >= 0) {
+        // Product already in cart, increase quantity
+        const updatedItems = [...prevItems];
+        const currentQty = updatedItems[existingItemIndex].quantity;
+        
+        // Check if we have enough stock
+        if (currentQty >= product.stock_quantity) {
+          Alert.alert(
+            "Stock Limit",
+            `Only ${product.stock_quantity} units available in stock.`
+          );
+          return prevItems;
+        }
+
+        updatedItems[existingItemIndex].quantity += 1;
+        return updatedItems;
+      } else {
+        // New product, add to cart
+        return [
+          ...prevItems,
+          {
+            ...product,
+            quantity: 1,
+            subtotal: product.price,
+          },
+        ];
+      }
+    });
+  };
+
+  const removeFromCart = (productId) => {
+    setCartItems((prevItems) =>
+      prevItems.filter((item) => item.id !== productId)
+    );
+  };
+
+  const updateCartItemQuantity = (productId, newQuantity) => {
+    if (newQuantity <= 0) {
+      removeFromCart(productId);
+      return;
+    }
+
+    setCartItems((prevItems) =>
+      prevItems.map((item) => {
+        if (item.id === productId) {
+          // Check stock availability
+          if (newQuantity > item.stock_quantity) {
+            Alert.alert(
+              "Stock Limit",
+              `Only ${item.stock_quantity} units available.`
+            );
+            return item;
+          }
+          return {
+            ...item,
+            quantity: newQuantity,
+            subtotal: item.price * newQuantity,
+          };
+        }
+        return item;
+      })
+    );
+  };
+
+  const calculateCartTotal = () => {
+    return cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+  };
+
+  const clearCart = () => {
+    setCartItems([]);
+  };
+
+  const handleCheckout = () => {
+    if (cartItems.length === 0) {
+      Alert.alert("Empty Cart", "Please add items to cart before checkout.");
+      return;
+    }
+    setShowCheckoutModal(true);
+  };
+
+  const completeCheckout = (paymentMethod = "cash") => {
+    const totalAmount = calculateCartTotal();
+    
+    // Create sale record
+    const saleResult = createSale(totalAmount, paymentMethod);
+    
+    if (saleResult.success) {
+      const saleId = saleResult.id;
+      
+      // Add sale items and update stock
+      cartItems.forEach((item) => {
+        addSaleItem(
+          saleId,
+          item.id,
+          item.quantity,
+          item.price,
+          item.price * item.quantity
+        );
+        
+        // Update product stock
+        const newStock = item.stock_quantity - item.quantity;
+        updateProductStock(item.id, newStock);
+      });
+      
+      Alert.alert(
+        "Sale Complete!",
+        `Total: $${totalAmount.toFixed(2)}\nPayment: ${paymentMethod}\nThank you!`,
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              clearCart();
+              setShowCheckoutModal(false);
+              loadDashboardData();
+            },
+          },
+        ]
+      );
+    } else {
+      Alert.alert("Error", "Failed to complete sale: " + saleResult.error);
+    }
   };
 
   const addNewProduct = (barcode) => {
@@ -124,9 +269,17 @@ export default function App() {
     setScannedData("");
   };
 
+  const openPOS = () => {
+    setCurrentScreen("pos");
+  };
+
   const goBackHome = () => {
     setCurrentScreen("home");
     loadDashboardData(); // Refresh data when returning home
+  };
+
+  const goBackToPOS = () => {
+    setCurrentScreen("pos");
   };
 
   const openAddProductModal = () => {
@@ -248,8 +401,8 @@ export default function App() {
 
           {/* Action Buttons */}
           <View style={styles.actionsContainer}>
-            <TouchableOpacity style={styles.primaryButton} onPress={openCamera}>
-              <Text style={styles.primaryButtonText}>📷 Scan Product</Text>
+            <TouchableOpacity style={styles.primaryButton} onPress={openPOS}>
+              <Text style={styles.primaryButtonText}>� Open POS</Text>
             </TouchableOpacity>
 
             <View style={styles.buttonRow}>
@@ -377,6 +530,132 @@ export default function App() {
     );
   }
 
+  // POS Screen with Cart
+  else if (currentScreen === "pos") {
+    const cartTotal = calculateCartTotal();
+    
+    screenContent = (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={goBackHome}>
+            <Text style={styles.backButtonText}>← Back</Text>
+          </TouchableOpacity>
+          <Text style={styles.headerText}>Point of Sale</Text>
+          <View style={styles.placeholder} />
+        </View>
+
+        <View style={styles.posContainer}>
+          {/* Scan Button */}
+          <TouchableOpacity
+            style={styles.scanButtonLarge}
+            onPress={openCamera}
+          >
+            <Text style={styles.scanButtonLargeText}>📷 Scan Product</Text>
+          </TouchableOpacity>
+
+          {/* Cart Section */}
+          <View style={styles.cartSection}>
+            <View style={styles.cartHeader}>
+              <Text style={styles.cartTitle}>Shopping Cart</Text>
+              {cartItems.length > 0 && (
+                <TouchableOpacity
+                  style={styles.clearCartButton}
+                  onPress={() => {
+                    Alert.alert(
+                      "Clear Cart",
+                      "Are you sure you want to clear the cart?",
+                      [
+                        { text: "Cancel", style: "cancel" },
+                        { text: "Clear", onPress: clearCart, style: "destructive" },
+                      ]
+                    );
+                  }}
+                >
+                  <Text style={styles.clearCartText}>Clear</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            <ScrollView style={styles.cartItems}>
+              {cartItems.length === 0 ? (
+                <View style={styles.emptyCart}>
+                  <Text style={styles.emptyCartText}>Cart is empty</Text>
+                  <Text style={styles.emptyCartSubtext}>
+                    Scan products to add them to cart
+                  </Text>
+                </View>
+              ) : (
+                cartItems.map((item) => (
+                  <View key={item.id} style={styles.cartItem}>
+                    <View style={styles.cartItemInfo}>
+                      <Text style={styles.cartItemName}>{item.name}</Text>
+                      <Text style={styles.cartItemPrice}>
+                        ${item.price.toFixed(2)} each
+                      </Text>
+                    </View>
+
+                    <View style={styles.cartItemControls}>
+                      <View style={styles.quantityControls}>
+                        <TouchableOpacity
+                          style={styles.quantityButton}
+                          onPress={() =>
+                            updateCartItemQuantity(item.id, item.quantity - 1)
+                          }
+                        >
+                          <Text style={styles.quantityButtonText}>-</Text>
+                        </TouchableOpacity>
+                        <Text style={styles.quantityText}>{item.quantity}</Text>
+                        <TouchableOpacity
+                          style={styles.quantityButton}
+                          onPress={() =>
+                            updateCartItemQuantity(item.id, item.quantity + 1)
+                          }
+                        >
+                          <Text style={styles.quantityButtonText}>+</Text>
+                        </TouchableOpacity>
+                      </View>
+
+                      <Text style={styles.cartItemSubtotal}>
+                        ${(item.price * item.quantity).toFixed(2)}
+                      </Text>
+
+                      <TouchableOpacity
+                        style={styles.removeButton}
+                        onPress={() => removeFromCart(item.id)}
+                      >
+                        <Text style={styles.removeButtonText}>✕</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ))
+              )}
+            </ScrollView>
+          </View>
+
+          {/* Cart Total and Checkout */}
+          <View style={styles.cartFooter}>
+            <View style={styles.totalSection}>
+              <Text style={styles.totalLabel}>Total:</Text>
+              <Text style={styles.totalAmount}>${cartTotal.toFixed(2)}</Text>
+            </View>
+            <TouchableOpacity
+              style={[
+                styles.checkoutButton,
+                cartItems.length === 0 && styles.checkoutButtonDisabled,
+              ]}
+              onPress={handleCheckout}
+              disabled={cartItems.length === 0}
+            >
+              <Text style={styles.checkoutButtonText}>Checkout</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <StatusBar style="light" />
+      </View>
+    );
+  }
+
   // Camera Screen
   else if (hasPermission === null) {
     screenContent = (
@@ -399,10 +678,10 @@ export default function App() {
     screenContent = (
       <View style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={goBackHome}>
-            <Text style={styles.backButtonText}>← Back</Text>
+          <TouchableOpacity style={styles.backButton} onPress={goBackToPOS}>
+            <Text style={styles.backButtonText}>← Back to POS</Text>
           </TouchableOpacity>
-          <Text style={styles.headerText}>QR Code Scanner</Text>
+          <Text style={styles.headerText}>Scanner</Text>
           <View style={styles.placeholder} />
         </View>
 
@@ -411,7 +690,7 @@ export default function App() {
             style={styles.camera}
             facing="back"
             barcodeScannerSettings={{
-              barcodeTypes: ["qr", "pdf417"],
+              barcodeTypes: ["qr", "pdf417", "ean13", "ean8", "code128", "code39"],
             }}
             onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
           />
@@ -428,16 +707,7 @@ export default function App() {
               <Text style={styles.resultText}>{scannedData}</Text>
             </View>
           ) : (
-            <Text style={styles.instructionText}>Point camera at QR code</Text>
-          )}
-
-          {scanned && (
-            <TouchableOpacity
-              style={styles.scanButton}
-              onPress={() => setScanned(false)}
-            >
-              <Text style={styles.scanButtonText}>Scan Again</Text>
-            </TouchableOpacity>
+            <Text style={styles.instructionText}>Point camera at barcode</Text>
           )}
         </View>
 
@@ -578,6 +848,65 @@ export default function App() {
               />
             </View>
           </ScrollView>
+        </View>
+      </Modal>
+
+      {/* Checkout Modal */}
+      <Modal
+        visible={showCheckoutModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={() => setShowCheckoutModal(false)}>
+              <Text style={styles.modalCancelText}>Cancel</Text>
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Checkout</Text>
+            <View style={styles.placeholder} />
+          </View>
+
+          <View style={styles.checkoutContent}>
+            <Text style={styles.checkoutTotal}>
+              Total: ${calculateCartTotal().toFixed(2)}
+            </Text>
+
+            <View style={styles.checkoutItems}>
+              <Text style={styles.checkoutItemsTitle}>Items:</Text>
+              {cartItems.map((item) => (
+                <View key={item.id} style={styles.checkoutItem}>
+                  <Text style={styles.checkoutItemName}>
+                    {item.name} x {item.quantity}
+                  </Text>
+                  <Text style={styles.checkoutItemPrice}>
+                    ${(item.price * item.quantity).toFixed(2)}
+                  </Text>
+                </View>
+              ))}
+            </View>
+
+            <Text style={styles.paymentMethodTitle}>Payment Method:</Text>
+            <View style={styles.paymentMethods}>
+              <TouchableOpacity
+                style={styles.paymentButton}
+                onPress={() => completeCheckout("cash")}
+              >
+                <Text style={styles.paymentButtonText}>💵 Cash</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.paymentButton}
+                onPress={() => completeCheckout("card")}
+              >
+                <Text style={styles.paymentButtonText}>💳 Card</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.paymentButton}
+                onPress={() => completeCheckout("gcash")}
+              >
+                <Text style={styles.paymentButtonText}>📱 GCash</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
       </Modal>
     </>
@@ -1084,5 +1413,261 @@ const styles = StyleSheet.create({
   },
   categoryChipTextSelected: {
     color: "#fff",
+  },
+
+  // POS Screen Styles
+  posContainer: {
+    flex: 1,
+    backgroundColor: "#000",
+  },
+  scanButtonLarge: {
+    backgroundColor: "#007AFF",
+    paddingVertical: 20,
+    margin: 15,
+    borderRadius: 15,
+    alignItems: "center",
+    shadowColor: "#007AFF",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  scanButtonLargeText: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+  cartSection: {
+    flex: 1,
+    backgroundColor: "#1a1a1a",
+    marginHorizontal: 15,
+    marginBottom: 15,
+    borderRadius: 15,
+    overflow: "hidden",
+  },
+  cartHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 15,
+    backgroundColor: "#2a2a2a",
+    borderBottomWidth: 1,
+    borderBottomColor: "#333",
+  },
+  cartTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#fff",
+  },
+  clearCartButton: {
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    backgroundColor: "#ff4757",
+    borderRadius: 8,
+  },
+  clearCartText: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+  cartItems: {
+    flex: 1,
+    padding: 15,
+  },
+  emptyCart: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: 60,
+  },
+  emptyCartText: {
+    fontSize: 18,
+    color: "#fff",
+    fontWeight: "600",
+    marginBottom: 8,
+  },
+  emptyCartSubtext: {
+    fontSize: 14,
+    color: "#888",
+    textAlign: "center",
+  },
+  cartItem: {
+    backgroundColor: "#2a2a2a",
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  cartItemInfo: {
+    marginBottom: 12,
+  },
+  cartItemName: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#fff",
+    marginBottom: 4,
+  },
+  cartItemPrice: {
+    fontSize: 14,
+    color: "#888",
+  },
+  cartItemControls: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  quantityControls: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#1a1a1a",
+    borderRadius: 8,
+    padding: 4,
+  },
+  quantityButton: {
+    width: 32,
+    height: 32,
+    backgroundColor: "#007AFF",
+    borderRadius: 6,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  quantityButtonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  quantityText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+    marginHorizontal: 15,
+    minWidth: 25,
+    textAlign: "center",
+  },
+  cartItemSubtotal: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#4CAF50",
+  },
+  removeButton: {
+    width: 32,
+    height: 32,
+    backgroundColor: "#ff4757",
+    borderRadius: 6,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  removeButtonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  cartFooter: {
+    backgroundColor: "#1a1a1a",
+    paddingHorizontal: 15,
+    paddingVertical: 20,
+    borderTopWidth: 1,
+    borderTopColor: "#333",
+  },
+  totalSection: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  totalLabel: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#fff",
+  },
+  totalAmount: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#4CAF50",
+  },
+  checkoutButton: {
+    backgroundColor: "#4CAF50",
+    paddingVertical: 18,
+    borderRadius: 12,
+    alignItems: "center",
+    shadowColor: "#4CAF50",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  checkoutButtonDisabled: {
+    backgroundColor: "#555",
+    shadowOpacity: 0,
+  },
+  checkoutButtonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+
+  // Checkout Modal Styles
+  checkoutContent: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: "#f5f5f5",
+  },
+  checkoutTotal: {
+    fontSize: 32,
+    fontWeight: "bold",
+    color: "#4CAF50",
+    textAlign: "center",
+    marginVertical: 20,
+  },
+  checkoutItems: {
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 20,
+  },
+  checkoutItemsTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 10,
+  },
+  checkoutItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  checkoutItemName: {
+    fontSize: 16,
+    color: "#333",
+  },
+  checkoutItemPrice: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#007AFF",
+  },
+  paymentMethodTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 15,
+  },
+  paymentMethods: {
+    gap: 12,
+  },
+  paymentButton: {
+    backgroundColor: "#007AFF",
+    paddingVertical: 18,
+    borderRadius: 12,
+    alignItems: "center",
+    shadowColor: "#007AFF",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  paymentButtonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
   },
 });
