@@ -7,6 +7,7 @@ import {
   Alert,
   StyleSheet,
 } from "react-native";
+import { getCategoryByName } from "../services/database";
 
 const CartComponent = ({
   cartItems,
@@ -16,6 +17,55 @@ const CartComponent = ({
   onCheckout,
   cartTotal,
 }) => {
+  // Calculate discount info
+  const getDiscountInfo = () => {
+    const itemsByCategory = {};
+    
+    cartItems.forEach((item) => {
+      const category = item.category || "Uncategorized";
+      if (!itemsByCategory[category]) {
+        itemsByCategory[category] = { items: [], totalQty: 0, regularTotal: 0 };
+      }
+      itemsByCategory[category].items.push(item);
+      itemsByCategory[category].totalQty += item.quantity;
+      itemsByCategory[category].regularTotal += item.price * item.quantity;
+    });
+
+    const discounts = [];
+    
+    Object.keys(itemsByCategory).forEach((categoryName) => {
+      const categoryData = itemsByCategory[categoryName];
+      const categoryInfo = getCategoryByName(categoryName);
+      
+      if (
+        categoryInfo &&
+        categoryInfo.bulk_discount_quantity > 0 &&
+        categoryInfo.bulk_discount_price > 0
+      ) {
+        const totalQty = categoryData.totalQty;
+        const discountQty = categoryInfo.bulk_discount_quantity;
+        const discountPrice = categoryInfo.bulk_discount_price;
+        
+        if (totalQty >= discountQty) {
+          const bulkSets = Math.floor(totalQty / discountQty);
+          const savings = (categoryData.regularTotal) - (bulkSets * discountPrice + (totalQty % discountQty) * (categoryData.regularTotal / totalQty));
+          
+          discounts.push({
+            category: categoryName,
+            quantity: totalQty,
+            bulkSets: bulkSets,
+            discountQty: discountQty,
+            discountPrice: discountPrice,
+            savings: savings,
+          });
+        }
+      }
+    });
+
+    return discounts;
+  };
+
+  const discounts = getDiscountInfo();
   return (
     <View style={styles.cartSection}>
       <View style={styles.cartHeader}>
@@ -53,7 +103,7 @@ const CartComponent = ({
               <View style={styles.cartItemInfo}>
                 <Text style={styles.cartItemName}>{item.name}</Text>
                 <Text style={styles.cartItemPrice}>
-                  ${item.price.toFixed(2)} each
+                  ₱{item.price.toFixed(2)} each
                 </Text>
               </View>
 
@@ -75,7 +125,7 @@ const CartComponent = ({
                 </View>
 
                 <Text style={styles.cartItemSubtotal}>
-                  ${(item.price * item.quantity).toFixed(2)}
+                  ₱{(item.price * item.quantity).toFixed(2)}
                 </Text>
 
                 <TouchableOpacity
@@ -92,9 +142,27 @@ const CartComponent = ({
 
       {/* Cart Footer */}
       <View style={styles.cartFooter}>
+        {/* Discount Information */}
+        {discounts.length > 0 && (
+          <View style={styles.discountSection}>
+            <Text style={styles.discountTitle}>💰 Bulk Discounts Applied!</Text>
+            {discounts.map((discount, index) => (
+              <View key={index} style={styles.discountItem}>
+                <Text style={styles.discountText}>
+                  {discount.category}: {discount.bulkSets} set(s) of{" "}
+                  {discount.discountQty} @ ₱{discount.discountPrice}
+                </Text>
+                <Text style={styles.savingsText}>
+                  Save: ₱{discount.savings.toFixed(2)}
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
+        
         <View style={styles.totalSection}>
           <Text style={styles.totalLabel}>Total:</Text>
-          <Text style={styles.totalAmount}>${cartTotal.toFixed(2)}</Text>
+          <Text style={styles.totalAmount}>₱{cartTotal.toFixed(2)}</Text>
         </View>
         <TouchableOpacity
           style={[
@@ -241,6 +309,36 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     borderTopWidth: 1,
     borderTopColor: "#333",
+  },
+  discountSection: {
+    backgroundColor: "#2a4a2a",
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 15,
+    borderLeftWidth: 4,
+    borderLeftColor: "#4CAF50",
+  },
+  discountTitle: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#4CAF50",
+    marginBottom: 8,
+  },
+  discountItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  discountText: {
+    fontSize: 12,
+    color: "#fff",
+    flex: 1,
+  },
+  savingsText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#4CAF50",
   },
   totalSection: {
     flexDirection: "row",

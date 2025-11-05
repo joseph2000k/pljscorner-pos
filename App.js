@@ -20,6 +20,7 @@ import {
   deleteProduct,
   updateProduct,
   getAllCategories,
+  getCategoryByName,
   createSale,
   addSaleItem,
   updateProductStock,
@@ -243,14 +244,126 @@ export default function App() {
   };
 
   const calculateCartTotal = () => {
-    return cartItems.reduce(
-      (total, item) => total + item.price * item.quantity,
-      0
-    );
+    // Group items by category
+    const itemsByCategory = {};
+    
+    cartItems.forEach((item) => {
+      const category = item.category || "Uncategorized";
+      if (!itemsByCategory[category]) {
+        itemsByCategory[category] = [];
+      }
+      itemsByCategory[category].push(item);
+    });
+
+    let total = 0;
+
+    // Calculate total for each category, applying bulk discounts
+    Object.keys(itemsByCategory).forEach((categoryName) => {
+      const categoryItems = itemsByCategory[categoryName];
+      
+      // Get category discount info
+      const categoryInfo = getCategoryByName(categoryName);
+      
+      if (
+        categoryInfo &&
+        categoryInfo.bulk_discount_quantity > 0 &&
+        categoryInfo.bulk_discount_price > 0
+      ) {
+        // Calculate total quantity for this category
+        const totalQuantity = categoryItems.reduce(
+          (sum, item) => sum + item.quantity,
+          0
+        );
+
+        const discountQty = categoryInfo.bulk_discount_quantity;
+        const discountPrice = categoryInfo.bulk_discount_price;
+
+        // Calculate how many bulk discounts apply
+        const bulkSets = Math.floor(totalQuantity / discountQty);
+        const remainingItems = totalQuantity % discountQty;
+
+        // Calculate total for this category
+        let categoryTotal = bulkSets * discountPrice;
+
+        // Add remaining items at regular price
+        if (remainingItems > 0) {
+          // Calculate average price for remaining items
+          const totalRegularPrice = categoryItems.reduce(
+            (sum, item) => sum + item.price * item.quantity,
+            0
+          );
+          const avgPrice = totalRegularPrice / totalQuantity;
+          categoryTotal += remainingItems * avgPrice;
+        }
+
+        total += categoryTotal;
+      } else {
+        // No bulk discount, calculate normally
+        const categoryTotal = categoryItems.reduce(
+          (sum, item) => sum + item.price * item.quantity,
+          0
+        );
+        total += categoryTotal;
+      }
+    });
+
+    return total;
   };
 
   const clearCart = () => {
     setCartItems([]);
+  };
+
+  const getDiscountInfo = () => {
+    const itemsByCategory = {};
+    
+    cartItems.forEach((item) => {
+      const category = item.category || "Uncategorized";
+      if (!itemsByCategory[category]) {
+        itemsByCategory[category] = { items: [], totalQty: 0, regularTotal: 0 };
+      }
+      itemsByCategory[category].items.push(item);
+      itemsByCategory[category].totalQty += item.quantity;
+      itemsByCategory[category].regularTotal += item.price * item.quantity;
+    });
+
+    const discounts = [];
+    
+    Object.keys(itemsByCategory).forEach((categoryName) => {
+      const categoryData = itemsByCategory[categoryName];
+      const categoryInfo = getCategoryByName(categoryName);
+      
+      if (
+        categoryInfo &&
+        categoryInfo.bulk_discount_quantity > 0 &&
+        categoryInfo.bulk_discount_price > 0
+      ) {
+        const totalQty = categoryData.totalQty;
+        const discountQty = categoryInfo.bulk_discount_quantity;
+        const discountPrice = categoryInfo.bulk_discount_price;
+        
+        if (totalQty >= discountQty) {
+          const bulkSets = Math.floor(totalQty / discountQty);
+          const remainingQty = totalQty % discountQty;
+          
+          // Calculate savings
+          const avgPrice = categoryData.regularTotal / totalQty;
+          const discountedTotal = bulkSets * discountPrice + remainingQty * avgPrice;
+          const savings = categoryData.regularTotal - discountedTotal;
+          
+          discounts.push({
+            category: categoryName,
+            quantity: totalQty,
+            bulkSets: bulkSets,
+            discountQty: discountQty,
+            discountPrice: discountPrice,
+            savings: savings,
+          });
+        }
+      }
+    });
+
+    return discounts;
   };
 
   const handleCheckout = () => {
@@ -267,6 +380,14 @@ export default function App() {
     change = 0
   ) => {
     const totalAmount = calculateCartTotal();
+    const discounts = getDiscountInfo();
+
+    // Calculate subtotal (before discounts)
+    const subtotal = cartItems.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+    const totalSavings = discounts.reduce((sum, d) => sum + d.savings, 0);
 
     // Create sale record
     const saleResult = createSale(totalAmount, paymentMethod);
@@ -293,6 +414,9 @@ export default function App() {
       const receipt = {
         saleId,
         items: [...cartItems],
+        subtotal,
+        discounts: discounts.length > 0 ? discounts : null,
+        totalSavings,
         totalAmount,
         paymentMethod,
         amountPaid: paymentMethod === "cash" ? amountPaid : totalAmount,
@@ -624,6 +748,7 @@ export default function App() {
   // POS Screen with Cart
   else if (currentScreen === "pos") {
     const cartTotal = calculateCartTotal();
+    const discounts = getDiscountInfo();
 
     screenContent = (
       <View style={styles.container}>
@@ -682,7 +807,7 @@ export default function App() {
                     <View style={styles.cartItemInfo}>
                       <Text style={styles.cartItemName}>{item.name}</Text>
                       <Text style={styles.cartItemPrice}>
-                        ${item.price.toFixed(2)} each
+                        ₱{item.price.toFixed(2)} each
                       </Text>
                     </View>
 
@@ -708,7 +833,7 @@ export default function App() {
                       </View>
 
                       <Text style={styles.cartItemSubtotal}>
-                        ${(item.price * item.quantity).toFixed(2)}
+                        ₱{(item.price * item.quantity).toFixed(2)}
                       </Text>
 
                       <TouchableOpacity
@@ -726,9 +851,27 @@ export default function App() {
 
           {/* Cart Total and Checkout */}
           <View style={styles.cartFooter}>
+            {/* Discount Information */}
+            {discounts.length > 0 && (
+              <View style={styles.discountSection}>
+                <Text style={styles.discountTitle}>💰 Bulk Discounts Applied!</Text>
+                {discounts.map((discount, index) => (
+                  <View key={index} style={styles.discountItem}>
+                    <Text style={styles.discountText}>
+                      {discount.category}: {discount.bulkSets} set(s) of{" "}
+                      {discount.discountQty} @ ₱{discount.discountPrice}
+                    </Text>
+                    <Text style={styles.savingsText}>
+                      Save: ₱{discount.savings.toFixed(2)}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
+            
             <View style={styles.totalSection}>
               <Text style={styles.totalLabel}>Total:</Text>
-              <Text style={styles.totalAmount}>${cartTotal.toFixed(2)}</Text>
+              <Text style={styles.totalAmount}>₱{cartTotal.toFixed(2)}</Text>
             </View>
             <TouchableOpacity
               style={[
@@ -1519,6 +1662,36 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     borderTopWidth: 1,
     borderTopColor: "#333",
+  },
+  discountSection: {
+    backgroundColor: "#2a4a2a",
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 15,
+    borderLeftWidth: 4,
+    borderLeftColor: "#4CAF50",
+  },
+  discountTitle: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#4CAF50",
+    marginBottom: 8,
+  },
+  discountItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  discountText: {
+    fontSize: 12,
+    color: "#fff",
+    flex: 1,
+  },
+  savingsText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#4CAF50",
   },
   totalSection: {
     flexDirection: "row",

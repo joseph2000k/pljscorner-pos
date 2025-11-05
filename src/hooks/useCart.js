@@ -4,6 +4,7 @@ import {
   createSale,
   addSaleItem,
   updateProductStock,
+  getCategoryByName,
 } from "../services/database";
 
 export const useCart = (onCheckoutComplete) => {
@@ -81,10 +82,71 @@ export const useCart = (onCheckoutComplete) => {
   };
 
   const calculateCartTotal = () => {
-    return cartItems.reduce(
-      (total, item) => total + item.price * item.quantity,
-      0
-    );
+    // Group items by category
+    const itemsByCategory = {};
+    
+    cartItems.forEach((item) => {
+      const category = item.category || "Uncategorized";
+      if (!itemsByCategory[category]) {
+        itemsByCategory[category] = [];
+      }
+      itemsByCategory[category].push(item);
+    });
+
+    let total = 0;
+
+    // Calculate total for each category, applying bulk discounts
+    Object.keys(itemsByCategory).forEach((categoryName) => {
+      const categoryItems = itemsByCategory[categoryName];
+      
+      // Get category discount info
+      const categoryInfo = getCategoryByName(categoryName);
+      
+      if (
+        categoryInfo &&
+        categoryInfo.bulk_discount_quantity > 0 &&
+        categoryInfo.bulk_discount_price > 0
+      ) {
+        // Calculate total quantity for this category
+        const totalQuantity = categoryItems.reduce(
+          (sum, item) => sum + item.quantity,
+          0
+        );
+
+        const discountQty = categoryInfo.bulk_discount_quantity;
+        const discountPrice = categoryInfo.bulk_discount_price;
+
+        // Calculate how many bulk discounts apply
+        const bulkSets = Math.floor(totalQuantity / discountQty);
+        const remainingItems = totalQuantity % discountQty;
+
+        // Calculate total for this category
+        let categoryTotal = bulkSets * discountPrice;
+
+        // Add remaining items at regular price
+        if (remainingItems > 0) {
+          // Calculate regular price for remaining items
+          let remainingQty = remainingItems;
+          for (const item of categoryItems) {
+            if (remainingQty <= 0) break;
+            const itemQtyToCharge = Math.min(item.quantity, remainingQty);
+            categoryTotal += item.price * itemQtyToCharge;
+            remainingQty -= itemQtyToCharge;
+          }
+        }
+
+        total += categoryTotal;
+      } else {
+        // No bulk discount, calculate normally
+        const categoryTotal = categoryItems.reduce(
+          (sum, item) => sum + item.price * item.quantity,
+          0
+        );
+        total += categoryTotal;
+      }
+    });
+
+    return total;
   };
 
   const clearCart = () => {

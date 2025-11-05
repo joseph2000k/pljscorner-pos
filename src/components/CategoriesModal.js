@@ -15,6 +15,8 @@ const CategoriesModal = ({ visible, onClose, onCategoryAdded }) => {
   const [categories, setCategories] = useState([]);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryDescription, setNewCategoryDescription] = useState("");
+  const [bulkDiscountQuantity, setBulkDiscountQuantity] = useState("");
+  const [bulkDiscountPrice, setBulkDiscountPrice] = useState("");
   const [isAddingCategory, setIsAddingCategory] = useState(false);
 
   useEffect(() => {
@@ -34,15 +36,36 @@ const CategoriesModal = ({ visible, onClose, onCategoryAdded }) => {
       return;
     }
 
+    // Validate discount fields
+    const quantity = parseInt(bulkDiscountQuantity) || 0;
+    const price = parseFloat(bulkDiscountPrice) || 0;
+
+    if (quantity < 0 || price < 0) {
+      Alert.alert("Error", "Discount values cannot be negative");
+      return;
+    }
+
+    if ((quantity > 0 && price === 0) || (quantity === 0 && price > 0)) {
+      Alert.alert(
+        "Error",
+        "Please enter both quantity and price for bulk discount, or leave both empty"
+      );
+      return;
+    }
+
     const result = addCategory(
       newCategoryName.trim(),
-      newCategoryDescription.trim()
+      newCategoryDescription.trim(),
+      quantity,
+      price
     );
 
     if (result.success) {
       Alert.alert("Success", "Category added successfully");
       setNewCategoryName("");
       setNewCategoryDescription("");
+      setBulkDiscountQuantity("");
+      setBulkDiscountPrice("");
       setIsAddingCategory(false);
       loadCategories();
 
@@ -63,6 +86,8 @@ const CategoriesModal = ({ visible, onClose, onCategoryAdded }) => {
     setIsAddingCategory(false);
     setNewCategoryName("");
     setNewCategoryDescription("");
+    setBulkDiscountQuantity("");
+    setBulkDiscountPrice("");
     onClose();
   };
 
@@ -118,6 +143,55 @@ const CategoriesModal = ({ visible, onClose, onCategoryAdded }) => {
                 />
               </View>
 
+              {/* Bulk Discount Section */}
+              <View style={styles.discountSection}>
+                <Text style={styles.discountSectionTitle}>
+                  💰 Bulk Discount (Optional)
+                </Text>
+                <Text style={styles.discountExplanation}>
+                  Set a special price when customers buy multiple items from
+                  this category
+                </Text>
+
+                <View style={styles.discountRow}>
+                  <View style={styles.discountInputGroup}>
+                    <Text style={styles.inputLabel}>Quantity</Text>
+                    <TextInput
+                      style={styles.textInput}
+                      value={bulkDiscountQuantity}
+                      onChangeText={setBulkDiscountQuantity}
+                      placeholder="e.g., 3"
+                      placeholderTextColor="#999"
+                      keyboardType="number-pad"
+                    />
+                    <Text style={styles.inputHint}>Items to buy</Text>
+                  </View>
+
+                  <View style={styles.discountInputGroup}>
+                    <Text style={styles.inputLabel}>Total Price</Text>
+                    <TextInput
+                      style={styles.textInput}
+                      value={bulkDiscountPrice}
+                      onChangeText={setBulkDiscountPrice}
+                      placeholder="e.g., 100"
+                      placeholderTextColor="#999"
+                      keyboardType="decimal-pad"
+                    />
+                    <Text style={styles.inputHint}>Discounted price</Text>
+                  </View>
+                </View>
+
+                <View style={styles.discountExample}>
+                  <Text style={styles.discountExampleTitle}>Example:</Text>
+                  <Text style={styles.discountExampleText}>
+                    If item price is ₱35 and you set:{"\n"}
+                    • Quantity: 3{"\n"}
+                    • Total Price: ₱100{"\n"}
+                    Customer pays ₱100 for 3 items (saves ₱5!)
+                  </Text>
+                </View>
+              </View>
+
               <TouchableOpacity
                 style={styles.addButton}
                 onPress={handleAddCategory}
@@ -154,6 +228,15 @@ const CategoriesModal = ({ visible, onClose, onCategoryAdded }) => {
                       <Text style={styles.categoryDescription}>
                         {category.description}
                       </Text>
+                    ) : null}
+                    {category.bulk_discount_quantity > 0 &&
+                    category.bulk_discount_price > 0 ? (
+                      <View style={styles.discountBadge}>
+                        <Text style={styles.discountBadgeText}>
+                          💰 Buy {category.bulk_discount_quantity} for ₱
+                          {category.bulk_discount_price}
+                        </Text>
+                      </View>
                     ) : null}
                     <Text style={styles.categoryDate}>
                       Added:{" "}
@@ -306,6 +389,19 @@ const styles = StyleSheet.create({
     color: "#666",
     marginBottom: 4,
   },
+  discountBadge: {
+    backgroundColor: "#4CAF50",
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginBottom: 4,
+    alignSelf: "flex-start",
+  },
+  discountBadgeText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
+  },
   categoryDate: {
     fontSize: 12,
     color: "#999",
@@ -324,6 +420,57 @@ const styles = StyleSheet.create({
   emptyStateSubtext: {
     fontSize: 14,
     color: "#999",
+  },
+  discountSection: {
+    backgroundColor: "#f0f8ff",
+    borderRadius: 8,
+    padding: 15,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: "#007AFF20",
+  },
+  discountSectionTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#007AFF",
+    marginBottom: 5,
+  },
+  discountExplanation: {
+    fontSize: 13,
+    color: "#666",
+    marginBottom: 15,
+    lineHeight: 18,
+  },
+  discountRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 15,
+  },
+  discountInputGroup: {
+    flex: 1,
+  },
+  inputHint: {
+    fontSize: 11,
+    color: "#999",
+    marginTop: 4,
+  },
+  discountExample: {
+    backgroundColor: "#fff",
+    borderRadius: 6,
+    padding: 10,
+    borderLeftWidth: 3,
+    borderLeftColor: "#4CAF50",
+  },
+  discountExampleTitle: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 5,
+  },
+  discountExampleText: {
+    fontSize: 12,
+    color: "#666",
+    lineHeight: 18,
   },
 });
 

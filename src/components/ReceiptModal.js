@@ -73,12 +73,12 @@ const ReceiptModal = ({ visible, onClose, receipt }) => {
                   <View style={styles.itemHeader}>
                     <Text style={styles.itemName}>{item.name}</Text>
                     <Text style={styles.itemTotal}>
-                      ${(item.price * item.quantity).toFixed(2)}
+                      ₱{(item.price * item.quantity).toFixed(2)}
                     </Text>
                   </View>
                   <View style={styles.itemDetails}>
                     <Text style={styles.itemDetailText}>
-                      {item.quantity} x ${item.price.toFixed(2)}
+                      {item.quantity} x ₱{item.price.toFixed(2)}
                     </Text>
                   </View>
                 </View>
@@ -92,14 +92,47 @@ const ReceiptModal = ({ visible, onClose, receipt }) => {
               <View style={styles.totalRow}>
                 <Text style={styles.totalLabel}>Subtotal:</Text>
                 <Text style={styles.totalValue}>
-                  ${receipt.totalAmount.toFixed(2)}
+                  ₱{(receipt.subtotal || receipt.totalAmount).toFixed(2)}
                 </Text>
               </View>
+
+              {/* Bulk Discounts */}
+              {receipt.discounts && receipt.discounts.length > 0 && (
+                <>
+                  <View style={styles.discountHeader}>
+                    <Text style={styles.discountHeaderText}>
+                      💰 Bulk Discounts Applied
+                    </Text>
+                  </View>
+                  {receipt.discounts.map((discount, index) => (
+                    <View key={index} style={styles.discountRow}>
+                      <Text style={styles.discountText}>
+                        {discount.category} ({discount.bulkSets} set
+                        {discount.bulkSets > 1 ? "s" : ""} of{" "}
+                        {discount.discountQty})
+                      </Text>
+                      <Text style={styles.discountValue}>
+                        -₱{discount.savings.toFixed(2)}
+                      </Text>
+                    </View>
+                  ))}
+                  {receipt.totalSavings > 0 && (
+                    <View style={styles.totalSavingsRow}>
+                      <Text style={styles.totalSavingsLabel}>
+                        Total Savings:
+                      </Text>
+                      <Text style={styles.totalSavingsValue}>
+                        -₱{receipt.totalSavings.toFixed(2)}
+                      </Text>
+                    </View>
+                  )}
+                </>
+              )}
 
               <View style={[styles.totalRow, styles.grandTotal]}>
                 <Text style={styles.grandTotalLabel}>TOTAL:</Text>
                 <Text style={styles.grandTotalValue}>
-                  ${receipt.totalAmount.toFixed(2)}
+                  ₱{receipt.totalAmount.toFixed(2)}
                 </Text>
               </View>
 
@@ -108,13 +141,13 @@ const ReceiptModal = ({ visible, onClose, receipt }) => {
                   <View style={styles.totalRow}>
                     <Text style={styles.totalLabel}>Amount Paid:</Text>
                     <Text style={styles.totalValue}>
-                      ${receipt.amountPaid.toFixed(2)}
+                      ₱{receipt.amountPaid.toFixed(2)}
                     </Text>
                   </View>
                   <View style={styles.totalRow}>
                     <Text style={styles.totalLabel}>Change:</Text>
                     <Text style={styles.changeValue}>
-                      ${receipt.change.toFixed(2)}
+                      ₱{receipt.change.toFixed(2)}
                     </Text>
                   </View>
                 </>
@@ -282,6 +315,57 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "600",
     color: "#333",
+  },
+  discountHeader: {
+    backgroundColor: "#f0f8f0",
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: 6,
+    marginTop: 10,
+    marginBottom: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: "#4CAF50",
+  },
+  discountHeaderText: {
+    fontSize: 13,
+    fontWeight: "bold",
+    color: "#4CAF50",
+  },
+  discountRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 5,
+    paddingLeft: 10,
+  },
+  discountText: {
+    fontSize: 13,
+    color: "#666",
+    flex: 1,
+  },
+  discountValue: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#4CAF50",
+  },
+  totalSavingsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 8,
+    paddingTop: 8,
+    paddingLeft: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#e0e0e0",
+    marginBottom: 5,
+  },
+  totalSavingsLabel: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#4CAF50",
+  },
+  totalSavingsValue: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#4CAF50",
   },
   grandTotal: {
     marginTop: 8,

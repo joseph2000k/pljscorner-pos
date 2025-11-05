@@ -8,7 +8,7 @@ import {
   StyleSheet,
   RefreshControl,
 } from "react-native";
-import { getAllSales, getSaleDetails } from "../services/database";
+import { getAllSales, getSaleDetails, getCategoryByName } from "../services/database";
 import ReceiptModal from "./ReceiptModal";
 
 const ReceiptHistoryModal = ({ visible, onClose }) => {
@@ -45,6 +45,59 @@ const ReceiptHistoryModal = ({ visible, onClose }) => {
     });
   };
 
+  const calculateDiscountsForItems = (items) => {
+    // Group items by category
+    const itemsByCategory = {};
+    
+    items.forEach((item) => {
+      const category = item.category || "Uncategorized";
+      if (!itemsByCategory[category]) {
+        itemsByCategory[category] = { items: [], totalQty: 0, regularTotal: 0 };
+      }
+      itemsByCategory[category].items.push(item);
+      itemsByCategory[category].totalQty += item.quantity;
+      itemsByCategory[category].regularTotal += item.unit_price * item.quantity;
+    });
+
+    const discounts = [];
+    
+    Object.keys(itemsByCategory).forEach((categoryName) => {
+      const categoryData = itemsByCategory[categoryName];
+      const categoryInfo = getCategoryByName(categoryName);
+      
+      if (
+        categoryInfo &&
+        categoryInfo.bulk_discount_quantity > 0 &&
+        categoryInfo.bulk_discount_price > 0
+      ) {
+        const totalQty = categoryData.totalQty;
+        const discountQty = categoryInfo.bulk_discount_quantity;
+        const discountPrice = categoryInfo.bulk_discount_price;
+        
+        if (totalQty >= discountQty) {
+          const bulkSets = Math.floor(totalQty / discountQty);
+          const remainingQty = totalQty % discountQty;
+          
+          // Calculate savings
+          const avgPrice = categoryData.regularTotal / totalQty;
+          const discountedTotal = bulkSets * discountPrice + remainingQty * avgPrice;
+          const savings = categoryData.regularTotal - discountedTotal;
+          
+          discounts.push({
+            category: categoryName,
+            quantity: totalQty,
+            bulkSets: bulkSets,
+            discountQty: discountQty,
+            discountPrice: discountPrice,
+            savings: savings,
+          });
+        }
+      }
+    });
+
+    return discounts;
+  };
+
   const handleViewReceipt = (sale) => {
     // Get full sale details with items
     const { sale: saleDetail, items } = getSaleDetails(sale.id);
@@ -52,6 +105,16 @@ const ReceiptHistoryModal = ({ visible, onClose }) => {
     if (!saleDetail) {
       return;
     }
+
+    // Calculate discounts based on items
+    const discounts = calculateDiscountsForItems(items);
+    
+    // Calculate subtotal (before discounts)
+    const subtotal = items.reduce(
+      (sum, item) => sum + item.unit_price * item.quantity,
+      0
+    );
+    const totalSavings = discounts.reduce((sum, d) => sum + d.savings, 0);
 
     // Convert sale data to receipt format
     const receipt = {
@@ -61,7 +124,11 @@ const ReceiptHistoryModal = ({ visible, onClose }) => {
         name: item.product_name,
         quantity: item.quantity,
         price: item.unit_price,
+        category: item.category,
       })),
+      subtotal,
+      discounts: discounts.length > 0 ? discounts : null,
+      totalSavings,
       totalAmount: saleDetail.total_amount,
       paymentMethod: saleDetail.payment_method,
       amountPaid: saleDetail.total_amount,

@@ -52,9 +52,28 @@ export const initializeDatabase = () => {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT UNIQUE NOT NULL,
         description TEXT,
+        bulk_discount_quantity INTEGER DEFAULT 0,
+        bulk_discount_price REAL DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
     `);
+
+    // Add discount columns to existing categories table if they don't exist
+    try {
+      db.execSync(`
+        ALTER TABLE categories ADD COLUMN bulk_discount_quantity INTEGER DEFAULT 0;
+      `);
+    } catch (error) {
+      // Column already exists, ignore error
+    }
+
+    try {
+      db.execSync(`
+        ALTER TABLE categories ADD COLUMN bulk_discount_price REAL DEFAULT 0;
+      `);
+    } catch (error) {
+      // Column already exists, ignore error
+    }
 
     console.log("Database initialized successfully");
 
@@ -252,7 +271,7 @@ export const getSaleDetails = (saleId) => {
     const sale = db.getFirstSync("SELECT * FROM sales WHERE id = ?", [saleId]);
     const items = db.getAllSync(
       `
-      SELECT si.*, p.name as product_name, p.barcode
+      SELECT si.*, p.name as product_name, p.barcode, p.category
       FROM sale_items si
       JOIN products p ON si.product_id = p.id
       WHERE si.sale_id = ?
@@ -278,11 +297,21 @@ export const getAllCategories = () => {
   }
 };
 
-export const addCategory = (name, description = "") => {
+export const getCategoryByName = (name) => {
+  try {
+    const result = db.getFirstSync("SELECT * FROM categories WHERE name = ?", [name]);
+    return result;
+  } catch (error) {
+    console.error("Error getting category by name:", error);
+    return null;
+  }
+};
+
+export const addCategory = (name, description = "", bulkDiscountQuantity = 0, bulkDiscountPrice = 0) => {
   try {
     const result = db.runSync(
-      "INSERT INTO categories (name, description) VALUES (?, ?)",
-      [name, description]
+      "INSERT INTO categories (name, description, bulk_discount_quantity, bulk_discount_price) VALUES (?, ?, ?, ?)",
+      [name, description, bulkDiscountQuantity, bulkDiscountPrice]
     );
     return { success: true, id: result.lastInsertRowId };
   } catch (error) {
