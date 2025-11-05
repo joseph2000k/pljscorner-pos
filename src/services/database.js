@@ -299,7 +299,9 @@ export const getAllCategories = () => {
 
 export const getCategoryByName = (name) => {
   try {
-    const result = db.getFirstSync("SELECT * FROM categories WHERE name = ?", [name]);
+    const result = db.getFirstSync("SELECT * FROM categories WHERE name = ?", [
+      name,
+    ]);
     return result;
   } catch (error) {
     console.error("Error getting category by name:", error);
@@ -307,7 +309,12 @@ export const getCategoryByName = (name) => {
   }
 };
 
-export const addCategory = (name, description = "", bulkDiscountQuantity = 0, bulkDiscountPrice = 0) => {
+export const addCategory = (
+  name,
+  description = "",
+  bulkDiscountQuantity = 0,
+  bulkDiscountPrice = 0
+) => {
   try {
     const result = db.runSync(
       "INSERT INTO categories (name, description, bulk_discount_quantity, bulk_discount_price) VALUES (?, ?, ?, ?)",

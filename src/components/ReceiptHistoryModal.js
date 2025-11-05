@@ -8,7 +8,11 @@ import {
   StyleSheet,
   RefreshControl,
 } from "react-native";
-import { getAllSales, getSaleDetails, getCategoryByName } from "../services/database";
+import {
+  getAllSales,
+  getSaleDetails,
+  getCategoryByName,
+} from "../services/database";
 import ReceiptModal from "./ReceiptModal";
 
 const ReceiptHistoryModal = ({ visible, onClose }) => {
@@ -48,7 +52,7 @@ const ReceiptHistoryModal = ({ visible, onClose }) => {
   const calculateDiscountsForItems = (items) => {
     // Group items by category
     const itemsByCategory = {};
-    
+
     items.forEach((item) => {
       const category = item.category || "Uncategorized";
       if (!itemsByCategory[category]) {
@@ -60,11 +64,11 @@ const ReceiptHistoryModal = ({ visible, onClose }) => {
     });
 
     const discounts = [];
-    
+
     Object.keys(itemsByCategory).forEach((categoryName) => {
       const categoryData = itemsByCategory[categoryName];
       const categoryInfo = getCategoryByName(categoryName);
-      
+
       if (
         categoryInfo &&
         categoryInfo.bulk_discount_quantity > 0 &&
@@ -73,16 +77,17 @@ const ReceiptHistoryModal = ({ visible, onClose }) => {
         const totalQty = categoryData.totalQty;
         const discountQty = categoryInfo.bulk_discount_quantity;
         const discountPrice = categoryInfo.bulk_discount_price;
-        
+
         if (totalQty >= discountQty) {
           const bulkSets = Math.floor(totalQty / discountQty);
           const remainingQty = totalQty % discountQty;
-          
+
           // Calculate savings
           const avgPrice = categoryData.regularTotal / totalQty;
-          const discountedTotal = bulkSets * discountPrice + remainingQty * avgPrice;
+          const discountedTotal =
+            bulkSets * discountPrice + remainingQty * avgPrice;
           const savings = categoryData.regularTotal - discountedTotal;
-          
+
           discounts.push({
             category: categoryName,
             quantity: totalQty,
@@ -108,7 +113,7 @@ const ReceiptHistoryModal = ({ visible, onClose }) => {
 
     // Calculate discounts based on items
     const discounts = calculateDiscountsForItems(items);
-    
+
     // Calculate subtotal (before discounts)
     const subtotal = items.reduce(
       (sum, item) => sum + item.unit_price * item.quantity,

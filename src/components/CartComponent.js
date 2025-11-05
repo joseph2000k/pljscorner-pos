@@ -20,7 +20,7 @@ const CartComponent = ({
   // Calculate discount info
   const getDiscountInfo = () => {
     const itemsByCategory = {};
-    
+
     cartItems.forEach((item) => {
       const category = item.category || "Uncategorized";
       if (!itemsByCategory[category]) {
@@ -32,11 +32,11 @@ const CartComponent = ({
     });
 
     const discounts = [];
-    
+
     Object.keys(itemsByCategory).forEach((categoryName) => {
       const categoryData = itemsByCategory[categoryName];
       const categoryInfo = getCategoryByName(categoryName);
-      
+
       if (
         categoryInfo &&
         categoryInfo.bulk_discount_quantity > 0 &&
@@ -45,11 +45,15 @@ const CartComponent = ({
         const totalQty = categoryData.totalQty;
         const discountQty = categoryInfo.bulk_discount_quantity;
         const discountPrice = categoryInfo.bulk_discount_price;
-        
+
         if (totalQty >= discountQty) {
           const bulkSets = Math.floor(totalQty / discountQty);
-          const savings = (categoryData.regularTotal) - (bulkSets * discountPrice + (totalQty % discountQty) * (categoryData.regularTotal / totalQty));
-          
+          const savings =
+            categoryData.regularTotal -
+            (bulkSets * discountPrice +
+              (totalQty % discountQty) *
+                (categoryData.regularTotal / totalQty));
+
           discounts.push({
             category: categoryName,
             quantity: totalQty,
@@ -159,7 +163,7 @@ const CartComponent = ({
             ))}
           </View>
         )}
-        
+
         <View style={styles.totalSection}>
           <Text style={styles.totalLabel}>Total:</Text>
           <Text style={styles.totalAmount}>₱{cartTotal.toFixed(2)}</Text>

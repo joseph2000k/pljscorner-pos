@@ -184,9 +184,8 @@ const CategoriesModal = ({ visible, onClose, onCategoryAdded }) => {
                 <View style={styles.discountExample}>
                   <Text style={styles.discountExampleTitle}>Example:</Text>
                   <Text style={styles.discountExampleText}>
-                    If item price is ₱35 and you set:{"\n"}
-                    • Quantity: 3{"\n"}
-                    • Total Price: ₱100{"\n"}
+                    If item price is ₱35 and you set:{"\n"}• Quantity: 3{"\n"}•
+                    Total Price: ₱100{"\n"}
                     Customer pays ₱100 for 3 items (saves ₱5!)
                   </Text>
                 </View>

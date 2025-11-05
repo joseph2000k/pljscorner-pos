@@ -246,7 +246,7 @@ export default function App() {
   const calculateCartTotal = () => {
     // Group items by category
     const itemsByCategory = {};
-    
+
     cartItems.forEach((item) => {
       const category = item.category || "Uncategorized";
       if (!itemsByCategory[category]) {
@@ -260,10 +260,10 @@ export default function App() {
     // Calculate total for each category, applying bulk discounts
     Object.keys(itemsByCategory).forEach((categoryName) => {
       const categoryItems = itemsByCategory[categoryName];
-      
+
       // Get category discount info
       const categoryInfo = getCategoryByName(categoryName);
-      
+
       if (
         categoryInfo &&
         categoryInfo.bulk_discount_quantity > 0 &&
@@ -316,7 +316,7 @@ export default function App() {
 
   const getDiscountInfo = () => {
     const itemsByCategory = {};
-    
+
     cartItems.forEach((item) => {
       const category = item.category || "Uncategorized";
       if (!itemsByCategory[category]) {
@@ -328,11 +328,11 @@ export default function App() {
     });
 
     const discounts = [];
-    
+
     Object.keys(itemsByCategory).forEach((categoryName) => {
       const categoryData = itemsByCategory[categoryName];
       const categoryInfo = getCategoryByName(categoryName);
-      
+
       if (
         categoryInfo &&
         categoryInfo.bulk_discount_quantity > 0 &&
@@ -341,16 +341,17 @@ export default function App() {
         const totalQty = categoryData.totalQty;
         const discountQty = categoryInfo.bulk_discount_quantity;
         const discountPrice = categoryInfo.bulk_discount_price;
-        
+
         if (totalQty >= discountQty) {
           const bulkSets = Math.floor(totalQty / discountQty);
           const remainingQty = totalQty % discountQty;
-          
+
           // Calculate savings
           const avgPrice = categoryData.regularTotal / totalQty;
-          const discountedTotal = bulkSets * discountPrice + remainingQty * avgPrice;
+          const discountedTotal =
+            bulkSets * discountPrice + remainingQty * avgPrice;
           const savings = categoryData.regularTotal - discountedTotal;
-          
+
           discounts.push({
             category: categoryName,
             quantity: totalQty,
@@ -854,7 +855,9 @@ export default function App() {
             {/* Discount Information */}
             {discounts.length > 0 && (
               <View style={styles.discountSection}>
-                <Text style={styles.discountTitle}>💰 Bulk Discounts Applied!</Text>
+                <Text style={styles.discountTitle}>
+                  💰 Bulk Discounts Applied!
+                </Text>
                 {discounts.map((discount, index) => (
                   <View key={index} style={styles.discountItem}>
                     <Text style={styles.discountText}>
@@ -868,7 +871,7 @@ export default function App() {
                 ))}
               </View>
             )}
-            
+
             <View style={styles.totalSection}>
               <Text style={styles.totalLabel}>Total:</Text>
               <Text style={styles.totalAmount}>₱{cartTotal.toFixed(2)}</Text>

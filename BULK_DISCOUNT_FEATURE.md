@@ -1,6 +1,7 @@
 # Bulk Discount Feature Documentation
 
 ## Overview
+
 The bulk discount feature allows you to set special pricing when customers buy multiple items from the same category. This encourages bulk purchases and provides automatic discounts at checkout.
 
 ## How It Works
@@ -8,6 +9,7 @@ The bulk discount feature allows you to set special pricing when customers buy m
 ### Setting Up Bulk Discounts
 
 1. **Navigate to Categories**
+
    - From home screen, tap "🏷️ Categories"
    - Tap "New" to add a category
 
@@ -21,12 +23,14 @@ The bulk discount feature allows you to set special pricing when customers buy m
 ### Example Scenario
 
 **Setup:**
+
 - Category: "Sticker Sheets"
 - Regular item price: ₱35 each
 - Bulk discount quantity: 3
 - Bulk discount price: ₱100
 
 **Customer Purchase:**
+
 - Customer buys 3 sticker sheets
 - Regular price would be: 3 × ₱35 = ₱105
 - With bulk discount: ₱100
@@ -42,11 +46,13 @@ The bulk discount feature allows you to set special pricing when customers buy m
 ### Advanced Example
 
 **Setup:**
+
 - Category: "Notebooks"
 - Regular price: ₱25 each
 - Bulk: Buy 5 for ₱100
 
 **Customer buys 12 notebooks:**
+
 - 2 complete sets: 2 × 5 = 10 notebooks @ ₱100 per set = ₱200
 - Remaining 2 notebooks: 2 × ₱25 = ₱50
 - **Total: ₱250** (instead of ₱300)
@@ -55,6 +61,7 @@ The bulk discount feature allows you to set special pricing when customers buy m
 ## Features
 
 ### In Categories Modal
+
 ✅ Easy-to-use discount input fields
 ✅ Real-time validation
 ✅ Example calculation shown
@@ -62,6 +69,7 @@ The bulk discount feature allows you to set special pricing when customers buy m
 ✅ Clear explanations of how it works
 
 ### In Cart/Checkout
+
 ✅ Automatic discount calculation
 ✅ Shows applied bulk discounts
 ✅ Displays savings amount
@@ -69,7 +77,9 @@ The bulk discount feature allows you to set special pricing when customers buy m
 ✅ Itemized in receipts
 
 ### Discount Display
+
 When bulk discounts are active, the cart shows:
+
 ```
 💰 Bulk Discounts Applied!
 Sticker Sheets: 1 set(s) of 3 @ ₱100
@@ -87,6 +97,7 @@ Save: ₱5.00
 ## Database Schema
 
 ### Categories Table (Updated)
+
 ```sql
 CREATE TABLE categories (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -101,15 +112,18 @@ CREATE TABLE categories (
 ## API Functions
 
 ### `addCategory(name, description, bulkDiscountQuantity, bulkDiscountPrice)`
+
 Creates a new category with optional bulk discount.
 
 **Parameters:**
+
 - `name` (string) - Category name (required)
 - `description` (string) - Category description (optional)
 - `bulkDiscountQuantity` (number) - Items needed for discount (default: 0)
 - `bulkDiscountPrice` (number) - Discounted total price (default: 0)
 
 **Returns:**
+
 ```javascript
 { success: true, id: 123 }
 // or
@@ -117,9 +131,11 @@ Creates a new category with optional bulk discount.
 ```
 
 ### `getCategoryByName(name)`
+
 Retrieves category information including discount settings.
 
 **Returns:**
+
 ```javascript
 {
   id: 1,
@@ -145,6 +161,7 @@ The cart total is calculated as follows:
 3. **Sum all categories**
 
 ### Code Example
+
 ```javascript
 // 3 items @ ₱35 each, bulk: 3 for ₱100
 totalQuantity = 3
@@ -157,18 +174,21 @@ categoryTotal = (1 × ₱100) + (0 × ₱35) = ₱100
 ## UI Components Updated
 
 ### 1. CategoriesModal.js
+
 - Added bulk discount input fields
 - Added discount validation
 - Added discount badge on category cards
 - Added example calculation helper
 
 ### 2. CartComponent.js
+
 - Added `getDiscountInfo()` function
 - Added discount display section
 - Shows savings amount
 - Updated to use ₱ symbol
 
 ### 3. useCart.js (hook)
+
 - Updated `calculateCartTotal()` with discount logic
 - Imports `getCategoryByName` from database
 - Handles multiple categories with different discounts
@@ -176,18 +196,21 @@ categoryTotal = (1 × ₱100) + (0 × ₱35) = ₱100
 ## Tips for Using Bulk Discounts
 
 ### Best Practices:
+
 1. **Set realistic quantities** - Make it achievable for customers
 2. **Clear savings** - Ensure discount is noticeable (5-15% off)
 3. **Round numbers** - Use prices like ₱100, ₱500 for easy math
 4. **Test calculations** - Verify discount math before going live
 
 ### Common Use Cases:
+
 - **"Buy 3, Save ₱X"** - Classic bulk pricing
 - **"Half Dozen Deals"** - 6 items at special price
 - **"Dozen Discount"** - 12 items discounted
 - **"Multi-pack Savings"** - Encourage larger purchases
 
 ### Not Recommended:
+
 - Very high quantities (customers won't buy that many)
 - Complex pricing that's hard to calculate mentally
 - Discounts less than 5% (not motivating enough)
@@ -195,16 +218,19 @@ categoryTotal = (1 × ₱100) + (0 × ₱35) = ₱100
 ## Troubleshooting
 
 ### Discount Not Applying?
+
 ✓ Check both quantity AND price are set
 ✓ Ensure products have correct category assigned
 ✓ Verify minimum quantity is met in cart
 
 ### Wrong Calculation?
+
 ✓ Check if products are in same category
 ✓ Verify category discount settings
 ✓ Review console logs for calculation details
 
 ### Can't Save Category?
+
 ✓ Both discount fields must be filled or both empty
 ✓ Values must be positive numbers
 ✓ Category name must be unique
@@ -212,6 +238,7 @@ categoryTotal = (1 × ₱100) + (0 × ₱35) = ₱100
 ## Future Enhancements
 
 Potential improvements:
+
 - 📊 Discount analytics (most popular discounts)
 - ⏰ Time-limited bulk discounts
 - 👥 Customer-specific bulk pricing tiers

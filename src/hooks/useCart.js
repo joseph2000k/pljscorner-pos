@@ -84,7 +84,7 @@ export const useCart = (onCheckoutComplete) => {
   const calculateCartTotal = () => {
     // Group items by category
     const itemsByCategory = {};
-    
+
     cartItems.forEach((item) => {
       const category = item.category || "Uncategorized";
       if (!itemsByCategory[category]) {
@@ -98,10 +98,10 @@ export const useCart = (onCheckoutComplete) => {
     // Calculate total for each category, applying bulk discounts
     Object.keys(itemsByCategory).forEach((categoryName) => {
       const categoryItems = itemsByCategory[categoryName];
-      
+
       // Get category discount info
       const categoryInfo = getCategoryByName(categoryName);
-      
+
       if (
         categoryInfo &&
         categoryInfo.bulk_discount_quantity > 0 &&
