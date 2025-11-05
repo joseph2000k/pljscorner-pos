@@ -7,7 +7,10 @@ import {
   ScrollView,
   TextInput,
   StyleSheet,
+  Image,
+  Alert,
 } from "react-native";
+import * as ImagePicker from "expo-image-picker";
 import { getAllCategories } from "../services/database";
 
 const AddProductModal = ({
@@ -32,6 +35,86 @@ const AddProductModal = ({
     setCategories(allCategories.map((cat) => cat.name));
   };
 
+  const pickImage = async () => {
+    try {
+      // Request permission
+      const permissionResult =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (permissionResult.granted === false) {
+        Alert.alert(
+          "Permission Required",
+          "Please allow access to your photo library to add product images."
+        );
+        return;
+      }
+
+      // Launch image picker
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        onChangeText("imageUri", result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error("Error picking image:", error);
+      Alert.alert("Error", "Failed to pick image. Please try again.");
+    }
+  };
+
+  const takePhoto = async () => {
+    try {
+      // Request permission
+      const permissionResult =
+        await ImagePicker.requestCameraPermissionsAsync();
+
+      if (permissionResult.granted === false) {
+        Alert.alert(
+          "Permission Required",
+          "Please allow access to your camera to take product photos."
+        );
+        return;
+      }
+
+      // Launch camera
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        onChangeText("imageUri", result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error("Error taking photo:", error);
+      Alert.alert("Error", "Failed to take photo. Please try again.");
+    }
+  };
+
+  const removeImage = () => {
+    Alert.alert("Remove Image", "Are you sure you want to remove this image?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Remove",
+        style: "destructive",
+        onPress: () => onChangeText("imageUri", null),
+      },
+    ]);
+  };
+
+  const showImageOptions = () => {
+    Alert.alert("Product Image", "Choose an option", [
+      { text: "Take Photo", onPress: takePhoto },
+      { text: "Choose from Library", onPress: pickImage },
+      { text: "Cancel", style: "cancel" },
+    ]);
+  };
+
   return (
     <Modal
       visible={visible}
@@ -54,6 +137,45 @@ const AddProductModal = ({
         </View>
 
         <ScrollView style={styles.modalContent}>
+          {/* Product Image */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Product Image</Text>
+            {productData?.imageUri ? (
+              <View style={styles.imageContainer}>
+                <Image
+                  source={{ uri: productData.imageUri }}
+                  style={styles.productImage}
+                  resizeMode="cover"
+                />
+                <View style={styles.imageButtonsRow}>
+                  <TouchableOpacity
+                    style={styles.changeImageButton}
+                    onPress={showImageOptions}
+                  >
+                    <Text style={styles.changeImageText}>Change Image</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.removeImageButton}
+                    onPress={removeImage}
+                  >
+                    <Text style={styles.removeImageText}>Remove</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={styles.addImageButton}
+                onPress={showImageOptions}
+              >
+                <Text style={styles.addImageIcon}>📷</Text>
+                <Text style={styles.addImageText}>Add Product Image</Text>
+                <Text style={styles.addImageHint}>
+                  Tap to take photo or choose from library
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Product Name *</Text>
             <TextInput
@@ -257,6 +379,72 @@ const styles = StyleSheet.create({
   },
   categoryChipTextSelected: {
     color: "#fff",
+  },
+  imageContainer: {
+    alignItems: "center",
+  },
+  productImage: {
+    width: "100%",
+    height: 200,
+    borderRadius: 12,
+    backgroundColor: "#f0f0f0",
+    marginBottom: 12,
+  },
+  imageButtonsRow: {
+    flexDirection: "row",
+    gap: 10,
+    width: "100%",
+  },
+  changeImageButton: {
+    flex: 1,
+    backgroundColor: "#007AFF",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  changeImageText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  removeImageButton: {
+    flex: 1,
+    backgroundColor: "#ff4757",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  removeImageText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  addImageButton: {
+    backgroundColor: "#fff",
+    borderWidth: 2,
+    borderColor: "#ddd",
+    borderStyle: "dashed",
+    borderRadius: 12,
+    paddingVertical: 40,
+    paddingHorizontal: 20,
+    alignItems: "center",
+  },
+  addImageIcon: {
+    fontSize: 48,
+    marginBottom: 12,
+  },
+  addImageText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 4,
+  },
+  addImageHint: {
+    fontSize: 12,
+    color: "#999",
+    textAlign: "center",
   },
 });
 

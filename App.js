@@ -9,6 +9,7 @@ import {
   ScrollView,
   TextInput,
   Modal,
+  Image,
 } from "react-native";
 import { CameraView, Camera } from "expo-camera";
 import { Audio } from "expo-av";
@@ -29,6 +30,7 @@ import {
   resetDatabase,
   searchProducts,
 } from "./src/services/database";
+import { saveImage, deleteImage } from "./src/utils/imageStorage";
 import CheckoutModal from "./src/components/CheckoutModal";
 import ReceiptModal from "./src/components/ReceiptModal";
 import ReceiptHistoryModal from "./src/components/ReceiptHistoryModal";
@@ -52,6 +54,7 @@ export default function App() {
     stock: "",
     category: "Food & Beverages",
     description: "",
+    imageUri: null,
   });
 
   // Cart state
@@ -476,6 +479,7 @@ export default function App() {
       stock: "",
       category: "General",
       description: "",
+      imageUri: null,
     });
     setShowAddProductModal(true);
   };
@@ -507,6 +511,7 @@ export default function App() {
       stock: "",
       category: "Food & Beverages",
       description: "",
+      imageUri: null,
     });
     setShowAddProductModal(true);
   };
@@ -529,7 +534,7 @@ export default function App() {
     loadDashboardData();
   };
 
-  const handleAddProduct = () => {
+  const handleAddProduct = async () => {
     if (!newProduct.name || !newProduct.price || !newProduct.barcode) {
       Alert.alert("Error", "Please fill in name, barcode, and price");
       return;
@@ -545,21 +550,54 @@ export default function App() {
       return;
     }
 
-    const result = addProduct(
-      newProduct.name,
-      newProduct.barcode,
-      parseFloat(newProduct.price),
-      parseInt(newProduct.stock) || 0,
-      newProduct.category,
-      newProduct.description
-    );
+    try {
+      // First add the product to get the ID
+      const result = addProduct(
+        newProduct.name,
+        newProduct.barcode,
+        parseFloat(newProduct.price),
+        parseInt(newProduct.stock) || 0,
+        newProduct.category,
+        newProduct.description,
+        null // imageUri will be updated after saving
+      );
 
-    if (result.success) {
-      Alert.alert("Success", "Product added successfully!");
-      closeAddProductModal();
-      loadDashboardData();
-    } else {
-      Alert.alert("Error", "Could not add product: " + result.error);
+      if (result.success) {
+        // If there's an image, save it and update the product
+        if (newProduct.imageUri) {
+          try {
+            const savedImageUri = await saveImage(
+              newProduct.imageUri,
+              result.id
+            );
+            // Update product with image URI
+            await updateProduct(
+              result.id,
+              newProduct.name,
+              newProduct.barcode,
+              parseFloat(newProduct.price),
+              parseInt(newProduct.stock) || 0,
+              newProduct.category,
+              newProduct.description,
+              savedImageUri
+            );
+          } catch (imageError) {
+            console.error("Error saving image:", imageError);
+            Alert.alert(
+              "Warning",
+              "Product added but image could not be saved."
+            );
+          }
+        }
+
+        Alert.alert("Success", "Product added successfully!");
+        closeAddProductModal();
+        loadDashboardData();
+      } else {
+        Alert.alert("Error", "Could not add product: " + result.error);
+      }
+    } catch (error) {
+      Alert.alert("Error", "An error occurred: " + error.message);
     }
   };
 
@@ -572,13 +610,29 @@ export default function App() {
         {
           text: "Delete",
           style: "destructive",
-          onPress: () => {
-            const result = deleteProduct(product.id);
-            if (result.success) {
-              Alert.alert("Success", "Product deleted successfully!");
-              loadDashboardData();
-            } else {
-              Alert.alert("Error", "Could not delete product: " + result.error);
+          onPress: async () => {
+            try {
+              // Delete the image first if it exists
+              if (product.image_uri) {
+                await deleteImage(product.image_uri);
+              }
+
+              const result = deleteProduct(product.id);
+              if (result.success) {
+                Alert.alert("Success", "Product deleted successfully!");
+                loadDashboardData();
+              } else {
+                Alert.alert(
+                  "Error",
+                  "Could not delete product: " + result.error
+                );
+              }
+            } catch (error) {
+              console.error("Error deleting product:", error);
+              Alert.alert(
+                "Error",
+                "An error occurred while deleting the product."
+              );
             }
           },
         },
@@ -595,11 +649,13 @@ export default function App() {
       stock: product.stock_quantity.toString(),
       category: product.category || "Food & Beverages",
       description: product.description || "",
+      imageUri: product.image_uri || null,
+      originalImageUri: product.image_uri || null, // Keep track of original image
     });
     setShowEditProductModal(true);
   };
 
-  const handleUpdateProduct = () => {
+  const handleUpdateProduct = async () => {
     if (
       !editingProduct.name ||
       !editingProduct.price ||
@@ -609,23 +665,61 @@ export default function App() {
       return;
     }
 
-    const result = updateProduct(
-      editingProduct.id,
-      editingProduct.name,
-      editingProduct.barcode,
-      parseFloat(editingProduct.price),
-      parseInt(editingProduct.stock),
-      editingProduct.category,
-      editingProduct.description
-    );
+    try {
+      let finalImageUri = editingProduct.imageUri;
 
-    if (result.success) {
-      Alert.alert("Success", "Product updated successfully!");
-      setShowEditProductModal(false);
-      setEditingProduct(null);
-      loadDashboardData();
-    } else {
-      Alert.alert("Error", "Could not update product: " + result.error);
+      // Handle image changes
+      if (editingProduct.imageUri !== editingProduct.originalImageUri) {
+        // If there's a new image (not from storage)
+        if (
+          editingProduct.imageUri &&
+          !editingProduct.imageUri.includes("product_images")
+        ) {
+          // Save new image
+          finalImageUri = await saveImage(
+            editingProduct.imageUri,
+            editingProduct.id
+          );
+
+          // Delete old image if it exists
+          if (editingProduct.originalImageUri) {
+            await deleteImage(editingProduct.originalImageUri);
+          }
+        } else if (
+          !editingProduct.imageUri &&
+          editingProduct.originalImageUri
+        ) {
+          // Image was removed
+          await deleteImage(editingProduct.originalImageUri);
+          finalImageUri = null;
+        }
+      }
+
+      const result = updateProduct(
+        editingProduct.id,
+        editingProduct.name,
+        editingProduct.barcode,
+        parseFloat(editingProduct.price),
+        parseInt(editingProduct.stock),
+        editingProduct.category,
+        editingProduct.description,
+        finalImageUri
+      );
+
+      if (result.success) {
+        Alert.alert("Success", "Product updated successfully!");
+        setShowEditProductModal(false);
+        setEditingProduct(null);
+        loadDashboardData();
+      } else {
+        Alert.alert("Error", "Could not update product: " + result.error);
+      }
+    } catch (error) {
+      console.error("Error updating product:", error);
+      Alert.alert(
+        "Error",
+        "An error occurred while updating the product: " + error.message
+      );
     }
   };
 
@@ -872,6 +966,13 @@ export default function App() {
                 style={styles.productCard}
                 onPress={() => handleEditProduct(product)}
               >
+                {product.image_uri && (
+                  <Image
+                    source={{ uri: product.image_uri }}
+                    style={styles.productCardImage}
+                    resizeMode="cover"
+                  />
+                )}
                 <View style={styles.productHeader}>
                   <Text style={styles.productCardName}>{product.name}</Text>
                   <Text style={styles.productCardPrice}>₱{product.price}</Text>
@@ -977,6 +1078,13 @@ export default function App() {
                     style={styles.searchResultItem}
                     onPress={() => handleAddFromSearch(product)}
                   >
+                    {product.image_uri && (
+                      <Image
+                        source={{ uri: product.image_uri }}
+                        style={styles.searchResultImage}
+                        resizeMode="cover"
+                      />
+                    )}
                     <View style={styles.searchResultInfo}>
                       <Text style={styles.searchResultName}>
                         {product.name}
@@ -1059,11 +1167,20 @@ export default function App() {
               ) : (
                 cartItems.map((item) => (
                   <View key={item.id} style={styles.cartItem}>
-                    <View style={styles.cartItemInfo}>
-                      <Text style={styles.cartItemName}>{item.name}</Text>
-                      <Text style={styles.cartItemPrice}>
-                        ₱{item.price.toFixed(2)} each
-                      </Text>
+                    <View style={styles.cartItemRow}>
+                      {item.image_uri && (
+                        <Image
+                          source={{ uri: item.image_uri }}
+                          style={styles.cartItemImage}
+                          resizeMode="cover"
+                        />
+                      )}
+                      <View style={styles.cartItemInfo}>
+                        <Text style={styles.cartItemName}>{item.name}</Text>
+                        <Text style={styles.cartItemPrice}>
+                          ₱{item.price.toFixed(2)} each
+                        </Text>
+                      </View>
                     </View>
 
                     <View style={styles.cartItemControls}>
@@ -1572,6 +1689,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#333",
   },
+  productCardImage: {
+    width: "100%",
+    height: 150,
+    borderRadius: 8,
+    marginBottom: 12,
+    backgroundColor: "#2a2a2a",
+  },
   productHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -1891,6 +2015,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#444",
   },
+  searchResultImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    marginRight: 12,
+    backgroundColor: "#1a1a1a",
+  },
   searchResultInfo: {
     flex: 1,
     marginRight: 12,
@@ -2011,8 +2142,20 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 10,
   },
-  cartItemInfo: {
+  cartItemRow: {
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 12,
+  },
+  cartItemImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    marginRight: 12,
+    backgroundColor: "#1a1a1a",
+  },
+  cartItemInfo: {
+    flex: 1,
   },
   cartItemName: {
     fontSize: 16,

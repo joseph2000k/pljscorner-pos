@@ -16,10 +16,20 @@ export const initializeDatabase = () => {
         stock_quantity INTEGER DEFAULT 0,
         category TEXT,
         description TEXT,
+        image_uri TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
     `);
+
+    // Add image_uri column to existing products table if it doesn't exist
+    try {
+      db.execSync(`
+        ALTER TABLE products ADD COLUMN image_uri TEXT;
+      `);
+    } catch (error) {
+      // Column already exists, ignore error
+    }
 
     // Create sales table
     db.execSync(`
@@ -161,12 +171,13 @@ export const addProduct = (
   price,
   stockQuantity,
   category,
-  description = ""
+  description = "",
+  imageUri = null
 ) => {
   try {
     const result = db.runSync(
-      "INSERT INTO products (name, barcode, price, stock_quantity, category, description) VALUES (?, ?, ?, ?, ?, ?)",
-      [name, barcode, price, stockQuantity, category, description]
+      "INSERT INTO products (name, barcode, price, stock_quantity, category, description, image_uri) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [name, barcode, price, stockQuantity, category, description, imageUri]
     );
     return { success: true, id: result.lastInsertRowId };
   } catch (error) {
@@ -414,12 +425,22 @@ export const updateProduct = (
   price,
   stockQuantity,
   category,
-  description = ""
+  description = "",
+  imageUri = null
 ) => {
   try {
     db.runSync(
-      "UPDATE products SET name = ?, barcode = ?, price = ?, stock_quantity = ?, category = ?, description = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-      [name, barcode, price, stockQuantity, category, description, productId]
+      "UPDATE products SET name = ?, barcode = ?, price = ?, stock_quantity = ?, category = ?, description = ?, image_uri = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+      [
+        name,
+        barcode,
+        price,
+        stockQuantity,
+        category,
+        description,
+        imageUri,
+        productId,
+      ]
     );
     return { success: true };
   } catch (error) {
