@@ -27,6 +27,7 @@ import {
   addSaleItem,
   updateProductStock,
   resetDatabase,
+  searchProducts,
 } from "./src/services/database";
 import CheckoutModal from "./src/components/CheckoutModal";
 import ReceiptModal from "./src/components/ReceiptModal";
@@ -66,6 +67,9 @@ export default function App() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [showEditProductModal, setShowEditProductModal] = useState(false);
   const [resetTapCount, setResetTapCount] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
 
   useEffect(() => {
     // Initialize database on app start
@@ -673,6 +677,33 @@ export default function App() {
     }
   };
 
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+
+    if (query.trim().length > 0) {
+      const results = searchProducts(query);
+      setSearchResults(results);
+      setShowSearchResults(true);
+    } else {
+      setSearchResults([]);
+      setShowSearchResults(false);
+    }
+  };
+
+  const handleAddFromSearch = (product) => {
+    // Check stock availability
+    if (product.stock_quantity <= 0) {
+      Alert.alert("Out of Stock", `${product.name} is currently out of stock.`);
+      return;
+    }
+
+    addToCart(product);
+    // Clear search after adding
+    setSearchQuery("");
+    setSearchResults([]);
+    setShowSearchResults(false);
+  };
+
   // Render different screens
   let screenContent;
 
@@ -912,6 +943,84 @@ export default function App() {
             <Text style={styles.scanButtonLargeText}>📷 Scan Product</Text>
           </TouchableOpacity>
 
+          {/* Search Bar */}
+          <View style={styles.searchContainer}>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search products by name, barcode, or category..."
+              placeholderTextColor="#888"
+              value={searchQuery}
+              onChangeText={handleSearch}
+              autoCorrect={false}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity
+                style={styles.clearSearchButton}
+                onPress={() => {
+                  setSearchQuery("");
+                  setSearchResults([]);
+                  setShowSearchResults(false);
+                }}
+              >
+                <Text style={styles.clearSearchText}>✕</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Search Results */}
+          {showSearchResults && searchResults.length > 0 && (
+            <View style={styles.searchResultsContainer}>
+              <ScrollView style={styles.searchResultsList}>
+                {searchResults.map((product) => (
+                  <TouchableOpacity
+                    key={product.id}
+                    style={styles.searchResultItem}
+                    onPress={() => handleAddFromSearch(product)}
+                  >
+                    <View style={styles.searchResultInfo}>
+                      <Text style={styles.searchResultName}>
+                        {product.name}
+                      </Text>
+                      <Text style={styles.searchResultCategory}>
+                        {product.category}
+                      </Text>
+                      <Text style={styles.searchResultBarcode}>
+                        Barcode: {product.barcode}
+                      </Text>
+                    </View>
+                    <View style={styles.searchResultPricing}>
+                      <Text style={styles.searchResultPrice}>
+                        ₱{product.price.toFixed(2)}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.searchResultStock,
+                          product.stock_quantity < 10 &&
+                            styles.searchResultStockLow,
+                        ]}
+                      >
+                        Stock: {product.stock_quantity}
+                      </Text>
+                      <Text style={styles.addToCartHint}>Tap to add</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+
+          {/* No Results Message */}
+          {showSearchResults &&
+            searchResults.length === 0 &&
+            searchQuery.length > 0 && (
+              <View style={styles.noResultsContainer}>
+                <Text style={styles.noResultsText}>No products found</Text>
+                <Text style={styles.noResultsSubtext}>
+                  Try a different search term
+                </Text>
+              </View>
+            )}
+
           {/* Cart Section */}
           <View style={styles.cartSection}>
             <View style={styles.cartHeader}>
@@ -944,7 +1053,7 @@ export default function App() {
                 <View style={styles.emptyCart}>
                   <Text style={styles.emptyCartText}>Cart is empty</Text>
                   <Text style={styles.emptyCartSubtext}>
-                    Scan products to add them to cart
+                    Scan or search for products to add them to cart
                   </Text>
                 </View>
               ) : (
@@ -1732,6 +1841,116 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 20,
     fontWeight: "bold",
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginHorizontal: 15,
+    marginBottom: 10,
+    backgroundColor: "#1a1a1a",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#333",
+    paddingHorizontal: 15,
+  },
+  searchInput: {
+    flex: 1,
+    color: "#fff",
+    fontSize: 16,
+    paddingVertical: 12,
+  },
+  clearSearchButton: {
+    padding: 8,
+  },
+  clearSearchText: {
+    color: "#888",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  searchResultsContainer: {
+    maxHeight: 250,
+    marginHorizontal: 15,
+    marginBottom: 10,
+    backgroundColor: "#1a1a1a",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#333",
+    overflow: "hidden",
+  },
+  searchResultsList: {
+    padding: 10,
+  },
+  searchResultItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#2a2a2a",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: "#444",
+  },
+  searchResultInfo: {
+    flex: 1,
+    marginRight: 12,
+  },
+  searchResultName: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#fff",
+    marginBottom: 4,
+  },
+  searchResultCategory: {
+    fontSize: 12,
+    color: "#888",
+    marginBottom: 2,
+  },
+  searchResultBarcode: {
+    fontSize: 11,
+    color: "#666",
+  },
+  searchResultPricing: {
+    alignItems: "flex-end",
+  },
+  searchResultPrice: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#4CAF50",
+    marginBottom: 4,
+  },
+  searchResultStock: {
+    fontSize: 12,
+    color: "#888",
+    marginBottom: 2,
+  },
+  searchResultStockLow: {
+    color: "#ff4757",
+  },
+  addToCartHint: {
+    fontSize: 10,
+    color: "#007AFF",
+    fontStyle: "italic",
+  },
+  noResultsContainer: {
+    alignItems: "center",
+    padding: 20,
+    marginHorizontal: 15,
+    marginBottom: 10,
+    backgroundColor: "#1a1a1a",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#333",
+  },
+  noResultsText: {
+    fontSize: 16,
+    color: "#fff",
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  noResultsSubtext: {
+    fontSize: 14,
+    color: "#888",
   },
   cartSection: {
     flex: 1,
