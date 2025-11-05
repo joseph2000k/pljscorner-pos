@@ -30,18 +30,20 @@ export const useBarcodeScanner = (addToCart, onProductNotFound) => {
 
   const playBeep = async () => {
     console.log("=== BEEP FUNCTION CALLED ===");
-    
+
     try {
       console.log("playBeep function called");
-      
+
       // Trigger haptic feedback FIRST (most reliable)
       try {
-        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        await Haptics.notificationAsync(
+          Haptics.NotificationFeedbackType.Success
+        );
         console.log("Haptic feedback SUCCESS");
       } catch (hapticError) {
         console.log("Haptic feedback FAILED:", hapticError);
       }
-      
+
       // Set audio mode for playback
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: false,
@@ -55,7 +57,9 @@ export const useBarcodeScanner = (addToCart, onProductNotFound) => {
 
       // Try to create and play beep sound
       const { sound } = await Audio.Sound.createAsync(
-        { uri: 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZRQ0PVKzn77BgGQc+ltryy3oxBSd+zPLaizsIHG7A7+OZRQ0PVKzn77BgGQc+ltryy3oxBSd+zPLaizsI' },
+        {
+          uri: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZRQ0PVKzn77BgGQc+ltryy3oxBSd+zPLaizsIHG7A7+OZRQ0PVKzn77BgGQc+ltryy3oxBSd+zPLaizsI",
+        },
         { shouldPlay: true, volume: 1.0 }
       );
 
@@ -66,15 +70,16 @@ export const useBarcodeScanner = (addToCart, onProductNotFound) => {
         sound.unloadAsync();
         console.log("Sound unloaded");
       }, 1000);
-
     } catch (error) {
       console.log("Error playing beep sound:", error);
-      
+
       // Alternative approach using Expo's haptic feedback as audio backup
       try {
         // If we can't play audio, at least provide haptic feedback on supported devices
         console.log("Attempting haptic feedback as backup");
-        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        await Haptics.notificationAsync(
+          Haptics.NotificationFeedbackType.Success
+        );
       } catch (hapticError) {
         console.log("Haptic feedback also failed:", hapticError);
       }

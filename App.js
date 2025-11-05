@@ -108,7 +108,7 @@ export default function App() {
     try {
       // Haptic feedback
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      
+
       // Set audio mode
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: false,
@@ -118,7 +118,9 @@ export default function App() {
 
       // Play beep sound
       const { sound } = await Audio.Sound.createAsync(
-        { uri: 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZRQ0PVKzn77BgGQc+ltryy3oxBSd+zPLaizsIHG7A7+OZRQ0PVKzn77BgGQc+ltryy3oxBSd+zPLaizsI' },
+        {
+          uri: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZRQ0PVKzn77BgGQc+ltryy3oxBSd+zPLaizsIHG7A7+OZRQ0PVKzn77BgGQc+ltryy3oxBSd+zPLaizsI",
+        },
         { shouldPlay: true, volume: 1.0 }
       );
       setTimeout(() => sound.unloadAsync(), 500);
