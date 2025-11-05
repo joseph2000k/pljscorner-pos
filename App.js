@@ -66,7 +66,7 @@ export default function App() {
   const [receiptData, setReceiptData] = useState(null);
   const [showReceiptHistory, setShowReceiptHistory] = useState(false);
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
-  const [hideRevenue, setHideRevenue] = useState(false);
+  const [hideRevenue, setHideRevenue] = useState(true);
   const [editingProduct, setEditingProduct] = useState(null);
   const [showEditProductModal, setShowEditProductModal] = useState(false);
   const [resetTapCount, setResetTapCount] = useState(0);
