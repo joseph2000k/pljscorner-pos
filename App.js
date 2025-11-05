@@ -1018,7 +1018,7 @@ export default function App() {
           )}
         </ScrollView>
 
-        <StatusBar style="light" />
+        <StatusBar style="dark" />
       </View>
     );
   }
@@ -1260,7 +1260,7 @@ export default function App() {
           </View>
         </View>
 
-        <StatusBar style="light" />
+        <StatusBar style="dark" />
       </View>
     );
   }
@@ -1327,7 +1327,7 @@ export default function App() {
           )}
         </View>
 
-        <StatusBar style="light" />
+        <StatusBar style="dark" />
       </View>
     );
   }
@@ -1672,7 +1672,7 @@ const styles = StyleSheet.create({
   },
   emptyStateText: {
     fontSize: 18,
-    color: "#fff",
+    color: "#333",
     fontWeight: "600",
     marginBottom: 10,
   },
@@ -1682,19 +1682,19 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   productCard: {
-    backgroundColor: "#1a1a1a",
+    backgroundColor: "#fff",
     padding: 15,
     borderRadius: 10,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: "#333",
+    borderColor: "#e0e0e0",
   },
   productCardImage: {
     width: "100%",
     height: 150,
     borderRadius: 8,
     marginBottom: 12,
-    backgroundColor: "#2a2a2a",
+    backgroundColor: "#f0f0f0",
   },
   productHeader: {
     flexDirection: "row",
@@ -1705,7 +1705,7 @@ const styles = StyleSheet.create({
   productCardName: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#fff",
+    color: "#333",
     flex: 1,
   },
   productCardPrice: {
@@ -1715,12 +1715,12 @@ const styles = StyleSheet.create({
   },
   productCardCategory: {
     fontSize: 14,
-    color: "#888",
+    color: "#666",
     marginBottom: 5,
   },
   productCardBarcode: {
     fontSize: 12,
-    color: "#666",
+    color: "#888",
     marginBottom: 10,
   },
   productCardFooter: {
@@ -1734,7 +1734,7 @@ const styles = StyleSheet.create({
   },
   productCardStock: {
     fontSize: 14,
-    color: "#fff",
+    color: "#333",
     marginRight: 8,
   },
   stockIndicator: {
@@ -1766,7 +1766,7 @@ const styles = StyleSheet.create({
   // Camera Screen Styles
   container: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: "#f5f5f5",
   },
   header: {
     paddingTop: 50,
@@ -1775,12 +1775,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#1a1a1a",
+    backgroundColor: "#fff",
   },
   headerText: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#fff",
+    color: "#333",
   },
   backButton: {
     paddingVertical: 8,
@@ -1826,13 +1826,15 @@ const styles = StyleSheet.create({
   },
   footer: {
     padding: 20,
-    backgroundColor: "#1a1a1a",
+    backgroundColor: "#fff",
     alignItems: "center",
     minHeight: 120,
+    borderTopWidth: 1,
+    borderTopColor: "#e0e0e0",
   },
   instructionText: {
     fontSize: 16,
-    color: "#fff",
+    color: "#333",
     textAlign: "center",
     marginBottom: 20,
   },
@@ -1847,7 +1849,7 @@ const styles = StyleSheet.create({
   },
   resultText: {
     fontSize: 16,
-    color: "#fff",
+    color: "#333",
     textAlign: "center",
     paddingHorizontal: 20,
   },
@@ -1947,7 +1949,7 @@ const styles = StyleSheet.create({
   // POS Screen Styles
   posContainer: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: "#f5f5f5",
   },
   scanButtonLarge: {
     backgroundColor: "#007AFF",
@@ -1971,15 +1973,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginHorizontal: 15,
     marginBottom: 10,
-    backgroundColor: "#1a1a1a",
+    backgroundColor: "#fff",
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#333",
+    borderColor: "#ddd",
     paddingHorizontal: 15,
   },
   searchInput: {
     flex: 1,
-    color: "#fff",
+    color: "#333",
     fontSize: 16,
     paddingVertical: 12,
   },
@@ -1995,10 +1997,10 @@ const styles = StyleSheet.create({
     maxHeight: 250,
     marginHorizontal: 15,
     marginBottom: 10,
-    backgroundColor: "#1a1a1a",
+    backgroundColor: "#fff",
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#333",
+    borderColor: "#ddd",
     overflow: "hidden",
   },
   searchResultsList: {
@@ -2008,19 +2010,19 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#2a2a2a",
+    backgroundColor: "#f9f9f9",
     padding: 12,
     borderRadius: 8,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: "#444",
+    borderColor: "#e0e0e0",
   },
   searchResultImage: {
     width: 60,
     height: 60,
     borderRadius: 8,
     marginRight: 12,
-    backgroundColor: "#1a1a1a",
+    backgroundColor: "#f0f0f0",
   },
   searchResultInfo: {
     flex: 1,
@@ -2029,17 +2031,17 @@ const styles = StyleSheet.create({
   searchResultName: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#fff",
+    color: "#333",
     marginBottom: 4,
   },
   searchResultCategory: {
     fontSize: 12,
-    color: "#888",
+    color: "#666",
     marginBottom: 2,
   },
   searchResultBarcode: {
     fontSize: 11,
-    color: "#666",
+    color: "#888",
   },
   searchResultPricing: {
     alignItems: "flex-end",
@@ -2068,14 +2070,14 @@ const styles = StyleSheet.create({
     padding: 20,
     marginHorizontal: 15,
     marginBottom: 10,
-    backgroundColor: "#1a1a1a",
+    backgroundColor: "#fff",
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#333",
+    borderColor: "#ddd",
   },
   noResultsText: {
     fontSize: 16,
-    color: "#fff",
+    color: "#333",
     fontWeight: "600",
     marginBottom: 4,
   },
@@ -2085,25 +2087,27 @@ const styles = StyleSheet.create({
   },
   cartSection: {
     flex: 1,
-    backgroundColor: "#1a1a1a",
+    backgroundColor: "#fff",
     marginHorizontal: 15,
     marginBottom: 15,
     borderRadius: 15,
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#ddd",
   },
   cartHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     padding: 15,
-    backgroundColor: "#2a2a2a",
+    backgroundColor: "#f9f9f9",
     borderBottomWidth: 1,
-    borderBottomColor: "#333",
+    borderBottomColor: "#e0e0e0",
   },
   cartTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#fff",
+    color: "#333",
   },
   clearCartButton: {
     paddingHorizontal: 15,
@@ -2127,7 +2131,7 @@ const styles = StyleSheet.create({
   },
   emptyCartText: {
     fontSize: 18,
-    color: "#fff",
+    color: "#333",
     fontWeight: "600",
     marginBottom: 8,
   },
@@ -2137,10 +2141,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   cartItem: {
-    backgroundColor: "#2a2a2a",
+    backgroundColor: "#f9f9f9",
     padding: 15,
     borderRadius: 10,
     marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
   },
   cartItemRow: {
     flexDirection: "row",
@@ -2152,7 +2158,7 @@ const styles = StyleSheet.create({
     height: 60,
     borderRadius: 8,
     marginRight: 12,
-    backgroundColor: "#1a1a1a",
+    backgroundColor: "#f0f0f0",
   },
   cartItemInfo: {
     flex: 1,
@@ -2160,7 +2166,7 @@ const styles = StyleSheet.create({
   cartItemName: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#fff",
+    color: "#333",
     marginBottom: 4,
   },
   cartItemPrice: {
@@ -2175,7 +2181,7 @@ const styles = StyleSheet.create({
   quantityControls: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#1a1a1a",
+    backgroundColor: "#f0f0f0",
     borderRadius: 8,
     padding: 4,
   },
@@ -2193,7 +2199,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   quantityText: {
-    color: "#fff",
+    color: "#333",
     fontSize: 16,
     fontWeight: "600",
     marginHorizontal: 15,
@@ -2219,14 +2225,14 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   cartFooter: {
-    backgroundColor: "#1a1a1a",
+    backgroundColor: "#fff",
     paddingHorizontal: 15,
     paddingVertical: 20,
     borderTopWidth: 1,
-    borderTopColor: "#333",
+    borderTopColor: "#e0e0e0",
   },
   discountSection: {
-    backgroundColor: "#2a4a2a",
+    backgroundColor: "#e8f5e9",
     borderRadius: 8,
     padding: 12,
     marginBottom: 15,
@@ -2236,7 +2242,7 @@ const styles = StyleSheet.create({
   discountTitle: {
     fontSize: 14,
     fontWeight: "bold",
-    color: "#4CAF50",
+    color: "#2e7d32",
     marginBottom: 8,
   },
   discountItem: {
@@ -2247,7 +2253,7 @@ const styles = StyleSheet.create({
   },
   discountText: {
     fontSize: 12,
-    color: "#fff",
+    color: "#333",
     flex: 1,
   },
   savingsText: {
@@ -2264,7 +2270,7 @@ const styles = StyleSheet.create({
   totalLabel: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#fff",
+    color: "#333",
   },
   totalAmount: {
     fontSize: 28,
