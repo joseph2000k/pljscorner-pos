@@ -108,7 +108,7 @@ export default function App() {
     try {
       // Haptic feedback
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      
+
       // Set audio mode
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: false,
@@ -118,13 +118,13 @@ export default function App() {
 
       // Play beep sound from assets
       const { sound } = await Audio.Sound.createAsync(
-        require('./assets/sounds/beep_sound.mp3'),
+        require("./assets/sounds/beep_sound.mp3"),
         { shouldPlay: true, volume: 1.0 }
       );
       setTimeout(() => sound.unloadAsync(), 500);
     } catch (error) {
       console.log("Beep/haptic error:", error);
-    }    // Look up product by barcode
+    } // Look up product by barcode
     const product = getProductByBarcode(data);
 
     if (product) {
