@@ -26,6 +26,7 @@ import {
   createSale,
   addSaleItem,
   updateProductStock,
+  resetDatabase,
 } from "./src/services/database";
 import CheckoutModal from "./src/components/CheckoutModal";
 import ReceiptModal from "./src/components/ReceiptModal";
@@ -64,6 +65,7 @@ export default function App() {
   const [hideRevenue, setHideRevenue] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [showEditProductModal, setShowEditProductModal] = useState(false);
+  const [resetTapCount, setResetTapCount] = useState(0);
 
   useEffect(() => {
     // Initialize database on app start
@@ -623,6 +625,54 @@ export default function App() {
     }
   };
 
+  const handleResetDatabase = () => {
+    Alert.alert(
+      "⚠️ Reset All Data",
+      "This will DELETE ALL products, sales, categories, and receipts. This action cannot be undone!\n\nAre you absolutely sure?",
+      [
+        { text: "Cancel", style: "cancel", onPress: () => setResetTapCount(0) },
+        {
+          text: "RESET ALL DATA",
+          style: "destructive",
+          onPress: () => {
+            const result = resetDatabase();
+            if (result.success) {
+              setCartItems([]);
+              setProducts([]);
+              setCategories([]);
+              setDashboardStats({});
+              setResetTapCount(0);
+              loadDashboardData();
+              Alert.alert("Success", "All data has been cleared!");
+            } else {
+              Alert.alert("Error", "Failed to reset: " + result.error);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleDevResetTap = () => {
+    const newCount = resetTapCount + 1;
+    setResetTapCount(newCount);
+
+    if (newCount >= 5) {
+      handleResetDatabase();
+    } else {
+      const remaining = 5 - newCount;
+      Alert.alert(
+        "Dev Mode",
+        `Tap ${remaining} more time${
+          remaining > 1 ? "s" : ""
+        } to reset all data`
+      );
+
+      // Reset counter after 3 seconds
+      setTimeout(() => setResetTapCount(0), 3000);
+    }
+  };
+
   // Render different screens
   let screenContent;
 
@@ -631,8 +681,13 @@ export default function App() {
     screenContent = (
       <ScrollView style={styles.homeContainer}>
         <View style={styles.homeHeader}>
-          <Text style={styles.homeTitle}>POS Corner Store</Text>
-          <Text style={styles.homeSubtitle}>Point of Sale System</Text>
+          <TouchableOpacity
+            onPress={handleDevResetTap}
+            style={styles.devResetArea}
+          >
+            <Text style={styles.homeTitle}>POS Corner Store</Text>
+            <Text style={styles.homeSubtitle}>Point of Sale System</Text>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.homeContent}>
@@ -1142,6 +1197,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  devResetArea: {
+    alignItems: "center",
   },
   homeTitle: {
     fontSize: 28,

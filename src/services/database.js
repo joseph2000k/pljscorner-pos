@@ -441,3 +441,23 @@ export const searchProducts = (searchTerm) => {
     return [];
   }
 };
+
+// Reset database (DEV ONLY - clears all data)
+export const resetDatabase = () => {
+  try {
+    // Drop all tables
+    db.execSync(`DROP TABLE IF EXISTS sale_items;`);
+    db.execSync(`DROP TABLE IF EXISTS sales;`);
+    db.execSync(`DROP TABLE IF EXISTS products;`);
+    db.execSync(`DROP TABLE IF EXISTS categories;`);
+
+    // Recreate tables
+    initializeDatabase();
+
+    console.log("Database reset successfully");
+    return { success: true };
+  } catch (error) {
+    console.error("Error resetting database:", error);
+    return { success: false, error: error.message };
+  }
+};
