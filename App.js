@@ -62,6 +62,8 @@ export default function App() {
   const [showReceiptHistory, setShowReceiptHistory] = useState(false);
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
   const [hideRevenue, setHideRevenue] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [showEditProductModal, setShowEditProductModal] = useState(false);
 
   useEffect(() => {
     // Initialize database on app start
@@ -578,6 +580,49 @@ export default function App() {
     );
   };
 
+  const handleEditProduct = (product) => {
+    setEditingProduct({
+      id: product.id,
+      name: product.name,
+      barcode: product.barcode,
+      price: product.price.toString(),
+      stock: product.stock_quantity.toString(),
+      category: product.category || "Food & Beverages",
+      description: product.description || "",
+    });
+    setShowEditProductModal(true);
+  };
+
+  const handleUpdateProduct = () => {
+    if (
+      !editingProduct.name ||
+      !editingProduct.price ||
+      !editingProduct.stock
+    ) {
+      Alert.alert("Error", "Please fill in all required fields");
+      return;
+    }
+
+    const result = updateProduct(
+      editingProduct.id,
+      editingProduct.name,
+      editingProduct.barcode,
+      parseFloat(editingProduct.price),
+      parseInt(editingProduct.stock),
+      editingProduct.category,
+      editingProduct.description
+    );
+
+    if (result.success) {
+      Alert.alert("Success", "Product updated successfully!");
+      setShowEditProductModal(false);
+      setEditingProduct(null);
+      loadDashboardData();
+    } else {
+      Alert.alert("Error", "Could not update product: " + result.error);
+    }
+  };
+
   // Render different screens
   let screenContent;
 
@@ -736,7 +781,11 @@ export default function App() {
             </View>
           ) : (
             products.map((product) => (
-              <View key={product.id} style={styles.productCard}>
+              <TouchableOpacity
+                key={product.id}
+                style={styles.productCard}
+                onPress={() => handleEditProduct(product)}
+              >
                 <View style={styles.productHeader}>
                   <Text style={styles.productCardName}>{product.name}</Text>
                   <Text style={styles.productCardPrice}>₱{product.price}</Text>
@@ -762,14 +811,22 @@ export default function App() {
                       ]}
                     />
                   </View>
-                  <TouchableOpacity
-                    style={styles.deleteButton}
-                    onPress={() => handleDeleteProduct(product)}
-                  >
-                    <Text style={styles.deleteButtonText}>🗑️</Text>
-                  </TouchableOpacity>
+                  <View style={styles.productActions}>
+                    <TouchableOpacity
+                      style={styles.editButton}
+                      onPress={() => handleEditProduct(product)}
+                    >
+                      <Text style={styles.editButtonText}>✏️</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.deleteButton}
+                      onPress={() => handleDeleteProduct(product)}
+                    >
+                      <Text style={styles.deleteButtonText}>🗑️</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              </View>
+              </TouchableOpacity>
             ))
           )}
         </ScrollView>
@@ -1007,6 +1064,33 @@ export default function App() {
         productData={newProduct}
         onChangeText={handleProductFormChange}
         onOpenCategories={handleOpenCategoriesFromProduct}
+      />
+
+      {/* Edit Product Modal */}
+      <AddProductModal
+        visible={showEditProductModal}
+        onClose={() => {
+          setShowEditProductModal(false);
+          setEditingProduct(null);
+        }}
+        onSave={handleUpdateProduct}
+        productData={
+          editingProduct || {
+            name: "",
+            barcode: "",
+            price: "",
+            stock: "",
+            category: "Food & Beverages",
+            description: "",
+          }
+        }
+        onChangeText={(field, value) => {
+          if (editingProduct) {
+            setEditingProduct({ ...editingProduct, [field]: value });
+          }
+        }}
+        onOpenCategories={() => setShowCategoriesModal(true)}
+        isEditing={true}
       />
 
       {/* Categories Modal */}
@@ -1366,6 +1450,18 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
+  },
+  productActions: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  editButton: {
+    backgroundColor: "#5f27cd",
+    padding: 8,
+    borderRadius: 6,
+  },
+  editButtonText: {
+    fontSize: 16,
   },
   deleteButton: {
     backgroundColor: "#ff4757",

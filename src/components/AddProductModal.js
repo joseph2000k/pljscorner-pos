@@ -17,6 +17,7 @@ const AddProductModal = ({
   productData,
   onChangeText,
   onOpenCategories,
+  isEditing = false,
 }) => {
   const [categories, setCategories] = useState([]);
 
@@ -42,9 +43,13 @@ const AddProductModal = ({
           <TouchableOpacity onPress={onClose}>
             <Text style={styles.modalCancelText}>Cancel</Text>
           </TouchableOpacity>
-          <Text style={styles.modalTitle}>Add New Product</Text>
+          <Text style={styles.modalTitle}>
+            {isEditing ? "Edit Product" : "Add New Product"}
+          </Text>
           <TouchableOpacity onPress={onSave}>
-            <Text style={styles.modalSaveText}>Save</Text>
+            <Text style={styles.modalSaveText}>
+              {isEditing ? "Update" : "Save"}
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -53,7 +58,7 @@ const AddProductModal = ({
             <Text style={styles.inputLabel}>Product Name *</Text>
             <TextInput
               style={styles.textInput}
-              value={productData.name}
+              value={productData?.name || ""}
               onChangeText={(text) => onChangeText("name", text)}
               placeholder="Enter product name"
               placeholderTextColor="#999"
@@ -64,7 +69,7 @@ const AddProductModal = ({
             <Text style={styles.inputLabel}>Barcode *</Text>
             <TextInput
               style={styles.textInput}
-              value={productData.barcode}
+              value={productData?.barcode || ""}
               onChangeText={(text) => onChangeText("barcode", text)}
               placeholder="Enter or scan barcode"
               placeholderTextColor="#999"
@@ -75,7 +80,7 @@ const AddProductModal = ({
             <Text style={styles.inputLabel}>Price *</Text>
             <TextInput
               style={styles.textInput}
-              value={productData.price}
+              value={productData?.price || ""}
               onChangeText={(text) => onChangeText("price", text)}
               placeholder="0.00"
               placeholderTextColor="#999"
@@ -87,7 +92,7 @@ const AddProductModal = ({
             <Text style={styles.inputLabel}>Stock Quantity</Text>
             <TextInput
               style={styles.textInput}
-              value={productData.stock}
+              value={productData?.stock || ""}
               onChangeText={(text) => onChangeText("stock", text)}
               placeholder="0"
               placeholderTextColor="#999"
@@ -124,7 +129,7 @@ const AddProductModal = ({
                     key={category}
                     style={[
                       styles.categoryChip,
-                      productData.category === category &&
+                      productData?.category === category &&
                         styles.categoryChipSelected,
                     ]}
                     onPress={() => onChangeText("category", category)}
@@ -132,7 +137,7 @@ const AddProductModal = ({
                     <Text
                       style={[
                         styles.categoryChipText,
-                        productData.category === category &&
+                        productData?.category === category &&
                           styles.categoryChipTextSelected,
                       ]}
                     >
@@ -148,7 +153,7 @@ const AddProductModal = ({
             <Text style={styles.inputLabel}>Description (Optional)</Text>
             <TextInput
               style={[styles.textInput, styles.textArea]}
-              value={productData.description}
+              value={productData?.description || ""}
               onChangeText={(text) => onChangeText("description", text)}
               placeholder="Enter product description"
               placeholderTextColor="#999"
