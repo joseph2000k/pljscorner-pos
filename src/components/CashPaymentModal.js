@@ -23,7 +23,7 @@ const CashPaymentModal = ({ visible, onClose, total, onComplete }) => {
     if (paid < total) {
       Alert.alert(
         "Insufficient Amount",
-        `Amount paid ($${paid.toFixed(2)}) is less than total ($${total.toFixed(
+        `Amount paid (₱${paid.toFixed(2)}) is less than total (₱${total.toFixed(
           2
         )})`
       );
@@ -61,7 +61,7 @@ const CashPaymentModal = ({ visible, onClose, total, onComplete }) => {
 
           <View style={styles.totalSection}>
             <Text style={styles.totalLabel}>Total Amount:</Text>
-            <Text style={styles.totalAmount}>${total.toFixed(2)}</Text>
+            <Text style={styles.totalAmount}>₱{total.toFixed(2)}</Text>
           </View>
 
           <View style={styles.inputSection}>
@@ -87,7 +87,7 @@ const CashPaymentModal = ({ visible, onClose, total, onComplete }) => {
                   style={styles.quickButton}
                   onPress={() => setAmountPaid(amount.toString())}
                 >
-                  <Text style={styles.quickButtonText}>${amount}</Text>
+                  <Text style={styles.quickButtonText}>₱{amount}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -108,7 +108,7 @@ const CashPaymentModal = ({ visible, onClose, total, onComplete }) => {
                   change < 0 && styles.changeAmountNegative,
                 ]}
               >
-                ${Math.abs(change).toFixed(2)}
+                ₱{Math.abs(change).toFixed(2)}
               </Text>
             </View>
           )}

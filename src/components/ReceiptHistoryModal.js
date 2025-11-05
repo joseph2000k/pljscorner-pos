@@ -198,7 +198,7 @@ const ReceiptHistoryModal = ({ visible, onClose }) => {
                   <View style={styles.statDivider} />
                   <View style={styles.statItem}>
                     <Text style={styles.statValue}>
-                      $
+                      ₱
                       {sales
                         .reduce((sum, sale) => sum + sale.total_amount, 0)
                         .toFixed(2)}
@@ -222,7 +222,7 @@ const ReceiptHistoryModal = ({ visible, onClose }) => {
                       </View>
                       <View style={styles.saleRight}>
                         <Text style={styles.saleAmount}>
-                          ${sale.total_amount.toFixed(2)}
+                          ₱{sale.total_amount.toFixed(2)}
                         </Text>
                         <View style={styles.paymentBadge}>
                           <Text style={styles.paymentIcon}>

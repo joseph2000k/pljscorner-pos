@@ -11,6 +11,8 @@ import {
   Modal,
 } from "react-native";
 import { CameraView, Camera } from "expo-camera";
+import { Audio } from "expo-av";
+import * as Haptics from "expo-haptics";
 import {
   initializeDatabase,
   getProductByBarcode,
@@ -59,6 +61,7 @@ export default function App() {
   const [receiptData, setReceiptData] = useState(null);
   const [showReceiptHistory, setShowReceiptHistory] = useState(false);
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
+  const [hideRevenue, setHideRevenue] = useState(false);
 
   useEffect(() => {
     // Initialize database on app start
@@ -87,7 +90,7 @@ export default function App() {
     setCategories(allCategories);
   };
 
-  const handleBarCodeScanned = ({ type, data }) => {
+  const handleBarCodeScanned = async ({ type, data }) => {
     // Prevent multiple scans and cooldown
     if (scanned || scanCooldown) return;
 
@@ -100,6 +103,28 @@ export default function App() {
     setScannedData(data);
     setLastScannedBarcode(data);
     setScanCooldown(true);
+
+    // Play beep sound and haptic feedback
+    try {
+      // Haptic feedback
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      
+      // Set audio mode
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        playsInSilentModeIOS: true,
+        shouldDuckAndroid: true,
+      });
+
+      // Play beep sound
+      const { sound } = await Audio.Sound.createAsync(
+        { uri: 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZRQ0PVKzn77BgGQc+ltryy3oxBSd+zPLaizsIHG7A7+OZRQ0PVKzn77BgGQc+ltryy3oxBSd+zPLaizsI' },
+        { shouldPlay: true, volume: 1.0 }
+      );
+      setTimeout(() => sound.unloadAsync(), 500);
+    } catch (error) {
+      console.log("Beep/haptic error:", error);
+    }
 
     // Look up product by barcode
     const product = getProductByBarcode(data);
@@ -584,12 +609,22 @@ export default function App() {
                 </Text>
                 <Text style={styles.statLabel}>Sales</Text>
               </View>
-              <View style={styles.statBox}>
+              <TouchableOpacity
+                style={styles.statBox}
+                onPress={() => setHideRevenue(!hideRevenue)}
+              >
                 <Text style={styles.statNumber}>
-                  ${dashboardStats.totalRevenue || "0.00"}
+                  {hideRevenue
+                    ? "••••••"
+                    : `₱${dashboardStats.totalRevenue || "0.00"}`}
                 </Text>
-                <Text style={styles.statLabel}>Revenue</Text>
-              </View>
+                <View style={styles.statLabelRow}>
+                  <Text style={styles.statLabel}>Revenue</Text>
+                  <Text style={styles.hideIcon}>
+                    {hideRevenue ? "👁️" : "🙈"}
+                  </Text>
+                </View>
+              </TouchableOpacity>
               <View style={styles.statBox}>
                 <Text style={styles.statNumber}>
                   {dashboardStats.lowStockProducts || 0}
@@ -644,7 +679,7 @@ export default function App() {
               <Text style={styles.lastScanTitle}>Last Scanned Product:</Text>
               <Text style={styles.lastScanData}>{scannedProduct.name}</Text>
               <Text style={styles.lastScanPrice}>
-                Price: ${scannedProduct.price}
+                Price: ₱{scannedProduct.price}
               </Text>
               <Text style={styles.lastScanStock}>
                 Stock: {scannedProduct.stock_quantity}
@@ -665,7 +700,7 @@ export default function App() {
                     </Text>
                   </View>
                   <View style={styles.productInfo}>
-                    <Text style={styles.productPrice}>${product.price}</Text>
+                    <Text style={styles.productPrice}>₱{product.price}</Text>
                     <Text style={styles.productStock}>
                       Stock: {product.stock_quantity}
                     </Text>
@@ -706,7 +741,7 @@ export default function App() {
               <View key={product.id} style={styles.productCard}>
                 <View style={styles.productHeader}>
                   <Text style={styles.productCardName}>{product.name}</Text>
-                  <Text style={styles.productCardPrice}>${product.price}</Text>
+                  <Text style={styles.productCardPrice}>₱{product.price}</Text>
                 </View>
                 <Text style={styles.productCardCategory}>
                   {product.category}
@@ -1154,6 +1189,16 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#666",
     marginTop: 5,
+  },
+  statLabelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 5,
+  },
+  hideIcon: {
+    fontSize: 12,
+    marginLeft: 5,
   },
 
   // Action Buttons

@@ -42,7 +42,7 @@ const CheckoutModal = ({
 
           <View style={styles.checkoutContent}>
             <Text style={styles.checkoutTotal}>
-              Total: ${cartTotal.toFixed(2)}
+              Total: ₱{cartTotal.toFixed(2)}
             </Text>
 
             <View style={styles.checkoutItems}>
@@ -53,7 +53,7 @@ const CheckoutModal = ({
                     {item.name} x {item.quantity}
                   </Text>
                   <Text style={styles.checkoutItemPrice}>
-                    ${(item.price * item.quantity).toFixed(2)}
+                    ₱{(item.price * item.quantity).toFixed(2)}
                   </Text>
                 </View>
               ))}
