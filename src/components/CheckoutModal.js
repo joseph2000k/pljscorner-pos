@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, Modal, TouchableOpacity, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import CashPaymentModal from "./CashPaymentModal";
 
 const CheckoutModal = ({
@@ -65,19 +66,28 @@ const CheckoutModal = ({
                 style={styles.paymentButton}
                 onPress={() => setShowCashModal(true)}
               >
-                <Text style={styles.paymentButtonText}>💵 Cash</Text>
+                <View style={styles.paymentButtonContent}>
+                  <Ionicons name="cash" size={24} color="#fff" />
+                  <Text style={styles.paymentButtonText}>Cash</Text>
+                </View>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.paymentButton}
                 onPress={handleCardPayment}
               >
-                <Text style={styles.paymentButtonText}>💳 Card</Text>
+                <View style={styles.paymentButtonContent}>
+                  <Ionicons name="card" size={24} color="#fff" />
+                  <Text style={styles.paymentButtonText}>Card</Text>
+                </View>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.paymentButton}
                 onPress={handleGCashPayment}
               >
-                <Text style={styles.paymentButtonText}>📱 GCash</Text>
+                <View style={styles.paymentButtonContent}>
+                  <Ionicons name="phone-portrait" size={24} color="#fff" />
+                  <Text style={styles.paymentButtonText}>GCash</Text>
+                </View>
               </TouchableOpacity>
             </View>
           </View>
@@ -181,6 +191,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 3,
+  },
+  paymentButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   paymentButtonText: {
     color: "#fff",

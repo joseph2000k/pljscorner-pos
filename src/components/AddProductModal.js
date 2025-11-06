@@ -10,6 +10,7 @@ import {
   Image,
   Alert,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { getAllCategories } from "../services/database";
 
@@ -167,7 +168,7 @@ const AddProductModal = ({
                 style={styles.addImageButton}
                 onPress={showImageOptions}
               >
-                <Text style={styles.addImageIcon}>📷</Text>
+                <Ionicons name="camera" size={48} color="#007AFF" />
                 <Text style={styles.addImageText}>Add Product Image</Text>
                 <Text style={styles.addImageHint}>
                   Tap to take photo or choose from library

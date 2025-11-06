@@ -8,6 +8,7 @@ import {
   StyleSheet,
   RefreshControl,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import {
   getAllSales,
   getSaleDetails,
@@ -148,13 +149,13 @@ const ReceiptHistoryModal = ({ visible, onClose }) => {
   const getPaymentIcon = (method) => {
     switch (method?.toLowerCase()) {
       case "cash":
-        return "💵";
+        return "cash";
       case "card":
-        return "💳";
+        return "card";
       case "gcash":
-        return "📱";
+        return "phone-portrait";
       default:
-        return "💰";
+        return "wallet";
     }
   };
 
@@ -168,7 +169,7 @@ const ReceiptHistoryModal = ({ visible, onClose }) => {
         <View style={styles.modalContainer}>
           <View style={styles.header}>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Text style={styles.closeButtonText}>✕</Text>
+              <Ionicons name="close" size={24} color="#333" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Receipt History</Text>
             <View style={styles.placeholder} />
@@ -182,7 +183,7 @@ const ReceiptHistoryModal = ({ visible, onClose }) => {
           >
             {sales.length === 0 ? (
               <View style={styles.emptyState}>
-                <Text style={styles.emptyStateIcon}>📋</Text>
+                <Ionicons name="receipt-outline" size={64} color="#ccc" />
                 <Text style={styles.emptyStateText}>No sales yet</Text>
                 <Text style={styles.emptyStateSubtext}>
                   Completed transactions will appear here
@@ -225,9 +226,12 @@ const ReceiptHistoryModal = ({ visible, onClose }) => {
                           ₱{sale.total_amount.toFixed(2)}
                         </Text>
                         <View style={styles.paymentBadge}>
-                          <Text style={styles.paymentIcon}>
-                            {getPaymentIcon(sale.payment_method)}
-                          </Text>
+                          <Ionicons
+                            name={getPaymentIcon(sale.payment_method)}
+                            size={14}
+                            color="#007AFF"
+                            style={styles.paymentIcon}
+                          />
                           <Text style={styles.paymentText}>
                             {sale.payment_method?.toUpperCase() || "CASH"}
                           </Text>

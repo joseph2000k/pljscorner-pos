@@ -11,6 +11,7 @@ import {
   Modal,
   Image,
 } from "react-native";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { CameraView, Camera } from "expo-camera";
 import { Audio } from "expo-av";
 import * as Haptics from "expo-haptics";
@@ -725,7 +726,7 @@ export default function App() {
 
   const handleResetDatabase = () => {
     Alert.alert(
-      "⚠️ Reset All Data",
+      "Reset All Data",
       "This will DELETE ALL products, sales, categories, and receipts. This action cannot be undone!\n\nAre you absolutely sure?",
       [
         { text: "Cancel", style: "cancel", onPress: () => setResetTapCount(0) },
@@ -843,9 +844,12 @@ export default function App() {
                 </Text>
                 <View style={styles.statLabelRow}>
                   <Text style={styles.statLabel}>Revenue</Text>
-                  <Text style={styles.hideIcon}>
-                    {hideRevenue ? "👁️" : "🙈"}
-                  </Text>
+                  <Ionicons
+                    name={hideRevenue ? "eye-outline" : "eye-off-outline"}
+                    size={16}
+                    color="#888"
+                    style={styles.hideIcon}
+                  />
                 </View>
               </TouchableOpacity>
               <View style={styles.statBox}>
@@ -860,7 +864,10 @@ export default function App() {
           {/* Action Buttons */}
           <View style={styles.actionsContainer}>
             <TouchableOpacity style={styles.primaryButton} onPress={openPOS}>
-              <Text style={styles.primaryButtonText}>� Open POS</Text>
+              <View style={styles.buttonContent}>
+                <Ionicons name="cart" size={24} color="#fff" />
+                <Text style={styles.primaryButtonText}>Open POS</Text>
+              </View>
             </TouchableOpacity>
 
             <View style={styles.buttonRow}>
@@ -868,14 +875,24 @@ export default function App() {
                 style={[styles.secondaryButton, styles.halfButton]}
                 onPress={() => setCurrentScreen("products")}
               >
-                <Text style={styles.secondaryButtonText}>📦 Products</Text>
+                <View style={styles.buttonContent}>
+                  <Ionicons name="cube-outline" size={20} color="#007AFF" />
+                  <Text style={styles.secondaryButtonText}>Products</Text>
+                </View>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={[styles.secondaryButton, styles.halfButton]}
                 onPress={openAddProductModal}
               >
-                <Text style={styles.secondaryButtonText}>➕ Add Product</Text>
+                <View style={styles.buttonContent}>
+                  <Ionicons
+                    name="add-circle-outline"
+                    size={20}
+                    color="#007AFF"
+                  />
+                  <Text style={styles.secondaryButtonText}>Add Product</Text>
+                </View>
               </TouchableOpacity>
             </View>
 
@@ -884,14 +901,20 @@ export default function App() {
                 style={[styles.secondaryButton, styles.halfButton]}
                 onPress={() => setShowCategoriesModal(true)}
               >
-                <Text style={styles.secondaryButtonText}>🏷️ Categories</Text>
+                <View style={styles.buttonContent}>
+                  <Ionicons name="pricetag-outline" size={20} color="#007AFF" />
+                  <Text style={styles.secondaryButtonText}>Categories</Text>
+                </View>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={[styles.secondaryButton, styles.halfButton]}
                 onPress={() => setShowReceiptHistory(true)}
               >
-                <Text style={styles.secondaryButtonText}>📋 History</Text>
+                <View style={styles.buttonContent}>
+                  <Ionicons name="receipt-outline" size={20} color="#007AFF" />
+                  <Text style={styles.secondaryButtonText}>History</Text>
+                </View>
               </TouchableOpacity>
             </View>
           </View>
@@ -1003,13 +1026,13 @@ export default function App() {
                       style={styles.editButton}
                       onPress={() => handleEditProduct(product)}
                     >
-                      <Text style={styles.editButtonText}>✏️</Text>
+                      <Ionicons name="pencil" size={16} color="#007AFF" />
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={styles.deleteButton}
                       onPress={() => handleDeleteProduct(product)}
                     >
-                      <Text style={styles.deleteButtonText}>🗑️</Text>
+                      <Ionicons name="trash" size={16} color="#FF3B30" />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -1041,7 +1064,10 @@ export default function App() {
         <View style={styles.posContainer}>
           {/* Scan Button */}
           <TouchableOpacity style={styles.scanButtonLarge} onPress={openCamera}>
-            <Text style={styles.scanButtonLargeText}>📷 Scan Product</Text>
+            <View style={styles.buttonContent}>
+              <Ionicons name="camera" size={24} color="#fff" />
+              <Text style={styles.scanButtonLargeText}>Scan Product</Text>
+            </View>
           </TouchableOpacity>
 
           {/* Search Bar */}
@@ -1063,7 +1089,7 @@ export default function App() {
                   setShowSearchResults(false);
                 }}
               >
-                <Text style={styles.clearSearchText}>✕</Text>
+                <Ionicons name="close-circle" size={20} color="#888" />
               </TouchableOpacity>
             )}
           </View>
@@ -1191,7 +1217,7 @@ export default function App() {
                             updateCartItemQuantity(item.id, item.quantity - 1)
                           }
                         >
-                          <Text style={styles.quantityButtonText}>-</Text>
+                          <Ionicons name="remove" size={18} color="#333" />
                         </TouchableOpacity>
                         <Text style={styles.quantityText}>{item.quantity}</Text>
                         <TouchableOpacity
@@ -1200,7 +1226,7 @@ export default function App() {
                             updateCartItemQuantity(item.id, item.quantity + 1)
                           }
                         >
-                          <Text style={styles.quantityButtonText}>+</Text>
+                          <Ionicons name="add" size={18} color="#333" />
                         </TouchableOpacity>
                       </View>
 
@@ -1212,7 +1238,7 @@ export default function App() {
                         style={styles.removeButton}
                         onPress={() => removeFromCart(item.id)}
                       >
-                        <Text style={styles.removeButtonText}>✕</Text>
+                        <Ionicons name="close" size={18} color="#FF3B30" />
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -1226,9 +1252,12 @@ export default function App() {
             {/* Discount Information */}
             {discounts.length > 0 && (
               <View style={styles.discountSection}>
-                <Text style={styles.discountTitle}>
-                  💰 Bulk Discounts Applied!
-                </Text>
+                <View style={styles.discountTitleRow}>
+                  <Ionicons name="pricetags" size={16} color="#4CAF50" />
+                  <Text style={styles.discountTitle}>
+                    Bulk Discounts Applied!
+                  </Text>
+                </View>
                 {discounts.map((discount, index) => (
                   <View key={index} style={styles.discountItem}>
                     <Text style={styles.discountText}>
@@ -1584,6 +1613,11 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 6,
   },
+  buttonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
   primaryButtonText: {
     color: "#fff",
     fontSize: 18,
@@ -1747,17 +1781,21 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   editButton: {
-    backgroundColor: "#5f27cd",
+    backgroundColor: "#E3F2FD",
     padding: 8,
     borderRadius: 6,
+    alignItems: "center",
+    justifyContent: "center",
   },
   editButtonText: {
     fontSize: 16,
   },
   deleteButton: {
-    backgroundColor: "#ff4757",
+    backgroundColor: "#FFEBEE",
     padding: 8,
     borderRadius: 6,
+    alignItems: "center",
+    justifyContent: "center",
   },
   deleteButtonText: {
     fontSize: 16,
@@ -2239,11 +2277,16 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     borderLeftColor: "#4CAF50",
   },
+  discountTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 8,
+  },
   discountTitle: {
     fontSize: 14,
     fontWeight: "bold",
     color: "#2e7d32",
-    marginBottom: 8,
   },
   discountItem: {
     flexDirection: "row",

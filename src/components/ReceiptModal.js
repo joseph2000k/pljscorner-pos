@@ -7,6 +7,7 @@ import {
   ScrollView,
   StyleSheet,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
 const ReceiptModal = ({ visible, onClose, receipt }) => {
   if (!receipt) return null;
@@ -32,7 +33,7 @@ const ReceiptModal = ({ visible, onClose, receipt }) => {
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Receipt</Text>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <Text style={styles.closeButtonText}>✕</Text>
+            <Ionicons name="close" size={24} color="#333" />
           </TouchableOpacity>
         </View>
 
@@ -100,8 +101,14 @@ const ReceiptModal = ({ visible, onClose, receipt }) => {
               {receipt.discounts && receipt.discounts.length > 0 && (
                 <>
                   <View style={styles.discountHeader}>
+                    <Ionicons
+                      name="pricetags"
+                      size={14}
+                      color="#4CAF50"
+                      style={{ marginRight: 4 }}
+                    />
                     <Text style={styles.discountHeaderText}>
-                      💰 Bulk Discounts Applied
+                      Bulk Discounts Applied
                     </Text>
                   </View>
                   {receipt.discounts.map((discount, index) => (
@@ -317,6 +324,8 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   discountHeader: {
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: "#f0f8f0",
     paddingVertical: 8,
     paddingHorizontal: 10,

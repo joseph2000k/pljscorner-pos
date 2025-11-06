@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Alert,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { getAllCategories, addCategory } from "../services/database";
 
 const CategoriesModal = ({ visible, onClose, onCategoryAdded }) => {
@@ -145,9 +146,12 @@ const CategoriesModal = ({ visible, onClose, onCategoryAdded }) => {
 
               {/* Bulk Discount Section */}
               <View style={styles.discountSection}>
-                <Text style={styles.discountSectionTitle}>
-                  💰 Bulk Discount (Optional)
-                </Text>
+                <View style={styles.discountSectionTitleRow}>
+                  <Ionicons name="pricetags" size={18} color="#4CAF50" />
+                  <Text style={styles.discountSectionTitle}>
+                    Bulk Discount (Optional)
+                  </Text>
+                </View>
                 <Text style={styles.discountExplanation}>
                   Set a special price when customers buy multiple items from
                   this category
@@ -231,8 +235,14 @@ const CategoriesModal = ({ visible, onClose, onCategoryAdded }) => {
                     {category.bulk_discount_quantity > 0 &&
                     category.bulk_discount_price > 0 ? (
                       <View style={styles.discountBadge}>
+                        <Ionicons
+                          name="pricetags"
+                          size={12}
+                          color="#4CAF50"
+                          style={{ marginRight: 4 }}
+                        />
                         <Text style={styles.discountBadgeText}>
-                          💰 Buy {category.bulk_discount_quantity} for ₱
+                          Buy {category.bulk_discount_quantity} for ₱
                           {category.bulk_discount_price}
                         </Text>
                       </View>
@@ -389,6 +399,8 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   discountBadge: {
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: "#4CAF50",
     borderRadius: 6,
     paddingHorizontal: 8,
@@ -428,11 +440,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#007AFF20",
   },
+  discountSectionTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 5,
+  },
   discountSectionTitle: {
     fontSize: 16,
     fontWeight: "600",
     color: "#007AFF",
-    marginBottom: 5,
   },
   discountExplanation: {
     fontSize: 13,

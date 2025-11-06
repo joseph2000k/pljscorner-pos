@@ -7,6 +7,7 @@ import {
   Alert,
   StyleSheet,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { getCategoryByName } from "../services/database";
 
 const CartComponent = ({
@@ -136,7 +137,7 @@ const CartComponent = ({
                   style={styles.removeButton}
                   onPress={() => onRemoveItem(item.id)}
                 >
-                  <Text style={styles.removeButtonText}>✕</Text>
+                  <Ionicons name="close" size={18} color="#FF3B30" />
                 </TouchableOpacity>
               </View>
             </View>
@@ -149,7 +150,10 @@ const CartComponent = ({
         {/* Discount Information */}
         {discounts.length > 0 && (
           <View style={styles.discountSection}>
-            <Text style={styles.discountTitle}>💰 Bulk Discounts Applied!</Text>
+            <View style={styles.discountTitleRow}>
+              <Ionicons name="pricetags" size={16} color="#4CAF50" />
+              <Text style={styles.discountTitle}>Bulk Discounts Applied!</Text>
+            </View>
             {discounts.map((discount, index) => (
               <View key={index} style={styles.discountItem}>
                 <Text style={styles.discountText}>
@@ -322,11 +326,16 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     borderLeftColor: "#4CAF50",
   },
+  discountTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 8,
+  },
   discountTitle: {
     fontSize: 14,
     fontWeight: "bold",
     color: "#4CAF50",
-    marginBottom: 8,
   },
   discountItem: {
     flexDirection: "row",
