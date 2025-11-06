@@ -1217,7 +1217,7 @@ export default function App() {
                             updateCartItemQuantity(item.id, item.quantity - 1)
                           }
                         >
-                          <Ionicons name="remove" size={18} color="#333" />
+                          <Ionicons name="remove" size={18} color="#fff" />
                         </TouchableOpacity>
                         <Text style={styles.quantityText}>{item.quantity}</Text>
                         <TouchableOpacity
@@ -1226,7 +1226,7 @@ export default function App() {
                             updateCartItemQuantity(item.id, item.quantity + 1)
                           }
                         >
-                          <Ionicons name="add" size={18} color="#333" />
+                          <Ionicons name="add" size={18} color="#fff" />
                         </TouchableOpacity>
                       </View>
 
@@ -1238,7 +1238,7 @@ export default function App() {
                         style={styles.removeButton}
                         onPress={() => removeFromCart(item.id)}
                       >
-                        <Ionicons name="close" size={18} color="#FF3B30" />
+                        <Ionicons name="close" size={18} color="#fff" />
                       </TouchableOpacity>
                     </View>
                   </View>

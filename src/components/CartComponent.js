@@ -118,14 +118,14 @@ const CartComponent = ({
                     style={styles.quantityButton}
                     onPress={() => onUpdateQuantity(item.id, item.quantity - 1)}
                   >
-                    <Text style={styles.quantityButtonText}>-</Text>
+                    <Ionicons name="remove" size={18} color="#fff" />
                   </TouchableOpacity>
                   <Text style={styles.quantityText}>{item.quantity}</Text>
                   <TouchableOpacity
                     style={styles.quantityButton}
                     onPress={() => onUpdateQuantity(item.id, item.quantity + 1)}
                   >
-                    <Text style={styles.quantityButtonText}>+</Text>
+                    <Ionicons name="add" size={18} color="#fff" />
                   </TouchableOpacity>
                 </View>
 
@@ -137,7 +137,7 @@ const CartComponent = ({
                   style={styles.removeButton}
                   onPress={() => onRemoveItem(item.id)}
                 >
-                  <Ionicons name="close" size={18} color="#FF3B30" />
+                  <Ionicons name="close" size={18} color="#fff" />
                 </TouchableOpacity>
               </View>
             </View>
