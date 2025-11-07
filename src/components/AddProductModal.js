@@ -11,6 +11,7 @@ import {
   Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { CameraView, Camera } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
 import { getAllCategories } from "../services/database";
 
@@ -24,12 +25,36 @@ const AddProductModal = ({
   isEditing = false,
 }) => {
   const [categories, setCategories] = useState([]);
+  const [showQRScanner, setShowQRScanner] = useState(false);
+  const [hasPermission, setHasPermission] = useState(null);
 
   useEffect(() => {
     if (visible) {
       loadCategories();
+      requestCameraPermission();
     }
   }, [visible]);
+
+  const requestCameraPermission = async () => {
+    const { status } = await Camera.requestCameraPermissionsAsync();
+    setHasPermission(status === "granted");
+  };
+
+  const handleQRScanned = ({ data }) => {
+    setShowQRScanner(false);
+    onChangeText("qr", data);
+  };
+
+  const openQRScanner = () => {
+    if (hasPermission === false) {
+      Alert.alert(
+        "Camera Permission Required",
+        "Please allow camera access to scan qrs."
+      );
+      return;
+    }
+    setShowQRScanner(true);
+  };
 
   const loadCategories = () => {
     const allCategories = getAllCategories();
@@ -189,14 +214,22 @@ const AddProductModal = ({
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Barcode *</Text>
-            <TextInput
-              style={styles.textInput}
-              value={productData?.barcode || ""}
-              onChangeText={(text) => onChangeText("barcode", text)}
-              placeholder="Enter or scan barcode"
-              placeholderTextColor="#999"
-            />
+            <Text style={styles.inputLabel}>QR *</Text>
+            <View style={styles.qrInputContainer}>
+              <TextInput
+                style={styles.qrInput}
+                value={productData?.qr || ""}
+                onChangeText={(text) => onChangeText("qr", text)}
+                placeholder="Enter or scan qr"
+                placeholderTextColor="#999"
+              />
+              <TouchableOpacity
+                style={styles.scanQRButton}
+                onPress={openQRScanner}
+              >
+                <Ionicons name="camera" size={24} color="#007AFF" />
+              </TouchableOpacity>
+            </View>
           </View>
 
           <View style={styles.inputGroup}>
@@ -286,6 +319,53 @@ const AddProductModal = ({
           </View>
         </ScrollView>
       </View>
+
+      {/* QR Scanner Modal */}
+      <Modal
+        visible={showQRScanner}
+        animationType="slide"
+        presentationStyle="fullScreen"
+      >
+        <View style={styles.scannerContainer}>
+          <View style={styles.scannerHeader}>
+            <TouchableOpacity
+              style={styles.closeScannerButton}
+              onPress={() => setShowQRScanner(false)}
+            >
+              <Ionicons name="close" size={28} color="#fff" />
+            </TouchableOpacity>
+            <Text style={styles.scannerTitle}>Scan QR</Text>
+            <View style={styles.placeholder} />
+          </View>
+
+          {hasPermission && (
+            <CameraView
+              style={styles.camera}
+              facing="back"
+              onBarcodeScanned={handleQRScanned}
+              barcodeScannerSettings={{
+                barcodeTypes: [
+                  "ean13",
+                  "ean8",
+                  "upc_a",
+                  "upc_e",
+                  "code128",
+                  "code39",
+                  "code93",
+                  "qr",
+                ],
+              }}
+            >
+              <View style={styles.scannerOverlay}>
+                <View style={styles.scannerFrame} />
+                <Text style={styles.scannerInstructions}>
+                  Position qr within the frame
+                </Text>
+              </View>
+            </CameraView>
+          )}
+        </View>
+      </Modal>
     </Modal>
   );
 };
@@ -446,6 +526,77 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#999",
     textAlign: "center",
+  },
+  qrInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  qrInput: {
+    flex: 1,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: "#333",
+  },
+  scanQRButton: {
+    backgroundColor: "#E3F2FD",
+    padding: 12,
+    borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  scannerContainer: {
+    flex: 1,
+    backgroundColor: "#000",
+  },
+  scannerHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingTop: 50,
+    paddingBottom: 15,
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
+  },
+  scannerTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#fff",
+  },
+  closeScannerButton: {
+    padding: 5,
+  },
+  camera: {
+    flex: 1,
+  },
+  scannerOverlay: {
+    flex: 1,
+    backgroundColor: "transparent",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  scannerFrame: {
+    width: 250,
+    height: 250,
+    borderWidth: 2,
+    borderColor: "#fff",
+    backgroundColor: "transparent",
+  },
+  scannerInstructions: {
+    position: "absolute",
+    bottom: 100,
+    color: "#fff",
+    fontSize: 16,
+    textAlign: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
   },
 });
 

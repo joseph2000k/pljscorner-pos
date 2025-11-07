@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { Alert } from "react-native";
 import { Audio } from "expo-av";
 import * as Haptics from "expo-haptics";
-import { getProductByBarcode } from "../services/database";
+import { getProductByQR } from "../services/database";
 
-export const useBarcodeScanner = (addToCart, onProductNotFound) => {
+export const useQRScanner = (addToCart, onProductNotFound) => {
   const [scanned, setScanned] = useState(false);
   const [scannedData, setScannedData] = useState("");
-  const [lastScannedBarcode, setLastScannedBarcode] = useState("");
+  const [lastScannedQR, setLastScannedQR] = useState("");
   const [scanCooldown, setScanCooldown] = useState(false);
 
   // Initialize audio mode
@@ -90,22 +90,22 @@ export const useBarcodeScanner = (addToCart, onProductNotFound) => {
     // Prevent multiple scans and cooldown
     if (scanned || scanCooldown) return;
 
-    // Prevent scanning the same barcode repeatedly within 300ms
-    if (data === lastScannedBarcode) {
+    // Prevent scanning the same qr repeatedly within 300ms
+    if (data === lastScannedQR) {
       return;
     }
 
     setScanned(true);
     setScannedData(data);
-    setLastScannedBarcode(data);
+    setLastScannedQR(data);
     setScanCooldown(true);
 
     // Play beep sound
     console.log("Attempting to play beep sound...");
     playBeep();
 
-    // Look up product by barcode
-    const product = getProductByBarcode(data);
+    // Look up product by qr
+    const product = getProductByQR(data);
 
     if (product) {
       // Check stock availability
@@ -144,12 +144,12 @@ export const useBarcodeScanner = (addToCart, onProductNotFound) => {
       // Clear cooldown and last scanned after 300ms
       setTimeout(() => {
         setScanCooldown(false);
-        setLastScannedBarcode("");
+        setLastScannedQR("");
       }, 300);
     } else {
       Alert.alert(
         "Product Not Found",
-        `Barcode: ${data}\nProduct not in database.`,
+        `QR: ${data}\nProduct not in database.`,
         [
           {
             text: "Scan Again",

@@ -11,7 +11,7 @@ export const initializeDatabase = () => {
       CREATE TABLE IF NOT EXISTS products (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
-        barcode TEXT UNIQUE,
+        qr TEXT UNIQUE,
         price REAL NOT NULL,
         stock_quantity INTEGER DEFAULT 0,
         category TEXT,
@@ -93,21 +93,21 @@ const insertDefaultData = () => {
     const sampleProducts = [
       {
         name: "Coffee",
-        barcode: "1234567890123",
+        qr: "1234567890123",
         price: 3.5,
         stock: 100,
         category: "Food & Beverages",
       },
       {
         name: "Laptop",
-        barcode: "9876543210987",
+        qr: "9876543210987",
         price: 999.99,
         stock: 10,
         category: "Electronics",
       },
       {
         name: "T-Shirt",
-        barcode: "5555666677778",
+        qr: "5555666677778",
         price: 19.99,
         stock: 50,
         category: "Clothing",
@@ -117,10 +117,10 @@ const insertDefaultData = () => {
     sampleProducts.forEach((product) => {
       try {
         db.runSync(
-          "INSERT OR IGNORE INTO products (name, barcode, price, stock_quantity, category) VALUES (?, ?, ?, ?, ?)",
+          "INSERT OR IGNORE INTO products (name, qr, price, stock_quantity, category) VALUES (?, ?, ?, ?, ?)",
           [
             product.name,
-            product.barcode,
+            product.qr,
             product.price,
             product.stock,
             product.category,
@@ -138,7 +138,7 @@ const insertDefaultData = () => {
 // Product operations
 export const addProduct = (
   name,
-  barcode,
+  qr,
   price,
   stockQuantity,
   category,
@@ -146,8 +146,8 @@ export const addProduct = (
 ) => {
   try {
     const result = db.runSync(
-      "INSERT INTO products (name, barcode, price, stock_quantity, category, description) VALUES (?, ?, ?, ?, ?, ?)",
-      [name, barcode, price, stockQuantity, category, description]
+      "INSERT INTO products (name, qr, price, stock_quantity, category, description) VALUES (?, ?, ?, ?, ?, ?)",
+      [name, qr, price, stockQuantity, category, description]
     );
     return { success: true, id: result.lastInsertRowId };
   } catch (error) {
@@ -156,14 +156,14 @@ export const addProduct = (
   }
 };
 
-export const getProductByBarcode = (barcode) => {
+export const getProductByQR = (qr) => {
   try {
-    const result = db.getFirstSync("SELECT * FROM products WHERE barcode = ?", [
-      barcode,
+    const result = db.getFirstSync("SELECT * FROM products WHERE qr = ?", [
+      qr,
     ]);
     return result;
   } catch (error) {
-    console.error("Error getting product by barcode:", error);
+    console.error("Error getting product by qr:", error);
     return null;
   }
 };
@@ -252,7 +252,7 @@ export const getSaleDetails = (saleId) => {
     const sale = db.getFirstSync("SELECT * FROM sales WHERE id = ?", [saleId]);
     const items = db.getAllSync(
       `
-      SELECT si.*, p.name as product_name, p.barcode
+      SELECT si.*, p.name as product_name, p.qr
       FROM sale_items si
       JOIN products p ON si.product_id = p.id
       WHERE si.sale_id = ?
@@ -350,7 +350,7 @@ export const deleteProduct = (productId) => {
 export const updateProduct = (
   productId,
   name,
-  barcode,
+  qr,
   price,
   stockQuantity,
   category,
@@ -358,8 +358,8 @@ export const updateProduct = (
 ) => {
   try {
     db.runSync(
-      "UPDATE products SET name = ?, barcode = ?, price = ?, stock_quantity = ?, category = ?, description = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-      [name, barcode, price, stockQuantity, category, description, productId]
+      "UPDATE products SET name = ?, qr = ?, price = ?, stock_quantity = ?, category = ?, description = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+      [name, qr, price, stockQuantity, category, description, productId]
     );
     return { success: true };
   } catch (error) {
@@ -372,7 +372,7 @@ export const updateProduct = (
 export const searchProducts = (searchTerm) => {
   try {
     const result = db.getAllSync(
-      "SELECT * FROM products WHERE name LIKE ? OR barcode LIKE ? OR category LIKE ? ORDER BY name",
+      "SELECT * FROM products WHERE name LIKE ? OR qr LIKE ? OR category LIKE ? ORDER BY name",
       [`%${searchTerm}%`, `%${searchTerm}%`, `%${searchTerm}%`]
     );
     return result;

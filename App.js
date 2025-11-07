@@ -17,7 +17,7 @@ import { Audio } from "expo-av";
 import * as Haptics from "expo-haptics";
 import {
   initializeDatabase,
-  getProductByBarcode,
+  getProductByQR,
   getAllProducts,
   getDashboardStats,
   addProduct,
@@ -50,7 +50,7 @@ export default function App() {
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [newProduct, setNewProduct] = useState({
     name: "",
-    barcode: "",
+    qr: "",
     price: "",
     stock: "",
     category: "Food & Beverages",
@@ -61,7 +61,7 @@ export default function App() {
   // Cart state
   const [cartItems, setCartItems] = useState([]);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
-  const [lastScannedBarcode, setLastScannedBarcode] = useState("");
+  const [lastScannedQR, setLastScannedQR] = useState("");
   const [scanCooldown, setScanCooldown] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
   const [receiptData, setReceiptData] = useState(null);
@@ -106,14 +106,14 @@ export default function App() {
     // Prevent multiple scans and cooldown
     if (scanned || scanCooldown) return;
 
-    // Prevent scanning the same barcode repeatedly within 300ms
-    if (data === lastScannedBarcode) {
+    // Prevent scanning the same qr repeatedly within 300ms
+    if (data === lastScannedQR) {
       return;
     }
 
     setScanned(true);
     setScannedData(data);
-    setLastScannedBarcode(data);
+    setLastScannedQR(data);
     setScanCooldown(true);
 
     // Play beep sound and haptic feedback
@@ -136,8 +136,8 @@ export default function App() {
       setTimeout(() => sound.unloadAsync(), 500);
     } catch (error) {
       console.log("Beep/haptic error:", error);
-    } // Look up product by barcode
-    const product = getProductByBarcode(data);
+    } // Look up product by qr
+    const product = getProductByQR(data);
 
     if (product) {
       // Check stock availability
@@ -174,12 +174,12 @@ export default function App() {
       // Clear cooldown and last scanned after 300ms
       setTimeout(() => {
         setScanCooldown(false);
-        setLastScannedBarcode("");
+        setLastScannedQR("");
       }, 300);
     } else {
       Alert.alert(
         "Product Not Found",
-        `Barcode: ${data}\nProduct not in database.`,
+        `QR: ${data}\nProduct not in database.`,
         [
           {
             text: "Scan Again",
@@ -471,11 +471,11 @@ export default function App() {
     }
   };
 
-  const addNewProduct = (barcode) => {
-    // Open the add product modal with the scanned barcode pre-filled
+  const addNewProduct = (qr) => {
+    // Open the add product modal with the scanned qr pre-filled
     setNewProduct({
       name: "",
-      barcode: barcode,
+      qr: qr,
       price: "",
       stock: "",
       category: "General",
@@ -507,7 +507,7 @@ export default function App() {
   const openAddProductModal = () => {
     setNewProduct({
       name: "",
-      barcode: "",
+      qr: "",
       price: "",
       stock: "",
       category: "Food & Beverages",
@@ -536,8 +536,8 @@ export default function App() {
   };
 
   const handleAddProduct = async () => {
-    if (!newProduct.name || !newProduct.price || !newProduct.barcode) {
-      Alert.alert("Error", "Please fill in name, barcode, and price");
+    if (!newProduct.name || !newProduct.price || !newProduct.qr) {
+      Alert.alert("Error", "Please fill in name, qr, and price");
       return;
     }
 
@@ -555,7 +555,7 @@ export default function App() {
       // First add the product to get the ID
       const result = addProduct(
         newProduct.name,
-        newProduct.barcode,
+        newProduct.qr,
         parseFloat(newProduct.price),
         parseInt(newProduct.stock) || 0,
         newProduct.category,
@@ -575,7 +575,7 @@ export default function App() {
             await updateProduct(
               result.id,
               newProduct.name,
-              newProduct.barcode,
+              newProduct.qr,
               parseFloat(newProduct.price),
               parseInt(newProduct.stock) || 0,
               newProduct.category,
@@ -645,7 +645,7 @@ export default function App() {
     setEditingProduct({
       id: product.id,
       name: product.name,
-      barcode: product.barcode,
+      qr: product.qr,
       price: product.price.toString(),
       stock: product.stock_quantity.toString(),
       category: product.category || "Food & Beverages",
@@ -699,7 +699,7 @@ export default function App() {
       const result = updateProduct(
         editingProduct.id,
         editingProduct.name,
-        editingProduct.barcode,
+        editingProduct.qr,
         parseFloat(editingProduct.price),
         parseInt(editingProduct.stock),
         editingProduct.category,
@@ -979,7 +979,7 @@ export default function App() {
             <View style={styles.emptyState}>
               <Text style={styles.emptyStateText}>No products found</Text>
               <Text style={styles.emptyStateSubtext}>
-                Scan a barcode to add products
+                Scan a qr to add products
               </Text>
             </View>
           ) : (
@@ -1003,9 +1003,7 @@ export default function App() {
                 <Text style={styles.productCardCategory}>
                   {product.category}
                 </Text>
-                <Text style={styles.productCardBarcode}>
-                  Barcode: {product.barcode}
-                </Text>
+                <Text style={styles.productCardQR}>QR: {product.qr}</Text>
                 <View style={styles.productCardFooter}>
                   <View style={styles.stockInfo}>
                     <Text style={styles.productCardStock}>
@@ -1074,7 +1072,7 @@ export default function App() {
           <View style={styles.searchContainer}>
             <TextInput
               style={styles.searchInput}
-              placeholder="Search products by name, barcode, or category..."
+              placeholder="Search products by name, qr, or category..."
               placeholderTextColor="#888"
               value={searchQuery}
               onChangeText={handleSearch}
@@ -1118,8 +1116,8 @@ export default function App() {
                       <Text style={styles.searchResultCategory}>
                         {product.category}
                       </Text>
-                      <Text style={styles.searchResultBarcode}>
-                        Barcode: {product.barcode}
+                      <Text style={styles.searchResultQR}>
+                        QR: {product.qr}
                       </Text>
                     </View>
                     <View style={styles.searchResultPricing}>
@@ -1352,7 +1350,7 @@ export default function App() {
               <Text style={styles.resultText}>{scannedData}</Text>
             </View>
           ) : (
-            <Text style={styles.instructionText}>Point camera at barcode</Text>
+            <Text style={styles.instructionText}>Point camera at qr</Text>
           )}
         </View>
 
@@ -1387,7 +1385,7 @@ export default function App() {
         productData={
           editingProduct || {
             name: "",
-            barcode: "",
+            qr: "",
             price: "",
             stock: "",
             category: "Food & Beverages",
@@ -1752,7 +1750,7 @@ const styles = StyleSheet.create({
     color: "#666",
     marginBottom: 5,
   },
-  productCardBarcode: {
+  productCardQR: {
     fontSize: 12,
     color: "#888",
     marginBottom: 10,
@@ -2077,7 +2075,7 @@ const styles = StyleSheet.create({
     color: "#666",
     marginBottom: 2,
   },
-  searchResultBarcode: {
+  searchResultQR: {
     fontSize: 11,
     color: "#888",
   },
