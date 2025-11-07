@@ -31,6 +31,30 @@ export const initializeDatabase = () => {
       // Column already exists, ignore error
     }
 
+    // Migrate barcode column to qr if needed
+    try {
+      // Check if barcode column exists
+      const tableInfo = db.getAllSync("PRAGMA table_info(products)");
+      const hasBarcode = tableInfo.some((col) => col.name === "barcode");
+      const hasQR = tableInfo.some((col) => col.name === "qr");
+
+      if (hasBarcode && !hasQR) {
+        // Rename barcode column to qr
+        db.execSync(`
+          ALTER TABLE products RENAME COLUMN barcode TO qr;
+        `);
+        console.log("Successfully migrated barcode column to qr");
+      } else if (!hasBarcode && !hasQR) {
+        // Add qr column if neither exists
+        db.execSync(`
+          ALTER TABLE products ADD COLUMN qr TEXT UNIQUE;
+        `);
+        console.log("Added qr column to products table");
+      }
+    } catch (error) {
+      console.log("Migration note:", error.message);
+    }
+
     // Create sales table
     db.execSync(`
       CREATE TABLE IF NOT EXISTS sales (
@@ -188,9 +212,7 @@ export const addProduct = (
 
 export const getProductByQR = (qr) => {
   try {
-    const result = db.getFirstSync("SELECT * FROM products WHERE qr = ?", [
-      qr,
-    ]);
+    const result = db.getFirstSync("SELECT * FROM products WHERE qr = ?", [qr]);
     return result;
   } catch (error) {
     console.error("Error getting product by qr:", error);
