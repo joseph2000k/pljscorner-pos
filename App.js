@@ -11,6 +11,7 @@ import {
   Modal,
   Image,
   Dimensions,
+  Platform,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
@@ -3307,7 +3308,8 @@ const styles = StyleSheet.create({
   cartFooter: {
     backgroundColor: "#fff",
     paddingHorizontal: 15,
-    paddingVertical: 20,
+    paddingTop: 20,
+    paddingBottom: Platform.OS === "android" ? 40 : 20,
     borderTopWidth: 1,
     borderTopColor: "#e0e0e0",
   },
