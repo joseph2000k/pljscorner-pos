@@ -1563,7 +1563,7 @@ export default function App() {
                 onPress={() => setShowReceiptHistory(true)}
               >
                 <Ionicons name="receipt" size={28} color="#5856D6" />
-                <Text style={styles.quickActionText}>History</Text>
+                <Text style={styles.quickActionText}>Receipts</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
