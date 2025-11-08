@@ -264,6 +264,9 @@ export default function App() {
     const product = getProductByQR(data);
 
     if (product) {
+      // Set the scanned product for display
+      setScannedProduct(product);
+
       // Check stock availability
       if (product.stock_quantity <= 0) {
         Alert.alert(
@@ -301,6 +304,9 @@ export default function App() {
         setLastScannedQR("");
       }, 300);
     } else {
+      // Clear scanned product if not found
+      setScannedProduct(null);
+
       Alert.alert(
         "Product Not Found",
         `QR: ${data}\nProduct not in database.`,
@@ -635,6 +641,8 @@ export default function App() {
 
   const goBackToPOS = () => {
     setCurrentScreen("pos");
+    setScannedProduct(null);
+    setScannedData("");
   };
 
   const openAddProductModal = () => {
@@ -2069,7 +2077,80 @@ export default function App() {
         </View>
 
         <View style={styles.footer}>
-          {scannedData ? (
+          {scannedProduct ? (
+            <View style={styles.scannedProductContainer}>
+              <View style={styles.scannerMainRow}>
+                {/* Left side: Product Image and Info */}
+                <View style={styles.scannerProductSection}>
+                  {scannedProduct.image_uri && (
+                    <Image
+                      source={{ uri: scannedProduct.image_uri }}
+                      style={styles.scannedProductImage}
+                      resizeMode="cover"
+                    />
+                  )}
+                  <View style={styles.scannedProductInfo}>
+                    <Text style={styles.resultLabel}>Last Scanned:</Text>
+                    <Text style={styles.resultText}>{scannedProduct.name}</Text>
+                    <Text style={styles.resultPrice}>
+                      ₱{scannedProduct.price.toFixed(2)}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Right side: Quantity Controls */}
+                {(() => {
+                  const cartItem = cartItems.find(
+                    (item) => item.id === scannedProduct.id
+                  );
+                  const quantityInCart = cartItem ? cartItem.quantity : 0;
+
+                  return (
+                    <View style={styles.scannerQuantitySection}>
+                      <Text style={styles.cartQuantityLabel}>
+                        In Cart: {quantityInCart}
+                      </Text>
+                      {quantityInCart > 0 && (
+                        <View style={styles.scannerQuantityControls}>
+                          <TouchableOpacity
+                            style={styles.scannerQuantityButton}
+                            onPress={() =>
+                              updateCartItemQuantity(
+                                scannedProduct.id,
+                                quantityInCart - 1
+                              )
+                            }
+                          >
+                            <Ionicons name="remove" size={20} color="#fff" />
+                          </TouchableOpacity>
+                          <Text style={styles.scannerQuantityText}>
+                            {quantityInCart}
+                          </Text>
+                          <TouchableOpacity
+                            style={styles.scannerQuantityButton}
+                            onPress={() =>
+                              updateCartItemQuantity(
+                                scannedProduct.id,
+                                quantityInCart + 1
+                              )
+                            }
+                          >
+                            <Ionicons name="add" size={20} color="#fff" />
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={styles.scannerRemoveButton}
+                            onPress={() => removeFromCart(scannedProduct.id)}
+                          >
+                            <Ionicons name="trash" size={18} color="#fff" />
+                          </TouchableOpacity>
+                        </View>
+                      )}
+                    </View>
+                  );
+                })()}
+              </View>
+            </View>
+          ) : scannedData ? (
             <View style={styles.resultContainer}>
               <Text style={styles.resultLabel}>Last Scanned:</Text>
               <Text style={styles.resultText}>{scannedData}</Text>
@@ -2751,7 +2832,7 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#fff",
     alignItems: "center",
-    minHeight: 120,
+    minHeight: 150,
     borderTopWidth: 1,
     borderTopColor: "#e0e0e0",
   },
@@ -2761,20 +2842,96 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 20,
   },
+  scannedProductContainer: {
+    width: "100%",
+    alignItems: "center",
+  },
+  scannerMainRow: {
+    flexDirection: "row",
+    width: "100%",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 10,
+  },
+  scannerProductSection: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 15,
+    flex: 1,
+  },
   resultContainer: {
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 15,
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 15,
+  },
+  scannedProductImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+  scannedProductInfo: {
+    flex: 1,
+    maxWidth: 200,
   },
   resultLabel: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#888",
-    marginBottom: 5,
+    marginBottom: 3,
   },
   resultText: {
     fontSize: 16,
+    fontWeight: "600",
     color: "#333",
+    marginBottom: 3,
+  },
+  resultPrice: {
+    fontSize: 15,
+    fontWeight: "500",
+    color: "#007AFF",
+  },
+  scannerQuantitySection: {
+    alignItems: "flex-end",
+    justifyContent: "center",
+    minWidth: 140,
+  },
+  cartQuantityLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 8,
+  },
+  scannerQuantityControls: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  scannerQuantityButton: {
+    backgroundColor: "#007AFF",
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  scannerQuantityText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333",
+    minWidth: 30,
     textAlign: "center",
-    paddingHorizontal: 20,
+  },
+  scannerRemoveButton: {
+    backgroundColor: "#FF3B30",
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 4,
   },
   scanButton: {
     backgroundColor: "#007AFF",
