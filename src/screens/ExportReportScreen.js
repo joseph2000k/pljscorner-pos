@@ -11,7 +11,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
-import XLSX from "xlsx";
+import XLSX from "xlsx-js-style";
 
 export default function ExportReportScreen({ onBackPress, onGenerateReport }) {
   const [startDate, setStartDate] = useState("");
@@ -315,14 +315,92 @@ export default function ExportReportScreen({ onBackPress, onGenerateReport }) {
 
       // Add detailed transactions sheet
       const ws = XLSX.utils.aoa_to_sheet(excelData);
+
+      // Apply cell styles for header row (black text, bold)
+      const range = XLSX.utils.decode_range(ws["!ref"]);
+      for (let col = range.s.c; col <= range.e.c; col++) {
+        const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+        if (!ws[cellAddress]) continue;
+        ws[cellAddress].s = {
+          font: {
+            bold: true,
+            color: { rgb: "FF000000" },
+            name: "Calibri",
+            sz: 11,
+          },
+          fill: {
+            patternType: "solid",
+            fgColor: { rgb: "FFFFFFFF" },
+          },
+          alignment: {
+            vertical: "center",
+            horizontal: "center",
+          },
+        };
+      }
+
       XLSX.utils.book_append_sheet(wb, ws, "Detailed Transactions");
 
       // Add summary sheet
       const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+
+      // Style header row in summary sheet
+      const summaryRange = XLSX.utils.decode_range(wsSummary["!ref"]);
+      for (let col = summaryRange.s.c; col <= summaryRange.e.c; col++) {
+        const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+        if (!wsSummary[cellAddress]) continue;
+        wsSummary[cellAddress].s = {
+          font: {
+            bold: true,
+            color: { rgb: "FF000000" },
+            name: "Calibri",
+            sz: 11,
+          },
+          fill: {
+            patternType: "solid",
+            fgColor: { rgb: "FFFFFFFF" },
+          },
+          alignment: {
+            vertical: "center",
+            horizontal: "center",
+          },
+        };
+      }
+
+      // Style TOTAL row (last row) - black text, bold
+      const totalRowIndex = summaryRange.e.r;
+      for (let col = summaryRange.s.c; col <= summaryRange.e.c; col++) {
+        const cellAddress = XLSX.utils.encode_cell({
+          r: totalRowIndex,
+          c: col,
+        });
+        if (!wsSummary[cellAddress]) continue;
+        wsSummary[cellAddress].s = {
+          font: {
+            bold: true,
+            color: { rgb: "FF000000" },
+            name: "Calibri",
+            sz: 11,
+          },
+          fill: {
+            patternType: "solid",
+            fgColor: { rgb: "FFFFFFFF" },
+          },
+          alignment: {
+            vertical: "center",
+            horizontal: "center",
+          },
+        };
+      }
+
       XLSX.utils.book_append_sheet(wb, wsSummary, "Product Summary");
 
-      // Generate Excel file
-      const wbout = XLSX.write(wb, { type: "base64", bookType: "xlsx" });
+      // Generate Excel file with cell styles enabled
+      const wbout = XLSX.write(wb, {
+        type: "base64",
+        bookType: "xlsx",
+        cellStyles: true,
+      });
       const fileName = `Sales_Report_${startDate}_to_${endDate}.xlsx`;
       const fileUri = FileSystem.documentDirectory + fileName;
 
