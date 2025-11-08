@@ -422,13 +422,16 @@ export default function App() {
 
         // Add remaining items at regular price
         if (remainingItems > 0) {
-          // Calculate average price for remaining items
-          const totalRegularPrice = categoryItems.reduce(
-            (sum, item) => sum + item.price * item.quantity,
-            0
-          );
-          const avgPrice = totalRegularPrice / totalQuantity;
-          categoryTotal += remainingItems * avgPrice;
+          // For remaining items, we need to charge at actual prices
+          // Starting from the most expensive items first (FIFO)
+          let remainingCount = remainingItems;
+
+          for (let i = 0; i < categoryItems.length && remainingCount > 0; i++) {
+            const item = categoryItems[i];
+            const qtyToCharge = Math.min(item.quantity, remainingCount);
+            categoryTotal += qtyToCharge * item.price;
+            remainingCount -= qtyToCharge;
+          }
         }
 
         total += categoryTotal;

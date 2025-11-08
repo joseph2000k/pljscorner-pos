@@ -10,7 +10,11 @@ import {
   Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { getAllCategories, addCategory } from "../services/database";
+import {
+  getAllCategories,
+  addCategory,
+  updateCategory,
+} from "../services/database";
 
 const CategoriesModal = ({ visible, onClose, onCategoryAdded }) => {
   const [categories, setCategories] = useState([]);
@@ -19,6 +23,7 @@ const CategoriesModal = ({ visible, onClose, onCategoryAdded }) => {
   const [bulkDiscountQuantity, setBulkDiscountQuantity] = useState("");
   const [bulkDiscountPrice, setBulkDiscountPrice] = useState("");
   const [isAddingCategory, setIsAddingCategory] = useState(false);
+  const [editingCategory, setEditingCategory] = useState(null);
 
   useEffect(() => {
     if (visible) {
@@ -54,41 +59,80 @@ const CategoriesModal = ({ visible, onClose, onCategoryAdded }) => {
       return;
     }
 
-    const result = addCategory(
-      newCategoryName.trim(),
-      newCategoryDescription.trim(),
-      quantity,
-      price
-    );
+    if (editingCategory) {
+      // Update existing category
+      const result = updateCategory(
+        editingCategory.id,
+        newCategoryName.trim(),
+        newCategoryDescription.trim(),
+        quantity,
+        price
+      );
 
-    if (result.success) {
-      Alert.alert("Success", "Category added successfully");
-      setNewCategoryName("");
-      setNewCategoryDescription("");
-      setBulkDiscountQuantity("");
-      setBulkDiscountPrice("");
-      setIsAddingCategory(false);
-      loadCategories();
-
-      // Notify parent component
-      if (onCategoryAdded) {
-        onCategoryAdded();
+      if (result.success) {
+        Alert.alert("Success", "Category updated successfully");
+        resetForm();
+        loadCategories();
+        if (onCategoryAdded) {
+          onCategoryAdded();
+        }
+      } else {
+        Alert.alert("Error", result.error || "Failed to update category.");
       }
     } else {
-      Alert.alert(
-        "Error",
-        result.error ||
-          "Failed to add category. Category name might already exist."
+      // Add new category
+      const result = addCategory(
+        newCategoryName.trim(),
+        newCategoryDescription.trim(),
+        quantity,
+        price
       );
+
+      if (result.success) {
+        Alert.alert("Success", "Category added successfully");
+        resetForm();
+        loadCategories();
+        if (onCategoryAdded) {
+          onCategoryAdded();
+        }
+      } else {
+        Alert.alert(
+          "Error",
+          result.error ||
+            "Failed to add category. Category name might already exist."
+        );
+      }
     }
   };
 
-  const handleClose = () => {
-    setIsAddingCategory(false);
+  const handleEditCategory = (category) => {
+    setEditingCategory(category);
+    setNewCategoryName(category.name);
+    setNewCategoryDescription(category.description || "");
+    setBulkDiscountQuantity(
+      category.bulk_discount_quantity > 0
+        ? category.bulk_discount_quantity.toString()
+        : ""
+    );
+    setBulkDiscountPrice(
+      category.bulk_discount_price > 0
+        ? category.bulk_discount_price.toString()
+        : ""
+    );
+    setIsAddingCategory(true);
+  };
+
+  const resetForm = () => {
     setNewCategoryName("");
     setNewCategoryDescription("");
     setBulkDiscountQuantity("");
     setBulkDiscountPrice("");
+    setIsAddingCategory(false);
+    setEditingCategory(null);
+  };
+
+  const handleClose = () => {
+    resetForm();
     onClose();
   };
 
@@ -106,7 +150,13 @@ const CategoriesModal = ({ visible, onClose, onCategoryAdded }) => {
           </TouchableOpacity>
           <Text style={styles.modalTitle}>Manage Categories</Text>
           <TouchableOpacity
-            onPress={() => setIsAddingCategory(!isAddingCategory)}
+            onPress={() => {
+              if (isAddingCategory) {
+                resetForm();
+              } else {
+                setIsAddingCategory(true);
+              }
+            }}
           >
             <Text style={styles.modalSaveText}>
               {isAddingCategory ? "Cancel" : "New"}
@@ -118,7 +168,9 @@ const CategoriesModal = ({ visible, onClose, onCategoryAdded }) => {
           {/* Add New Category Form */}
           {isAddingCategory && (
             <View style={styles.addCategoryForm}>
-              <Text style={styles.formTitle}>Add New Category</Text>
+              <Text style={styles.formTitle}>
+                {editingCategory ? "Edit Category" : "Add New Category"}
+              </Text>
 
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Category Name *</Text>
@@ -199,7 +251,9 @@ const CategoriesModal = ({ visible, onClose, onCategoryAdded }) => {
                 style={styles.addButton}
                 onPress={handleAddCategory}
               >
-                <Text style={styles.addButtonText}>Add Category</Text>
+                <Text style={styles.addButtonText}>
+                  {editingCategory ? "Update Category" : "Add Category"}
+                </Text>
               </TouchableOpacity>
             </View>
           )}
@@ -252,6 +306,12 @@ const CategoriesModal = ({ visible, onClose, onCategoryAdded }) => {
                       {new Date(category.created_at).toLocaleDateString()}
                     </Text>
                   </View>
+                  <TouchableOpacity
+                    style={styles.editButton}
+                    onPress={() => handleEditCategory(category)}
+                  >
+                    <Ionicons name="pencil" size={20} color="#007AFF" />
+                  </TouchableOpacity>
                 </View>
               ))
             )}
@@ -487,6 +547,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#666",
     lineHeight: 18,
+  },
+  editButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: "#f0f0f0",
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 

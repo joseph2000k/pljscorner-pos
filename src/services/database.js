@@ -411,6 +411,25 @@ export const addCategory = (
   }
 };
 
+export const updateCategory = (
+  categoryId,
+  name,
+  description = "",
+  bulkDiscountQuantity = 0,
+  bulkDiscountPrice = 0
+) => {
+  try {
+    db.runSync(
+      "UPDATE categories SET name = ?, description = ?, bulk_discount_quantity = ?, bulk_discount_price = ? WHERE id = ?",
+      [name, description, bulkDiscountQuantity, bulkDiscountPrice, categoryId]
+    );
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating category:", error);
+    return { success: false, error: error.message };
+  }
+};
+
 export const deleteCategory = (categoryId) => {
   try {
     // Check if category is being used by products
