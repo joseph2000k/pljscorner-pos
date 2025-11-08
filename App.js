@@ -1117,12 +1117,37 @@ export default function App() {
                 try {
                   await initializeDatabase();
 
-                  // Explicitly reload all data
+                  // Fix image URIs to match current device's FileSystem.documentDirectory
+                  console.log("Updating image URIs for current device...");
                   const allProducts = getAllProducts();
+
+                  for (const product of allProducts) {
+                    if (product.image_uri) {
+                      // Extract just the filename from the old path
+                      const filename = product.image_uri.split("/").pop();
+                      // Create new path with current device's directory
+                      const newImageUri = `${FileSystem.documentDirectory}product_images/${filename}`;
+
+                      // Update the database with the new path
+                      updateProduct(
+                        product.id,
+                        product.name,
+                        product.qr,
+                        product.price,
+                        product.stock_quantity,
+                        product.category,
+                        product.description,
+                        newImageUri
+                      );
+                    }
+                  }
+
+                  // Reload all data after updating paths
+                  const updatedProducts = getAllProducts();
                   console.log(
-                    `Found ${allProducts.length} products in restored database`
+                    `Found ${updatedProducts.length} products in restored database`
                   );
-                  setProducts(allProducts);
+                  setProducts(updatedProducts);
 
                   console.log("Loading categories...");
                   const allCategories = getAllCategories();
