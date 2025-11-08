@@ -122,8 +122,6 @@ export default function App() {
     let labels;
     let data;
 
-    console.log("Loading chart data for view type:", viewType);
-
     if (viewType === "hourly") {
       // Hourly view - Today's sales by hour
       chartData = getSalesChartDataByHour();
@@ -172,8 +170,6 @@ export default function App() {
         data = chartData.map((item) => parseFloat(item.revenue) || 0);
       }
     }
-
-    console.log("Chart data loaded:", { chartData, labels, data });
 
     // Format data for the chart
     if (chartData && chartData.length > 0 && data && data.length > 0) {

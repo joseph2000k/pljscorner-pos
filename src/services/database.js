@@ -316,7 +316,6 @@ export const getSalesChartData = (days = 7) => {
     `,
       [days]
     );
-    console.log("Daily chart data:", result);
     return result;
   } catch (error) {
     console.error("Error getting sales chart data:", error);
@@ -339,7 +338,6 @@ export const getSalesChartDataByHour = () => {
       ORDER BY hour ASC
     `
     );
-    console.log("Hourly chart data:", result);
     return result;
   } catch (error) {
     console.error("Error getting sales chart data by hour:", error);
@@ -362,7 +360,6 @@ export const getSalesChartDataByMonth = () => {
       ORDER BY month ASC
     `
     );
-    console.log("Monthly chart data:", result);
     return result;
   } catch (error) {
     console.error("Error getting sales chart data by month:", error);
