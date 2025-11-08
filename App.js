@@ -2041,7 +2041,30 @@ export default function App() {
           />
 
           <View style={styles.overlay}>
-            <View style={styles.scanArea} />
+            {/* Top dark overlay */}
+            <View style={styles.overlayTop} />
+            
+            {/* Middle row with scan area */}
+            <View style={styles.overlayMiddle}>
+              <View style={styles.overlaySide} />
+              
+              {/* Scan area with corner brackets */}
+              <View style={styles.scanArea}>
+                {/* Top-left corner */}
+                <View style={[styles.corner, styles.cornerTopLeft]} />
+                {/* Top-right corner */}
+                <View style={[styles.corner, styles.cornerTopRight]} />
+                {/* Bottom-left corner */}
+                <View style={[styles.corner, styles.cornerBottomLeft]} />
+                {/* Bottom-right corner */}
+                <View style={[styles.corner, styles.cornerBottomRight]} />
+              </View>
+              
+              <View style={styles.overlaySide} />
+            </View>
+            
+            {/* Bottom dark overlay */}
+            <View style={styles.overlayBottom} />
           </View>
         </View>
 
@@ -2671,16 +2694,58 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    alignItems: "center",
-    justifyContent: "center",
+    flexDirection: "column",
+  },
+  overlayTop: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+  },
+  overlayMiddle: {
+    flexDirection: "row",
+  },
+  overlaySide: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+  },
+  overlayBottom: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
   },
   scanArea: {
-    width: 250,
-    height: 250,
-    borderWidth: 2,
-    borderColor: "#00ff00",
-    borderRadius: 20,
+    width: 280,
+    height: 280,
     backgroundColor: "transparent",
+    position: "relative",
+  },
+  corner: {
+    position: "absolute",
+    width: 40,
+    height: 40,
+    borderColor: "#fff",
+  },
+  cornerTopLeft: {
+    top: 0,
+    left: 0,
+    borderTopWidth: 4,
+    borderLeftWidth: 4,
+  },
+  cornerTopRight: {
+    top: 0,
+    right: 0,
+    borderTopWidth: 4,
+    borderRightWidth: 4,
+  },
+  cornerBottomLeft: {
+    bottom: 0,
+    left: 0,
+    borderBottomWidth: 4,
+    borderLeftWidth: 4,
+  },
+  cornerBottomRight: {
+    bottom: 0,
+    right: 0,
+    borderBottomWidth: 4,
+    borderRightWidth: 4,
   },
   footer: {
     padding: 20,
