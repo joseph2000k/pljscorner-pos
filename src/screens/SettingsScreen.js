@@ -15,6 +15,7 @@ export default function SettingsScreen({
   onRestoreBackup,
   revenuePeriod,
   onRevenuePeriodChange,
+  onExportReport,
 }) {
   return (
     <View style={styles.container}>
@@ -145,6 +146,28 @@ export default function SettingsScreen({
               <Text style={styles.settingTitle}>Restore Backup</Text>
               <Text style={styles.settingDescription}>
                 Import data from a backup file
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#999" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Reports Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Reports</Text>
+
+          <TouchableOpacity style={styles.settingItem} onPress={onExportReport}>
+            <View style={styles.settingIconContainer}>
+              <Ionicons
+                name="document-text-outline"
+                size={24}
+                color="#2196F3"
+              />
+            </View>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingTitle}>Export Sales Report</Text>
+              <Text style={styles.settingDescription}>
+                Generate Excel report for selected date range
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#999" />

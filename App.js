@@ -24,6 +24,7 @@ import JSZip from "jszip";
 import { LineChart } from "react-native-chart-kit";
 import SettingsScreen from "./src/screens/SettingsScreen";
 import SalesReportScreen from "./src/screens/SalesReportScreen";
+import ExportReportScreen from "./src/screens/ExportReportScreen";
 import {
   initializeDatabase,
   getProductByQR,
@@ -45,6 +46,7 @@ import {
   getSalesChartDataByHour,
   getSalesChartDataByMonth,
   getSalesByPaymentMethod,
+  getSalesByDateRange,
 } from "./src/services/database";
 import { saveImage, deleteImage } from "./src/utils/imageStorage";
 import CheckoutModal from "./src/components/CheckoutModal";
@@ -54,7 +56,7 @@ import CategoriesModal from "./src/components/CategoriesModal";
 import AddProductModal from "./src/components/AddProductModal";
 
 export default function App() {
-  const [currentScreen, setCurrentScreen] = useState("home"); // 'home', 'camera', 'products', 'add-product', 'pos', 'settings', 'sales-report'
+  const [currentScreen, setCurrentScreen] = useState("home"); // 'home', 'camera', 'products', 'add-product', 'pos', 'settings', 'sales-report', 'export-report'
   const [hasPermission, setHasPermission] = useState(null);
   const [scanned, setScanned] = useState(false);
   const [scannedData, setScannedData] = useState("");
@@ -1964,6 +1966,7 @@ export default function App() {
         onRestoreBackup={handleRestoreBackup}
         revenuePeriod={revenuePeriod}
         onRevenuePeriodChange={saveRevenuePeriodPreference}
+        onExportReport={() => setCurrentScreen("export-report")}
       />
     );
   }
@@ -1976,6 +1979,16 @@ export default function App() {
         onBackPress={goBackHome}
         salesByPaymentMethod={salesByPaymentMethod}
         revenuePeriod={revenuePeriod}
+      />
+    );
+  }
+
+  // Export Report Screen
+  else if (currentScreen === "export-report") {
+    screenContent = (
+      <ExportReportScreen
+        onBackPress={goBackHome}
+        onGenerateReport={getSalesByDateRange}
       />
     );
   }

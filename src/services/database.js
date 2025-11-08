@@ -578,6 +578,45 @@ export const getSalesByPaymentMethod = (period = "daily") => {
   }
 };
 
+// Get detailed sales data by date range for export
+export const getSalesByDateRange = (startDate, endDate) => {
+  try {
+    const result = db.getAllSync(
+      `
+      SELECT 
+        s.id as sale_id,
+        s.created_at,
+        s.payment_method,
+        s.total_amount,
+        s.customer_name,
+        s.amount_paid,
+        s.change_amount,
+        si.product_id,
+        p.name as product_name,
+        p.category,
+        p.price as original_price,
+        si.quantity,
+        si.unit_price as price,
+        si.total_price as subtotal,
+        c.bulk_discount_quantity,
+        c.bulk_discount_price
+      FROM sales s
+      LEFT JOIN sale_items si ON s.id = si.sale_id
+      LEFT JOIN products p ON si.product_id = p.id
+      LEFT JOIN categories c ON p.category = c.name
+      WHERE DATE(s.created_at, 'localtime') BETWEEN DATE(?) AND DATE(?)
+      ORDER BY s.created_at DESC, s.id, si.id
+      `,
+      [startDate, endDate]
+    );
+
+    return result;
+  } catch (error) {
+    console.error("Error getting sales by date range:", error);
+    return [];
+  }
+};
+
 export const deleteProduct = (productId) => {
   try {
     // Check if product exists in any sales first
