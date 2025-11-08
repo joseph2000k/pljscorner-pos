@@ -137,8 +137,8 @@ const ReceiptHistoryModal = ({ visible, onClose }) => {
       totalSavings,
       totalAmount: saleDetail.total_amount,
       paymentMethod: saleDetail.payment_method,
-      amountPaid: saleDetail.total_amount,
-      change: 0,
+      amountPaid: saleDetail.amount_paid || saleDetail.total_amount,
+      change: saleDetail.change_amount || 0,
       date: saleDetail.created_at,
     };
 

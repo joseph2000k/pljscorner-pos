@@ -82,6 +82,8 @@ export const initializeDatabase = () => {
         total_amount REAL NOT NULL,
         payment_method TEXT DEFAULT 'cash',
         customer_name TEXT,
+        amount_paid REAL DEFAULT 0,
+        change_amount REAL DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
     `);
@@ -124,6 +126,23 @@ export const initializeDatabase = () => {
     try {
       db.execSync(`
         ALTER TABLE categories ADD COLUMN bulk_discount_price REAL DEFAULT 0;
+      `);
+    } catch (error) {
+      // Column already exists, ignore error
+    }
+
+    // Add payment details columns to existing sales table if they don't exist
+    try {
+      db.execSync(`
+        ALTER TABLE sales ADD COLUMN amount_paid REAL DEFAULT 0;
+      `);
+    } catch (error) {
+      // Column already exists, ignore error
+    }
+
+    try {
+      db.execSync(`
+        ALTER TABLE sales ADD COLUMN change_amount REAL DEFAULT 0;
       `);
     } catch (error) {
       // Column already exists, ignore error
@@ -207,12 +226,14 @@ export const updateProductStock = (productId, newStock) => {
 export const createSale = (
   totalAmount,
   paymentMethod = "cash",
-  customerName = ""
+  customerName = "",
+  amountPaid = 0,
+  changeAmount = 0
 ) => {
   try {
     const result = db.runSync(
-      "INSERT INTO sales (total_amount, payment_method, customer_name) VALUES (?, ?, ?)",
-      [totalAmount, paymentMethod, customerName]
+      "INSERT INTO sales (total_amount, payment_method, customer_name, amount_paid, change_amount) VALUES (?, ?, ?, ?, ?)",
+      [totalAmount, paymentMethod, customerName, amountPaid, changeAmount]
     );
     return { success: true, id: result.lastInsertRowId };
   } catch (error) {

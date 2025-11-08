@@ -526,7 +526,13 @@ export default function App() {
     const totalSavings = discounts.reduce((sum, d) => sum + d.savings, 0);
 
     // Create sale record
-    const saleResult = createSale(totalAmount, paymentMethod);
+    const saleResult = createSale(
+      totalAmount,
+      paymentMethod,
+      "",
+      amountPaid,
+      change
+    );
 
     if (saleResult.success) {
       const saleId = saleResult.id;
