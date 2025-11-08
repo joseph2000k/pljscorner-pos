@@ -19,6 +19,7 @@ import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import * as DocumentPicker from "expo-document-picker";
 import JSZip from "jszip";
+import SettingsScreen from "./src/screens/SettingsScreen";
 import {
   initializeDatabase,
   getProductByQR,
@@ -45,7 +46,7 @@ import CategoriesModal from "./src/components/CategoriesModal";
 import AddProductModal from "./src/components/AddProductModal";
 
 export default function App() {
-  const [currentScreen, setCurrentScreen] = useState("home"); // 'home', 'camera', 'products', 'add-product', 'pos'
+  const [currentScreen, setCurrentScreen] = useState("home"); // 'home', 'camera', 'products', 'add-product', 'pos', 'settings'
   const [hasPermission, setHasPermission] = useState(null);
   const [scanned, setScanned] = useState(false);
   const [scannedData, setScannedData] = useState("");
@@ -1319,6 +1320,16 @@ export default function App() {
                 </View>
               </TouchableOpacity>
             </View>
+
+            <TouchableOpacity
+              style={styles.secondaryButton}
+              onPress={() => setCurrentScreen("settings")}
+            >
+              <View style={styles.buttonContent}>
+                <Ionicons name="settings-outline" size={20} color="#007AFF" />
+                <Text style={styles.secondaryButtonText}>Settings</Text>
+              </View>
+            </TouchableOpacity>
           </View>
 
           {/* Last Scanned Product */}
@@ -1373,24 +1384,7 @@ export default function App() {
             <Text style={styles.backButtonText}>← Back</Text>
           </TouchableOpacity>
           <Text style={styles.headerText}>Products</Text>
-          <View style={styles.backupButtonsContainer}>
-            <TouchableOpacity
-              style={styles.backupButton}
-              onPress={handleBackupDatabase}
-            >
-              <Ionicons
-                name="cloud-download-outline"
-                size={24}
-                color="#4CAF50"
-              />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.backupButton}
-              onPress={handleRestoreBackup}
-            >
-              <Ionicons name="cloud-upload-outline" size={24} color="#FF9800" />
-            </TouchableOpacity>
-          </View>
+          <View style={styles.placeholder} />
         </View>
 
         <ScrollView style={styles.productsContent}>
@@ -1717,6 +1711,17 @@ export default function App() {
 
         <StatusBar style="dark" />
       </View>
+    );
+  }
+
+  // Settings Screen
+  else if (currentScreen === "settings") {
+    screenContent = (
+      <SettingsScreen
+        onBackPress={goBackHome}
+        onBackupDatabase={handleBackupDatabase}
+        onRestoreBackup={handleRestoreBackup}
+      />
     );
   }
 
