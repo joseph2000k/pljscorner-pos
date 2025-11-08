@@ -15,6 +15,10 @@ import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { CameraView, Camera } from "expo-camera";
 import { Audio } from "expo-av";
 import * as Haptics from "expo-haptics";
+import * as FileSystem from "expo-file-system/legacy";
+import * as Sharing from "expo-sharing";
+import * as DocumentPicker from "expo-document-picker";
+import JSZip from "jszip";
 import {
   initializeDatabase,
   getProductByQR,
@@ -30,6 +34,7 @@ import {
   updateProductStock,
   resetDatabase,
   searchProducts,
+  reopenDatabase,
 } from "./src/services/database";
 import { saveImage, deleteImage } from "./src/utils/imageStorage";
 import CheckoutModal from "./src/components/CheckoutModal";
@@ -641,6 +646,474 @@ export default function App() {
     );
   };
 
+  const handleBackupDatabase = async () => {
+    try {
+      console.log("=== STARTING BACKUP ===");
+
+      const timestamp = new Date()
+        .toISOString()
+        .replace(/[:.]/g, "-")
+        .split("T")[0];
+      const timeString = new Date()
+        .toLocaleTimeString()
+        .replace(/:/g, "-")
+        .replace(/ /g, "");
+
+      // Step 1: Verify database exists
+      const possiblePaths = [
+        `${FileSystem.documentDirectory}SQLite/pos_database.db`,
+        `${FileSystem.documentDirectory}pos_database.db`,
+      ];
+
+      let dbPath = null;
+      let dbInfo = null;
+
+      for (const path of possiblePaths) {
+        console.log("Checking path:", path);
+        const info = await FileSystem.getInfoAsync(path);
+        if (info.exists && info.size > 0) {
+          dbPath = path;
+          dbInfo = info;
+          console.log("✓ Found database at:", path, "Size:", info.size);
+          break;
+        }
+      }
+
+      if (!dbPath || !dbInfo) {
+        Alert.alert(
+          "Database Not Found",
+          "Could not find database file. Please add some products first."
+        );
+        return;
+      }
+
+      Alert.alert("Creating Backup", "Reading database and images...");
+
+      // Step 2: Read database file
+      console.log("Reading database from:", dbPath);
+      const dbContent = await FileSystem.readAsStringAsync(dbPath, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      console.log("Database content length:", dbContent.length);
+
+      if (dbContent.length === 0) {
+        Alert.alert("Error", "Database file is empty!");
+        return;
+      }
+
+      // Step 3: Create ZIP
+      console.log("Creating ZIP archive...");
+      const zip = new JSZip();
+
+      // Add database
+      zip.file("pos_database.db", dbContent, { base64: true });
+      console.log("✓ Database added to ZIP");
+
+      // Step 4: Add images
+      const imagesDir = `${FileSystem.documentDirectory}product_images`;
+      const imagesInfo = await FileSystem.getInfoAsync(imagesDir);
+
+      let imageCount = 0;
+      if (imagesInfo.exists) {
+        const imageFiles = await FileSystem.readDirectoryAsync(imagesDir);
+        console.log(`Found ${imageFiles.length} images`);
+
+        if (imageFiles.length > 0) {
+          const imagesFolder = zip.folder("product_images");
+
+          for (const imageFile of imageFiles) {
+            try {
+              const imagePath = `${imagesDir}/${imageFile}`;
+              const imageInfo = await FileSystem.getInfoAsync(imagePath);
+
+              if (imageInfo.exists && imageInfo.size > 0) {
+                const imageContent = await FileSystem.readAsStringAsync(
+                  imagePath,
+                  {
+                    encoding: FileSystem.EncodingType.Base64,
+                  }
+                );
+                imagesFolder.file(imageFile, imageContent, { base64: true });
+                imageCount++;
+              }
+            } catch (err) {
+              console.error(`Error adding image ${imageFile}:`, err.message);
+            }
+          }
+          console.log(`✓ Added ${imageCount} images to ZIP`);
+        }
+      } else {
+        console.log("No images directory found");
+      }
+
+      // Step 5: Add metadata
+      const backupInfo = {
+        timestamp: new Date().toISOString(),
+        version: "1.0.0",
+        productsCount: products.length,
+        imagesCount: imageCount,
+        databaseSize: dbInfo.size,
+        platform: "Expo/React Native",
+      };
+      zip.file("backup_info.json", JSON.stringify(backupInfo, null, 2));
+      console.log("✓ Metadata added");
+
+      // Step 6: Generate ZIP
+      console.log("Generating ZIP file...");
+      Alert.alert("Creating Backup", "Compressing data...");
+
+      const zipContent = await zip.generateAsync({
+        type: "base64",
+        compression: "DEFLATE",
+        compressionOptions: { level: 6 }, // Faster compression
+      });
+
+      console.log("ZIP generated, base64 length:", zipContent.length);
+
+      // Step 7: Save ZIP
+      const zipFileName = `pos_backup_${timestamp}_${timeString}.zip`;
+      const zipPath = `${FileSystem.cacheDirectory}${zipFileName}`;
+
+      console.log("Saving ZIP to:", zipPath);
+      await FileSystem.writeAsStringAsync(zipPath, zipContent, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      // Step 8: Verify ZIP was created
+      const zipInfo = await FileSystem.getInfoAsync(zipPath);
+      console.log("ZIP file info:", zipInfo);
+
+      if (!zipInfo.exists || zipInfo.size === 0) {
+        Alert.alert("Error", "Failed to create backup file!");
+        return;
+      }
+
+      console.log("=== BACKUP SUCCESSFUL ===");
+      console.log("ZIP size:", zipInfo.size, "bytes");
+
+      // Step 9: Share the file
+      const isAvailable = await Sharing.isAvailableAsync();
+      if (isAvailable) {
+        await Sharing.shareAsync(zipPath, {
+          dialogTitle: "Save Complete Backup",
+          mimeType: "application/zip",
+          UTI: "public.zip-archive",
+        });
+
+        Alert.alert(
+          "✅ Backup Complete!",
+          `Backup created successfully!\n\n` +
+            `📦 File: ${zipFileName}\n` +
+            `📊 Size: ${(zipInfo.size / 1024).toFixed(2)} KB\n` +
+            `💾 Database: ${(dbInfo.size / 1024).toFixed(2)} KB\n` +
+            `🛍️ Products: ${products.length}\n` +
+            `🖼️ Images: ${imageCount}\n\n` +
+            `Save this ZIP file in a safe place to restore your data later.`
+        );
+      } else {
+        Alert.alert(
+          "Backup Created",
+          `Backup saved at:\n${zipPath}\n\nSize: ${(
+            zipInfo.size / 1024
+          ).toFixed(2)} KB`
+        );
+      }
+    } catch (error) {
+      console.error("=== BACKUP FAILED ===");
+      console.error("Error:", error.message);
+      console.error("Stack:", error.stack);
+      Alert.alert(
+        "Backup Failed",
+        `Error: ${error.message}\n\nCheck the console for details.`
+      );
+    }
+  };
+
+  const handleRestoreBackup = async () => {
+    Alert.alert(
+      "Restore Backup",
+      "Select your backup ZIP file. This will replace your current database and images.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Select Backup",
+          onPress: async () => {
+            try {
+              console.log("Opening document picker for ZIP file...");
+
+              // Pick the backup zip file - accept any file type
+              const result = await DocumentPicker.getDocumentAsync({
+                type: "*/*",
+                copyToCacheDirectory: true,
+              });
+
+              console.log("Document picker result:", result);
+
+              if (result.canceled) {
+                console.log("User canceled file selection");
+                return;
+              }
+
+              const selectedUri = result.assets[0].uri;
+              const fileName = result.assets[0].name || "unknown";
+
+              console.log("Selected file:", fileName);
+              console.log("File URI:", selectedUri);
+
+              // Check if it's a zip file
+              if (!fileName.toLowerCase().endsWith(".zip")) {
+                Alert.alert(
+                  "Wrong File Type",
+                  `Selected file: ${fileName}\n\nPlease select a .zip backup file created by this app.`
+                );
+                return;
+              }
+
+              Alert.alert(
+                "Restoring...",
+                "Please wait, this may take a moment..."
+              );
+
+              // Read the zip file
+              console.log("Reading ZIP file as base64...");
+              const zipContent = await FileSystem.readAsStringAsync(
+                selectedUri,
+                {
+                  encoding: FileSystem.EncodingType.Base64,
+                }
+              );
+
+              console.log(
+                "ZIP content read successfully, length:",
+                zipContent.length
+              );
+
+              if (zipContent.length === 0) {
+                Alert.alert(
+                  "Error",
+                  "The backup file is empty or could not be read!"
+                );
+                return;
+              }
+
+              // Load and extract the zip
+              console.log("Loading ZIP archive...");
+              const zip = await JSZip.loadAsync(zipContent, { base64: true });
+
+              console.log("ZIP loaded successfully!");
+              const fileList = Object.keys(zip.files);
+              console.log("Files in ZIP:", fileList);
+
+              // 1. Check if backup_info.json exists
+              let backupInfo = null;
+              if (zip.files["backup_info.json"]) {
+                try {
+                  const infoContent = await zip.files["backup_info.json"].async(
+                    "string"
+                  );
+                  backupInfo = JSON.parse(infoContent);
+                  console.log("Backup info:", backupInfo);
+                } catch (err) {
+                  console.log("Could not read backup info:", err);
+                }
+              }
+
+              // 2. Restore database
+              if (!zip.files["pos_database.db"]) {
+                Alert.alert(
+                  "Invalid Backup",
+                  `Database file not found in backup!\n\nFiles found: ${fileList.join(
+                    ", "
+                  )}`
+                );
+                return;
+              }
+
+              console.log("Extracting database...");
+              const dbContent = await zip.files["pos_database.db"].async(
+                "base64"
+              );
+              console.log(
+                "Database extracted, base64 length:",
+                dbContent.length
+              );
+
+              if (dbContent.length === 0) {
+                Alert.alert("Error", "Database in backup is empty!");
+                return;
+              }
+
+              // Ensure SQLite directory exists
+              const sqliteDir = `${FileSystem.documentDirectory}SQLite`;
+              console.log("SQLite directory:", sqliteDir);
+
+              const sqliteDirInfo = await FileSystem.getInfoAsync(sqliteDir);
+              if (!sqliteDirInfo.exists) {
+                console.log("Creating SQLite directory...");
+                await FileSystem.makeDirectoryAsync(sqliteDir, {
+                  intermediates: true,
+                });
+              }
+
+              const dbPath = `${sqliteDir}/pos_database.db`;
+              console.log("Target database path:", dbPath);
+
+              // Delete old database if exists
+              const oldDbInfo = await FileSystem.getInfoAsync(dbPath);
+              if (oldDbInfo.exists) {
+                console.log("Deleting old database...");
+                await FileSystem.deleteAsync(dbPath, { idempotent: true });
+              }
+
+              // Write the database file
+              console.log("Writing new database file...");
+              await FileSystem.writeAsStringAsync(dbPath, dbContent, {
+                encoding: FileSystem.EncodingType.Base64,
+              });
+
+              // Verify the database was written
+              const newDbInfo = await FileSystem.getInfoAsync(dbPath);
+              console.log(
+                "New database written:",
+                newDbInfo.exists,
+                "Size:",
+                newDbInfo.size
+              );
+
+              if (!newDbInfo.exists || newDbInfo.size === 0) {
+                Alert.alert("Error", "Failed to write database file!");
+                return;
+              }
+
+              // Important: Close and reopen the database connection
+              console.log("Reopening database connection...");
+              try {
+                reopenDatabase();
+                console.log("Database connection reopened successfully");
+              } catch (err) {
+                console.error("Error reopening database:", err);
+                Alert.alert(
+                  "Warning",
+                  "Database restored but connection could not be reopened. Please restart the app."
+                );
+                return;
+              }
+
+              // 3. Restore images
+              console.log("Restoring images...");
+              let restoredImages = 0;
+              const imagesDir = `${FileSystem.documentDirectory}product_images`;
+
+              // Clear existing images directory
+              const imagesDirInfo = await FileSystem.getInfoAsync(imagesDir);
+              if (imagesDirInfo.exists) {
+                console.log("Clearing old images...");
+                await FileSystem.deleteAsync(imagesDir, { idempotent: true });
+              }
+
+              // Create fresh images directory
+              await FileSystem.makeDirectoryAsync(imagesDir, {
+                intermediates: true,
+              });
+
+              // Extract all images from product_images folder in zip
+              for (const filename in zip.files) {
+                if (
+                  filename.startsWith("product_images/") &&
+                  !zip.files[filename].dir
+                ) {
+                  const imageName = filename.replace("product_images/", "");
+                  console.log(`Extracting image: ${imageName}`);
+
+                  const imageContent = await zip.files[filename].async(
+                    "base64"
+                  );
+                  const imagePath = `${imagesDir}/${imageName}`;
+
+                  await FileSystem.writeAsStringAsync(imagePath, imageContent, {
+                    encoding: FileSystem.EncodingType.Base64,
+                  });
+
+                  restoredImages++;
+                }
+              }
+
+              console.log(`Successfully restored ${restoredImages} images`);
+
+              // 4. Reinitialize and reload
+              console.log("Reinitializing database...");
+
+              setTimeout(async () => {
+                try {
+                  await initializeDatabase();
+                  console.log("Database reinitialized");
+
+                  // Explicitly reload all data
+                  console.log("Loading products...");
+                  const allProducts = getAllProducts();
+                  console.log(
+                    `Found ${allProducts.length} products in restored database`
+                  );
+                  setProducts(allProducts);
+
+                  console.log("Loading categories...");
+                  const allCategories = getAllCategories();
+                  setCategories(allCategories);
+
+                  console.log("Loading dashboard stats...");
+                  const stats = getDashboardStats();
+                  setDashboardStats(stats);
+
+                  // Clear cart and other state
+                  setCartItems([]);
+                  setScannedProduct(null);
+
+                  console.log("=== RESTORE COMPLETE ===");
+                  console.log("Dashboard data reloaded");
+
+                  Alert.alert(
+                    "✅ Restore Complete!",
+                    `Your backup has been restored successfully!\n\n` +
+                      `📦 Database: ✓ Restored\n` +
+                      `🖼️ Images: ${restoredImages} restored\n` +
+                      (backupInfo
+                        ? `� Backup Date: ${new Date(
+                            backupInfo.timestamp
+                          ).toLocaleString()}\n`
+                        : "") +
+                      `\nAll data has been reloaded!`,
+                    [
+                      {
+                        text: "OK",
+                        onPress: () => {
+                          setCurrentScreen("home");
+                        },
+                      },
+                    ]
+                  );
+                } catch (err) {
+                  console.error("Error reloading:", err);
+                  Alert.alert(
+                    "Restore Completed with Warning",
+                    `Database and images were restored, but there was an error reloading:\n${err.message}\n\nPlease restart the app to see your restored data.`
+                  );
+                }
+              }, 1000);
+            } catch (error) {
+              console.error("Restore error:", error);
+              console.error("Error stack:", error.stack);
+              Alert.alert(
+                "Restore Failed",
+                `An error occurred while restoring:\n\n${error.message}\n\nPlease check the console for more details.`
+              );
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const handleEditProduct = (product) => {
     setEditingProduct({
       id: product.id,
@@ -917,6 +1390,17 @@ export default function App() {
                 </View>
               </TouchableOpacity>
             </View>
+
+            {/* Clear Data Button */}
+            <TouchableOpacity
+              style={styles.dangerButton}
+              onPress={handleResetDatabase}
+            >
+              <View style={styles.buttonContent}>
+                <Ionicons name="trash-outline" size={20} color="#FF3B30" />
+                <Text style={styles.dangerButtonText}>Clear All Data</Text>
+              </View>
+            </TouchableOpacity>
           </View>
 
           {/* Last Scanned Product */}
@@ -971,7 +1455,24 @@ export default function App() {
             <Text style={styles.backButtonText}>← Back</Text>
           </TouchableOpacity>
           <Text style={styles.headerText}>Products</Text>
-          <View style={styles.placeholder} />
+          <View style={styles.backupButtonsContainer}>
+            <TouchableOpacity
+              style={styles.backupButton}
+              onPress={handleBackupDatabase}
+            >
+              <Ionicons
+                name="cloud-download-outline"
+                size={24}
+                color="#4CAF50"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.backupButton}
+              onPress={handleRestoreBackup}
+            >
+              <Ionicons name="cloud-upload-outline" size={24} color="#FF9800" />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <ScrollView style={styles.productsContent}>
@@ -1644,6 +2145,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
+  dangerButton: {
+    backgroundColor: "#fff",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#FF3B30",
+    marginTop: 15,
+  },
+  dangerButtonText: {
+    color: "#FF3B30",
+    fontSize: 14,
+    fontWeight: "600",
+  },
   buttonRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -1835,6 +2351,17 @@ const styles = StyleSheet.create({
     color: "#007AFF",
     fontSize: 16,
     fontWeight: "600",
+  },
+  backupButtonsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+  backupButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 5,
   },
   placeholder: {
     width: 60, // Same width as back button for centering

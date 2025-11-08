@@ -1,7 +1,27 @@
 import * as SQLite from "expo-sqlite";
 
 // Open database
-const db = SQLite.openDatabaseSync("pos_database.db");
+let db = SQLite.openDatabaseSync("pos_database.db");
+
+// Function to close and reopen database (for restore operations)
+export const reopenDatabase = () => {
+  try {
+    // Close existing connection if possible
+    if (db && db.closeSync) {
+      db.closeSync();
+    }
+  } catch (error) {
+    console.log(
+      "Note: Could not close database (may not be open):",
+      error.message
+    );
+  }
+
+  // Reopen database
+  db = SQLite.openDatabaseSync("pos_database.db");
+  console.log("Database connection reopened");
+  return db;
+};
 
 // Initialize database tables
 export const initializeDatabase = () => {
