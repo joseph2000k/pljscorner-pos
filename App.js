@@ -811,7 +811,7 @@ export default function App() {
             onPress={handleDevResetTap}
             style={styles.devResetArea}
           >
-            <Text style={styles.homeTitle}>POS Corner Store</Text>
+            <Text style={styles.homeTitle}>PLJ's Corner</Text>
             <Text style={styles.homeSubtitle}>Point of Sale System</Text>
           </TouchableOpacity>
         </View>
@@ -1056,7 +1056,16 @@ export default function App() {
             <Text style={styles.backButtonText}>← Back</Text>
           </TouchableOpacity>
           <Text style={styles.headerText}>Point of Sale</Text>
-          <View style={styles.placeholder} />
+          <View style={styles.cartBadgeContainer}>
+            <Ionicons name="cart" size={24} color="#4CAF50" />
+            {cartItems.length > 0 && (
+              <View style={styles.cartBadge}>
+                <Text style={styles.cartBadgeText}>
+                  {cartItems.reduce((sum, item) => sum + item.quantity, 0)}
+                </Text>
+              </View>
+            )}
+          </View>
         </View>
 
         <View style={styles.posContainer}>
@@ -1829,6 +1838,29 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     width: 60, // Same width as back button for centering
+  },
+  cartBadgeContainer: {
+    width: 60,
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+  },
+  cartBadge: {
+    position: "absolute",
+    top: -5,
+    right: 10,
+    backgroundColor: "#f44336",
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 5,
+  },
+  cartBadgeText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "bold",
   },
   permissionText: {
     fontSize: 18,

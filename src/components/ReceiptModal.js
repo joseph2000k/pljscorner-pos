@@ -41,7 +41,7 @@ const ReceiptModal = ({ visible, onClose, receipt }) => {
           <View style={styles.receipt}>
             {/* Store Header */}
             <View style={styles.storeHeader}>
-              <Text style={styles.storeName}>PL JS CORNER STORE</Text>
+              <Text style={styles.storeName}>PLJS CORNER</Text>
               <Text style={styles.storeSubtitle}>Point of Sale</Text>
               <Text style={styles.divider}>━━━━━━━━━━━━━━━━━━━━━━━━━━</Text>
             </View>
@@ -164,12 +164,6 @@ const ReceiptModal = ({ visible, onClose, receipt }) => {
             <Text style={styles.divider}>━━━━━━━━━━━━━━━━━━━━━━━━━━</Text>
 
             {/* Footer */}
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>
-                Thank you for your purchase!
-              </Text>
-              <Text style={styles.footerText}>Please come again</Text>
-            </View>
           </View>
         </ScrollView>
 
