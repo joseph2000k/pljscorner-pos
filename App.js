@@ -59,7 +59,7 @@ export default function App() {
     qr: "",
     price: "",
     stock: "",
-    category: "Food & Beverages",
+    category: "General",
     description: "",
     imageUri: null,
   });
@@ -516,7 +516,7 @@ export default function App() {
       qr: "",
       price: "",
       stock: "",
-      category: "Food & Beverages",
+      category: "General",
       description: "",
       imageUri: null,
     });
@@ -1050,7 +1050,7 @@ export default function App() {
       qr: product.qr,
       price: product.price.toString(),
       stock: product.stock_quantity.toString(),
-      category: product.category || "Food & Beverages",
+      category: product.category || "General",
       description: product.description || "",
       imageUri: product.image_uri || null,
       originalImageUri: product.image_uri || null, // Keep track of original image
@@ -1816,7 +1816,7 @@ export default function App() {
             qr: "",
             price: "",
             stock: "",
-            category: "Food & Beverages",
+            category: "General",
             description: "",
           }
         }

@@ -68,68 +68,8 @@ export const initializeDatabase = () => {
 // Insert default data
 const insertDefaultData = () => {
   try {
-    // Insert default categories
-    const defaultCategories = [
-      "Food & Beverages",
-      "Electronics",
-      "Clothing",
-      "Health & Beauty",
-      "Home & Garden",
-      "Books & Stationery",
-      "Sports & Recreation",
-    ];
-
-    defaultCategories.forEach((category) => {
-      try {
-        db.runSync("INSERT OR IGNORE INTO categories (name) VALUES (?)", [
-          category,
-        ]);
-      } catch (error) {
-        // Ignore duplicate entries
-      }
-    });
-
-    // Insert sample products
-    const sampleProducts = [
-      {
-        name: "Coffee",
-        qr: "1234567890123",
-        price: 3.5,
-        stock: 100,
-        category: "Food & Beverages",
-      },
-      {
-        name: "Laptop",
-        qr: "9876543210987",
-        price: 999.99,
-        stock: 10,
-        category: "Electronics",
-      },
-      {
-        name: "T-Shirt",
-        qr: "5555666677778",
-        price: 19.99,
-        stock: 50,
-        category: "Clothing",
-      },
-    ];
-
-    sampleProducts.forEach((product) => {
-      try {
-        db.runSync(
-          "INSERT OR IGNORE INTO products (name, qr, price, stock_quantity, category) VALUES (?, ?, ?, ?, ?)",
-          [
-            product.name,
-            product.qr,
-            product.price,
-            product.stock,
-            product.category,
-          ]
-        );
-      } catch (error) {
-        // Ignore duplicate entries
-      }
-    });
+    // No default categories - users can add their own categories
+    console.log("Database ready - no default data inserted");
   } catch (error) {
     console.error("Error inserting default data:", error);
   }
@@ -158,9 +98,7 @@ export const addProduct = (
 
 export const getProductByQR = (qr) => {
   try {
-    const result = db.getFirstSync("SELECT * FROM products WHERE qr = ?", [
-      qr,
-    ]);
+    const result = db.getFirstSync("SELECT * FROM products WHERE qr = ?", [qr]);
     return result;
   } catch (error) {
     console.error("Error getting product by qr:", error);

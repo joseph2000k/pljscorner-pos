@@ -141,26 +141,8 @@ export const initializeDatabase = () => {
 // Insert default data
 const insertDefaultData = () => {
   try {
-    // Insert default categories
-    const defaultCategories = [
-      "Food & Beverages",
-      "Electronics",
-      "Clothing",
-      "Health & Beauty",
-      "Home & Garden",
-      "Books & Stationery",
-      "Sports & Recreation",
-    ];
-
-    defaultCategories.forEach((category) => {
-      try {
-        db.runSync("INSERT OR IGNORE INTO categories (name) VALUES (?)", [
-          category,
-        ]);
-      } catch (error) {
-        // Ignore duplicate entries
-      }
-    });
+    // No default categories - users can add their own categories
+    console.log("Database ready - no default data inserted");
   } catch (error) {
     console.error("Error inserting default data:", error);
   }
