@@ -532,6 +532,52 @@ export const getDashboardStats = (revenuePeriod = "daily") => {
   }
 };
 
+// Get sales report by payment method
+export const getSalesByPaymentMethod = (period = "daily") => {
+  try {
+    let timeFilter = "";
+
+    switch (period) {
+      case "daily":
+        timeFilter =
+          "WHERE DATE(created_at, 'localtime') = DATE('now', 'localtime')";
+        break;
+      case "weekly":
+        timeFilter =
+          "WHERE DATE(created_at, 'localtime') >= DATE('now', 'localtime', '-7 days')";
+        break;
+      case "monthly":
+        timeFilter =
+          "WHERE strftime('%Y-%m', created_at, 'localtime') = strftime('%Y-%m', 'now', 'localtime')";
+        break;
+      case "yearly":
+        timeFilter =
+          "WHERE strftime('%Y', created_at, 'localtime') = strftime('%Y', 'now', 'localtime')";
+        break;
+      default:
+        timeFilter = "";
+    }
+
+    const result = db.getAllSync(
+      `
+      SELECT 
+        payment_method,
+        COUNT(*) as transaction_count,
+        SUM(total_amount) as total_amount
+      FROM sales
+      ${timeFilter}
+      GROUP BY payment_method
+      ORDER BY payment_method
+      `
+    );
+
+    return result;
+  } catch (error) {
+    console.error("Error getting sales by payment method:", error);
+    return [];
+  }
+};
+
 export const deleteProduct = (productId) => {
   try {
     // Check if product exists in any sales first

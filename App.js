@@ -23,6 +23,7 @@ import * as DocumentPicker from "expo-document-picker";
 import JSZip from "jszip";
 import { LineChart } from "react-native-chart-kit";
 import SettingsScreen from "./src/screens/SettingsScreen";
+import SalesReportScreen from "./src/screens/SalesReportScreen";
 import {
   initializeDatabase,
   getProductByQR,
@@ -43,6 +44,7 @@ import {
   getSalesChartData,
   getSalesChartDataByHour,
   getSalesChartDataByMonth,
+  getSalesByPaymentMethod,
 } from "./src/services/database";
 import { saveImage, deleteImage } from "./src/utils/imageStorage";
 import CheckoutModal from "./src/components/CheckoutModal";
@@ -52,7 +54,7 @@ import CategoriesModal from "./src/components/CategoriesModal";
 import AddProductModal from "./src/components/AddProductModal";
 
 export default function App() {
-  const [currentScreen, setCurrentScreen] = useState("home"); // 'home', 'camera', 'products', 'add-product', 'pos', 'settings'
+  const [currentScreen, setCurrentScreen] = useState("home"); // 'home', 'camera', 'products', 'add-product', 'pos', 'settings', 'sales-report'
   const [hasPermission, setHasPermission] = useState(null);
   const [scanned, setScanned] = useState(false);
   const [scannedData, setScannedData] = useState("");
@@ -1555,6 +1557,14 @@ export default function App() {
 
               <TouchableOpacity
                 style={styles.quickActionButton}
+                onPress={() => setCurrentScreen("sales-report")}
+              >
+                <Ionicons name="analytics" size={28} color="#FF3B30" />
+                <Text style={styles.quickActionText}>Sales Report</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.quickActionButton}
                 onPress={() => setCurrentScreen("settings")}
               >
                 <Ionicons name="settings" size={28} color="#8E8E93" />
@@ -1954,6 +1964,18 @@ export default function App() {
         onRestoreBackup={handleRestoreBackup}
         revenuePeriod={revenuePeriod}
         onRevenuePeriodChange={saveRevenuePeriodPreference}
+      />
+    );
+  }
+
+  // Sales Report Screen
+  else if (currentScreen === "sales-report") {
+    const salesByPaymentMethod = getSalesByPaymentMethod(revenuePeriod);
+    screenContent = (
+      <SalesReportScreen
+        onBackPress={goBackHome}
+        salesByPaymentMethod={salesByPaymentMethod}
+        revenuePeriod={revenuePeriod}
       />
     );
   }
