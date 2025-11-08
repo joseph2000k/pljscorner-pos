@@ -1989,6 +1989,7 @@ export default function App() {
       <ExportReportScreen
         onBackPress={goBackHome}
         onGenerateReport={getSalesByDateRange}
+        getAllProducts={getAllProducts}
       />
     );
   }

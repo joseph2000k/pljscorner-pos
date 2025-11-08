@@ -13,7 +13,11 @@ import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import XLSX from "xlsx-js-style";
 
-export default function ExportReportScreen({ onBackPress, onGenerateReport }) {
+export default function ExportReportScreen({
+  onBackPress,
+  onGenerateReport,
+  getAllProducts,
+}) {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -395,6 +399,115 @@ export default function ExportReportScreen({ onBackPress, onGenerateReport }) {
 
       XLSX.utils.book_append_sheet(wb, wsSummary, "Product Summary");
 
+      // Create Product Inventory sheet
+      const allProducts = getAllProducts();
+      const inventoryData = [];
+
+      // Add header
+      inventoryData.push([
+        "Product Name",
+        "Category",
+        "Price",
+        "Stock Quantity",
+        "QR Code",
+        "Description",
+      ]);
+
+      // Sort products by category then name
+      const sortedInventory = allProducts.sort((a, b) => {
+        if (a.category !== b.category) {
+          return a.category.localeCompare(b.category);
+        }
+        return a.name.localeCompare(b.name);
+      });
+
+      // Add product data
+      sortedInventory.forEach((product) => {
+        inventoryData.push([
+          product.name,
+          product.category,
+          product.price.toFixed(2),
+          product.stock_quantity,
+          product.qr || "",
+          product.description || "",
+        ]);
+      });
+
+      // Add totals row
+      const totalProducts = allProducts.length;
+      const totalStockValue = allProducts.reduce(
+        (sum, product) => sum + product.price * product.stock_quantity,
+        0
+      );
+      const totalStockQty = allProducts.reduce(
+        (sum, product) => sum + product.stock_quantity,
+        0
+      );
+
+      inventoryData.push([]);
+      inventoryData.push([
+        "TOTAL",
+        `${totalProducts} Products`,
+        `₱${totalStockValue.toFixed(2)}`,
+        totalStockQty,
+        "",
+        "",
+      ]);
+
+      // Create inventory sheet
+      const wsInventory = XLSX.utils.aoa_to_sheet(inventoryData);
+
+      // Style header row in inventory sheet
+      const inventoryRange = XLSX.utils.decode_range(wsInventory["!ref"]);
+      for (let col = inventoryRange.s.c; col <= inventoryRange.e.c; col++) {
+        const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+        if (!wsInventory[cellAddress]) continue;
+        wsInventory[cellAddress].s = {
+          font: {
+            bold: true,
+            color: { rgb: "FF000000" },
+            name: "Calibri",
+            sz: 11,
+          },
+          fill: {
+            patternType: "solid",
+            fgColor: { rgb: "FFFFFFFF" },
+          },
+          alignment: {
+            vertical: "center",
+            horizontal: "center",
+          },
+        };
+      }
+
+      // Style TOTAL row in inventory sheet
+      const inventoryTotalRowIndex = inventoryRange.e.r;
+      for (let col = inventoryRange.s.c; col <= inventoryRange.e.c; col++) {
+        const cellAddress = XLSX.utils.encode_cell({
+          r: inventoryTotalRowIndex,
+          c: col,
+        });
+        if (!wsInventory[cellAddress]) continue;
+        wsInventory[cellAddress].s = {
+          font: {
+            bold: true,
+            color: { rgb: "FF000000" },
+            name: "Calibri",
+            sz: 11,
+          },
+          fill: {
+            patternType: "solid",
+            fgColor: { rgb: "FFFFFFFF" },
+          },
+          alignment: {
+            vertical: "center",
+            horizontal: "center",
+          },
+        };
+      }
+
+      XLSX.utils.book_append_sheet(wb, wsInventory, "Product Inventory");
+
       // Generate Excel file with cell styles enabled
       const wbout = XLSX.write(wb, {
         type: "base64",
@@ -523,7 +636,7 @@ export default function ExportReportScreen({ onBackPress, onGenerateReport }) {
         {/* Format Info */}
         <View style={styles.formatInfo}>
           <Text style={styles.formatTitle}>
-            Excel Report Contains 2 Sheets:
+            Excel Report Contains 3 Sheets:
           </Text>
 
           <Text style={styles.sheetTitle}>1. Detailed Transactions</Text>
@@ -546,6 +659,15 @@ export default function ExportReportScreen({ onBackPress, onGenerateReport }) {
           <Text style={styles.formatItem}>• Number of Transactions</Text>
           <Text style={styles.formatItem}>• Average Price per Unit</Text>
           <Text style={styles.formatItem}>• Grand Total Summary</Text>
+
+          <Text style={[styles.sheetTitle, { marginTop: 12 }]}>
+            3. Product Inventory
+          </Text>
+          <Text style={styles.formatItem}>• Product Name and Category</Text>
+          <Text style={styles.formatItem}>• Current Price</Text>
+          <Text style={styles.formatItem}>• Current Stock Quantity</Text>
+          <Text style={styles.formatItem}>• QR Code and Description</Text>
+          <Text style={styles.formatItem}>• Total Stock Value Summary</Text>
         </View>
       </ScrollView>
     </View>
