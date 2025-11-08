@@ -131,7 +131,7 @@ export default function App() {
           const hour = parseInt(item.hour);
           return `${hour}:00`;
         });
-        data = chartData.map((item) => parseFloat(item.revenue) || 0);
+        data = chartData.map((item) => parseInt(item.count) || 0);
       }
     } else if (viewType === "monthly") {
       // Monthly view - Last 12 months
@@ -156,7 +156,7 @@ export default function App() {
           ];
           return monthNames[parseInt(month) - 1];
         });
-        data = chartData.map((item) => parseFloat(item.revenue) || 0);
+        data = chartData.map((item) => parseInt(item.count) || 0);
       }
     } else {
       // Daily view - Last 7 days (default)
@@ -167,7 +167,7 @@ export default function App() {
           const date = new Date(item.date + "T00:00:00"); // Add time to ensure proper date parsing
           return `${date.getMonth() + 1}/${date.getDate()}`;
         });
-        data = chartData.map((item) => parseFloat(item.revenue) || 0);
+        data = chartData.map((item) => parseInt(item.count) || 0);
       }
     }
 
@@ -1430,34 +1430,43 @@ export default function App() {
                 </TouchableOpacity>
               </View>
 
-              <LineChart
-                data={salesChartData}
-                width={Dimensions.get("window").width - 48}
-                height={200}
-                chartConfig={{
-                  backgroundColor: "#ffffff",
-                  backgroundGradientFrom: "#ffffff",
-                  backgroundGradientTo: "#ffffff",
-                  decimalPlaces: 0,
-                  color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
-                  labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                  style: {
-                    borderRadius: 16,
-                  },
-                  propsForDots: {
-                    r: "5",
-                    strokeWidth: "2",
-                    stroke: "#007AFF",
-                  },
-                  propsForBackgroundLines: {
-                    strokeWidth: 1,
-                    stroke: "#e3e3e3",
-                    strokeDasharray: "0",
-                  },
-                }}
-                bezier
-                style={styles.chart}
-              />
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={true}
+                style={styles.chartScrollContainer}
+              >
+                <LineChart
+                  data={salesChartData}
+                  width={Math.max(
+                    Dimensions.get("window").width - 48,
+                    salesChartData.labels.length * 60
+                  )}
+                  height={200}
+                  chartConfig={{
+                    backgroundColor: "#ffffff",
+                    backgroundGradientFrom: "#ffffff",
+                    backgroundGradientTo: "#ffffff",
+                    decimalPlaces: 0,
+                    color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
+                    labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                    style: {
+                      borderRadius: 16,
+                    },
+                    propsForDots: {
+                      r: "5",
+                      strokeWidth: "2",
+                      stroke: "#007AFF",
+                    },
+                    propsForBackgroundLines: {
+                      strokeWidth: 1,
+                      stroke: "#e3e3e3",
+                      strokeDasharray: "0",
+                    },
+                  }}
+                  bezier
+                  style={styles.chart}
+                />
+              </ScrollView>
             </View>
           )}
 
@@ -2219,6 +2228,9 @@ const styles = StyleSheet.create({
   },
   chartViewButtonTextActive: {
     color: "#fff",
+  },
+  chartScrollContainer: {
+    marginVertical: 8,
   },
   chart: {
     marginVertical: 8,
