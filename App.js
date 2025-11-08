@@ -2043,11 +2043,11 @@ export default function App() {
           <View style={styles.overlay}>
             {/* Top dark overlay */}
             <View style={styles.overlayTop} />
-            
+
             {/* Middle row with scan area */}
             <View style={styles.overlayMiddle}>
               <View style={styles.overlaySide} />
-              
+
               {/* Scan area with corner brackets */}
               <View style={styles.scanArea}>
                 {/* Top-left corner */}
@@ -2059,10 +2059,10 @@ export default function App() {
                 {/* Bottom-right corner */}
                 <View style={[styles.corner, styles.cornerBottomRight]} />
               </View>
-              
+
               <View style={styles.overlaySide} />
             </View>
-            
+
             {/* Bottom dark overlay */}
             <View style={styles.overlayBottom} />
           </View>
