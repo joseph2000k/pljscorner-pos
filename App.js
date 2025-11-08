@@ -35,6 +35,7 @@ import {
   resetDatabase,
   searchProducts,
   reopenDatabase,
+  getAllSales,
 } from "./src/services/database";
 import { saveImage, deleteImage } from "./src/utils/imageStorage";
 import CheckoutModal from "./src/components/CheckoutModal";
@@ -735,10 +736,13 @@ export default function App() {
       }
 
       // Add metadata
+      const allSales = getAllSales();
       const backupInfo = {
         timestamp: new Date().toISOString(),
         version: "1.0.0",
         productsCount: products.length,
+        categoriesCount: categories.length,
+        salesCount: allSales.length,
         imagesCount: imageCount,
         databaseSize: dbInfo.size,
         platform: "Expo/React Native",
@@ -786,7 +790,9 @@ export default function App() {
             `📊 Size: ${(zipInfo.size / 1024).toFixed(2)} KB\n` +
             `💾 Database: ${(dbInfo.size / 1024).toFixed(2)} KB\n` +
             `🛍️ Products: ${products.length}\n` +
-            `🖼️ Images: ${imageCount}\n\n` +
+            `� Categories: ${categories.length}\n` +
+            `🧾 Receipts: ${allSales.length}\n` +
+            `�🖼️ Images: ${imageCount}\n\n` +
             `Save this ZIP file in a safe place to restore your data later.`
         );
       } else {

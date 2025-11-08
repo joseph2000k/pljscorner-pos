@@ -161,48 +161,6 @@ const insertDefaultData = () => {
         // Ignore duplicate entries
       }
     });
-
-    // Insert sample products
-    const sampleProducts = [
-      {
-        name: "Coffee",
-        qr: "1234567890123",
-        price: 3.5,
-        stock: 100,
-        category: "Food & Beverages",
-      },
-      {
-        name: "Laptop",
-        qr: "9876543210987",
-        price: 999.99,
-        stock: 10,
-        category: "Electronics",
-      },
-      {
-        name: "T-Shirt",
-        qr: "5555666677778",
-        price: 19.99,
-        stock: 50,
-        category: "Clothing",
-      },
-    ];
-
-    sampleProducts.forEach((product) => {
-      try {
-        db.runSync(
-          "INSERT OR IGNORE INTO products (name, qr, price, stock_quantity, category) VALUES (?, ?, ?, ?, ?)",
-          [
-            product.name,
-            product.qr,
-            product.price,
-            product.stock,
-            product.category,
-          ]
-        );
-      } catch (error) {
-        // Ignore duplicate entries
-      }
-    });
   } catch (error) {
     console.error("Error inserting default data:", error);
   }
