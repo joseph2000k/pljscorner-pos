@@ -1654,49 +1654,57 @@ export default function App() {
                 style={styles.productCard}
                 onPress={() => handleEditProduct(product)}
               >
-                {product.image_uri && (
-                  <Image
-                    source={{ uri: product.image_uri }}
-                    style={styles.productCardImage}
-                    resizeMode="cover"
-                  />
-                )}
-                <View style={styles.productHeader}>
-                  <Text style={styles.productCardName}>{product.name}</Text>
-                  <Text style={styles.productCardPrice}>₱{product.price}</Text>
-                </View>
-                <Text style={styles.productCardCategory}>
-                  {product.category}
-                </Text>
-                <Text style={styles.productCardQR}>QR: {product.qr}</Text>
-                <View style={styles.productCardFooter}>
-                  <View style={styles.stockInfo}>
-                    <Text style={styles.productCardStock}>
-                      Stock: {product.stock_quantity}
-                    </Text>
-                    <View
-                      style={[
-                        styles.stockIndicator,
-                        {
-                          backgroundColor:
-                            product.stock_quantity < 10 ? "#ff4757" : "#2ed573",
-                        },
-                      ]}
+                <View style={styles.productCardContent}>
+                  {product.image_uri && (
+                    <Image
+                      source={{ uri: product.image_uri }}
+                      style={styles.productCardImage}
+                      resizeMode="cover"
                     />
-                  </View>
-                  <View style={styles.productActions}>
-                    <TouchableOpacity
-                      style={styles.editButton}
-                      onPress={() => handleEditProduct(product)}
-                    >
-                      <Ionicons name="pencil" size={16} color="#007AFF" />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.deleteButton}
-                      onPress={() => handleDeleteProduct(product)}
-                    >
-                      <Ionicons name="trash" size={16} color="#FF3B30" />
-                    </TouchableOpacity>
+                  )}
+                  <View style={styles.productCardDetails}>
+                    <View style={styles.productHeader}>
+                      <Text style={styles.productCardName}>{product.name}</Text>
+                      <Text style={styles.productCardPrice}>
+                        ₱{product.price}
+                      </Text>
+                    </View>
+                    <Text style={styles.productCardCategory}>
+                      {product.category}
+                    </Text>
+                    <Text style={styles.productCardQR}>QR: {product.qr}</Text>
+                    <View style={styles.productCardFooter}>
+                      <View style={styles.stockInfo}>
+                        <Text style={styles.productCardStock}>
+                          Stock: {product.stock_quantity}
+                        </Text>
+                        <View
+                          style={[
+                            styles.stockIndicator,
+                            {
+                              backgroundColor:
+                                product.stock_quantity < 10
+                                  ? "#ff4757"
+                                  : "#2ed573",
+                            },
+                          ]}
+                        />
+                      </View>
+                      <View style={styles.productActions}>
+                        <TouchableOpacity
+                          style={styles.editButton}
+                          onPress={() => handleEditProduct(product)}
+                        >
+                          <Ionicons name="pencil" size={16} color="#007AFF" />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.deleteButton}
+                          onPress={() => handleDeleteProduct(product)}
+                        >
+                          <Ionicons name="trash" size={16} color="#FF3B30" />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
                   </View>
                 </View>
               </TouchableOpacity>
@@ -2614,18 +2622,25 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#e0e0e0",
   },
+  productCardContent: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+  },
   productCardImage: {
-    width: "100%",
-    height: 150,
+    width: 80,
+    height: 80,
     borderRadius: 8,
-    marginBottom: 12,
+    marginRight: 12,
     backgroundColor: "#f0f0f0",
+  },
+  productCardDetails: {
+    flex: 1,
   },
   productHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 6,
   },
   productCardName: {
     fontSize: 18,
