@@ -93,14 +93,54 @@ export const initializeDatabase = () => {
       CREATE TABLE IF NOT EXISTS sale_items (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         sale_id INTEGER NOT NULL,
-        product_id INTEGER NOT NULL,
+        product_id INTEGER,
+        product_name TEXT NOT NULL,
+        product_qr TEXT,
+        product_category TEXT,
         quantity INTEGER NOT NULL,
         unit_price REAL NOT NULL,
         total_price REAL NOT NULL,
-        FOREIGN KEY (sale_id) REFERENCES sales (id),
-        FOREIGN KEY (product_id) REFERENCES products (id)
+        FOREIGN KEY (sale_id) REFERENCES sales (id)
       );
     `);
+
+    // Add product details columns to existing sale_items table if they don't exist
+    try {
+      db.execSync(`
+        ALTER TABLE sale_items ADD COLUMN product_name TEXT;
+      `);
+    } catch (error) {
+      // Column already exists, ignore error
+    }
+
+    try {
+      db.execSync(`
+        ALTER TABLE sale_items ADD COLUMN product_qr TEXT;
+      `);
+    } catch (error) {
+      // Column already exists, ignore error
+    }
+
+    try {
+      db.execSync(`
+        ALTER TABLE sale_items ADD COLUMN product_category TEXT;
+      `);
+    } catch (error) {
+      // Column already exists, ignore error
+    }
+
+    // Migrate existing sale_items data to include product details
+    try {
+      db.execSync(`
+        UPDATE sale_items 
+        SET product_name = (SELECT name FROM products WHERE products.id = sale_items.product_id),
+            product_qr = (SELECT qr FROM products WHERE products.id = sale_items.product_id),
+            product_category = (SELECT category FROM products WHERE products.id = sale_items.product_id)
+        WHERE product_name IS NULL;
+      `);
+    } catch (error) {
+      // Migration not needed or already done
+    }
 
     // Create categories table
     db.execSync(`
@@ -250,9 +290,24 @@ export const addSaleItem = (
   totalPrice
 ) => {
   try {
+    // Get product details to store with the sale item
+    const product = db.getFirstSync(
+      "SELECT name, qr, category FROM products WHERE id = ?",
+      [productId]
+    );
+
     db.runSync(
-      "INSERT INTO sale_items (sale_id, product_id, quantity, unit_price, total_price) VALUES (?, ?, ?, ?, ?)",
-      [saleId, productId, quantity, unitPrice, totalPrice]
+      "INSERT INTO sale_items (sale_id, product_id, product_name, product_qr, product_category, quantity, unit_price, total_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [
+        saleId,
+        productId,
+        product?.name || "Unknown Product",
+        product?.qr || "",
+        product?.category || "General",
+        quantity,
+        unitPrice,
+        totalPrice,
+      ]
     );
     return { success: true };
   } catch (error) {
@@ -266,7 +321,7 @@ export const getAllSales = () => {
     const result = db.getAllSync(`
       SELECT s.*, 
              COUNT(si.id) as item_count,
-             GROUP_CONCAT(p.name, ', ') as products
+             GROUP_CONCAT(COALESCE(si.product_name, p.name, 'Unknown'), ', ') as products
       FROM sales s
       LEFT JOIN sale_items si ON s.id = si.sale_id
       LEFT JOIN products p ON si.product_id = p.id
@@ -285,9 +340,12 @@ export const getSaleDetails = (saleId) => {
     const sale = db.getFirstSync("SELECT * FROM sales WHERE id = ?", [saleId]);
     const items = db.getAllSync(
       `
-      SELECT si.*, p.name as product_name, p.qr, p.category
+      SELECT si.*, 
+             COALESCE(si.product_name, p.name, 'Unknown Product') as product_name,
+             COALESCE(si.product_qr, p.qr, '') as qr,
+             COALESCE(si.product_category, p.category, 'General') as category
       FROM sale_items si
-      JOIN products p ON si.product_id = p.id
+      LEFT JOIN products p ON si.product_id = p.id
       WHERE si.sale_id = ?
     `,
       [saleId]
@@ -592,9 +650,9 @@ export const getSalesByDateRange = (startDate, endDate) => {
         s.amount_paid,
         s.change_amount,
         si.product_id,
-        p.name as product_name,
-        p.category,
-        p.price as original_price,
+        COALESCE(si.product_name, p.name, 'Unknown Product') as product_name,
+        COALESCE(si.product_category, p.category, 'General') as category,
+        COALESCE(p.price, si.unit_price) as original_price,
         si.quantity,
         si.unit_price as price,
         si.total_price as subtotal,
@@ -603,7 +661,7 @@ export const getSalesByDateRange = (startDate, endDate) => {
       FROM sales s
       LEFT JOIN sale_items si ON s.id = si.sale_id
       LEFT JOIN products p ON si.product_id = p.id
-      LEFT JOIN categories c ON p.category = c.name
+      LEFT JOIN categories c ON COALESCE(si.product_category, p.category) = c.name
       WHERE DATE(s.created_at, 'localtime') BETWEEN DATE(?) AND DATE(?)
       ORDER BY s.created_at DESC, s.id, si.id
       `,
@@ -619,20 +677,8 @@ export const getSalesByDateRange = (startDate, endDate) => {
 
 export const deleteProduct = (productId) => {
   try {
-    // Check if product exists in any sales first
-    const salesCount =
-      db.getFirstSync(
-        "SELECT COUNT(*) as count FROM sale_items WHERE product_id = ?",
-        [productId]
-      )?.count || 0;
-
-    if (salesCount > 0) {
-      return {
-        success: false,
-        error: "Cannot delete product that has sales history",
-      };
-    }
-
+    // Product can now be deleted even if it has sales history
+    // The product details are stored in sale_items table, so history is preserved
     db.runSync("DELETE FROM products WHERE id = ?", [productId]);
     return { success: true };
   } catch (error) {
