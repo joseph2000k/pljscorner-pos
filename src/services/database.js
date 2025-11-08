@@ -452,15 +452,64 @@ export const deleteCategory = (categoryId) => {
 };
 
 // Dashboard/Analytics operations
-export const getDashboardStats = () => {
+export const getDashboardStats = (revenuePeriod = "daily") => {
   try {
     const totalProducts =
       db.getFirstSync("SELECT COUNT(*) as count FROM products")?.count || 0;
-    const totalSales =
-      db.getFirstSync("SELECT COUNT(*) as count FROM sales")?.count || 0;
-    const totalRevenue =
-      db.getFirstSync("SELECT SUM(total_amount) as total FROM sales")?.total ||
-      0;
+
+    // Calculate sales count and revenue based on selected period
+    let salesQuery;
+    let revenueQuery;
+
+    switch (revenuePeriod) {
+      case "daily":
+        salesQuery = `
+          SELECT COUNT(*) as count FROM sales 
+          WHERE DATE(created_at, 'localtime') = DATE('now', 'localtime')
+        `;
+        revenueQuery = `
+          SELECT SUM(total_amount) as total FROM sales 
+          WHERE DATE(created_at, 'localtime') = DATE('now', 'localtime')
+        `;
+        break;
+      case "weekly":
+        salesQuery = `
+          SELECT COUNT(*) as count FROM sales 
+          WHERE DATE(created_at, 'localtime') >= DATE('now', 'localtime', '-7 days')
+        `;
+        revenueQuery = `
+          SELECT SUM(total_amount) as total FROM sales 
+          WHERE DATE(created_at, 'localtime') >= DATE('now', 'localtime', '-7 days')
+        `;
+        break;
+      case "monthly":
+        salesQuery = `
+          SELECT COUNT(*) as count FROM sales 
+          WHERE strftime('%Y-%m', created_at, 'localtime') = strftime('%Y-%m', 'now', 'localtime')
+        `;
+        revenueQuery = `
+          SELECT SUM(total_amount) as total FROM sales 
+          WHERE strftime('%Y-%m', created_at, 'localtime') = strftime('%Y-%m', 'now', 'localtime')
+        `;
+        break;
+      case "yearly":
+        salesQuery = `
+          SELECT COUNT(*) as count FROM sales 
+          WHERE strftime('%Y', created_at, 'localtime') = strftime('%Y', 'now', 'localtime')
+        `;
+        revenueQuery = `
+          SELECT SUM(total_amount) as total FROM sales 
+          WHERE strftime('%Y', created_at, 'localtime') = strftime('%Y', 'now', 'localtime')
+        `;
+        break;
+      default:
+        salesQuery = "SELECT COUNT(*) as count FROM sales";
+        revenueQuery = "SELECT SUM(total_amount) as total FROM sales";
+    }
+
+    const totalSales = db.getFirstSync(salesQuery)?.count || 0;
+    const totalRevenue = db.getFirstSync(revenueQuery)?.total || 0;
+
     const lowStockProducts =
       db.getFirstSync(
         "SELECT COUNT(*) as count FROM products WHERE stock_quantity < 10"

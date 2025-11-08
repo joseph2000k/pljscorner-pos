@@ -13,6 +13,8 @@ export default function SettingsScreen({
   onBackPress,
   onBackupDatabase,
   onRestoreBackup,
+  revenuePeriod,
+  onRevenuePeriodChange,
 }) {
   return (
     <View style={styles.container}>
@@ -25,6 +27,89 @@ export default function SettingsScreen({
       </View>
 
       <ScrollView style={styles.content}>
+        {/* Display Settings */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Display Settings</Text>
+
+          <View style={styles.settingItem}>
+            <View style={styles.settingIconContainer}>
+              <Ionicons name="cash-outline" size={24} color="#007AFF" />
+            </View>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingTitle}>Revenue Display Period</Text>
+              <Text style={styles.settingDescription}>
+                Choose time period for dashboard revenue
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.radioGroup}>
+            <TouchableOpacity
+              style={styles.radioOption}
+              onPress={() => onRevenuePeriodChange("daily")}
+            >
+              <Ionicons
+                name={
+                  revenuePeriod === "daily"
+                    ? "radio-button-on"
+                    : "radio-button-off"
+                }
+                size={24}
+                color={revenuePeriod === "daily" ? "#007AFF" : "#999"}
+              />
+              <Text style={styles.radioLabel}>Daily</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.radioOption}
+              onPress={() => onRevenuePeriodChange("weekly")}
+            >
+              <Ionicons
+                name={
+                  revenuePeriod === "weekly"
+                    ? "radio-button-on"
+                    : "radio-button-off"
+                }
+                size={24}
+                color={revenuePeriod === "weekly" ? "#007AFF" : "#999"}
+              />
+              <Text style={styles.radioLabel}>Weekly</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.radioOption}
+              onPress={() => onRevenuePeriodChange("monthly")}
+            >
+              <Ionicons
+                name={
+                  revenuePeriod === "monthly"
+                    ? "radio-button-on"
+                    : "radio-button-off"
+                }
+                size={24}
+                color={revenuePeriod === "monthly" ? "#007AFF" : "#999"}
+              />
+              <Text style={styles.radioLabel}>Monthly</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.radioOption}
+              onPress={() => onRevenuePeriodChange("yearly")}
+            >
+              <Ionicons
+                name={
+                  revenuePeriod === "yearly"
+                    ? "radio-button-on"
+                    : "radio-button-off"
+                }
+                size={24}
+                color={revenuePeriod === "yearly" ? "#007AFF" : "#999"}
+              />
+              <Text style={styles.radioLabel}>Yearly</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* Backup & Restore Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Data Management</Text>
@@ -147,6 +232,21 @@ const styles = StyleSheet.create({
   settingDescription: {
     fontSize: 13,
     color: "#666",
+  },
+  radioGroup: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: "#fff",
+  },
+  radioOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+  },
+  radioLabel: {
+    fontSize: 16,
+    marginLeft: 12,
+    color: "#333",
   },
   infoContainer: {
     padding: 16,

@@ -12,6 +12,7 @@ import {
   Image,
   Dimensions,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { CameraView, Camera } from "expo-camera";
 import { Audio } from "expo-av";
@@ -88,12 +89,35 @@ export default function App() {
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [salesChartData, setSalesChartData] = useState(null);
   const [chartViewType, setChartViewType] = useState("daily"); // 'daily', 'hourly', 'monthly'
+  const [revenuePeriod, setRevenuePeriod] = useState("daily"); // 'daily', 'weekly', 'monthly', 'yearly'
 
   useEffect(() => {
     // Initialize database on app start
     initializeDatabase();
     loadDashboardData();
+    loadRevenuePeriodPreference();
   }, []);
+
+  const loadRevenuePeriodPreference = async () => {
+    try {
+      const savedPeriod = await AsyncStorage.getItem("revenuePeriod");
+      if (savedPeriod) {
+        setRevenuePeriod(savedPeriod);
+      }
+    } catch (error) {
+      console.error("Error loading revenue period preference:", error);
+    }
+  };
+
+  const saveRevenuePeriodPreference = async (period) => {
+    try {
+      await AsyncStorage.setItem("revenuePeriod", period);
+      setRevenuePeriod(period);
+      loadDashboardData(); // Refresh dashboard with new period
+    } catch (error) {
+      console.error("Error saving revenue period preference:", error);
+    }
+  };
 
   useEffect(() => {
     const getCameraPermissions = async () => {
@@ -108,7 +132,7 @@ export default function App() {
   }, [currentScreen]);
 
   const loadDashboardData = () => {
-    const stats = getDashboardStats();
+    const stats = getDashboardStats(revenuePeriod);
     setDashboardStats(stats);
     const allProducts = getAllProducts();
     setProducts(allProducts);
@@ -1331,7 +1355,15 @@ export default function App() {
                 <Text style={styles.statNumber}>
                   {dashboardStats.totalSales || 0}
                 </Text>
-                <Text style={styles.statLabel}>Sales</Text>
+                <Text style={styles.statLabel}>
+                  {revenuePeriod === "daily"
+                    ? "Daily Sales"
+                    : revenuePeriod === "weekly"
+                    ? "Weekly Sales"
+                    : revenuePeriod === "monthly"
+                    ? "Monthly Sales"
+                    : "Yearly Sales"}
+                </Text>
               </View>
               <TouchableOpacity
                 style={styles.statBox}
@@ -1343,7 +1375,15 @@ export default function App() {
                     : `₱${dashboardStats.totalRevenue || "0.00"}`}
                 </Text>
                 <View style={styles.statLabelRow}>
-                  <Text style={styles.statLabel}>Revenue</Text>
+                  <Text style={styles.statLabel}>
+                    {revenuePeriod === "daily"
+                      ? "Daily Revenue"
+                      : revenuePeriod === "weekly"
+                      ? "Weekly Revenue"
+                      : revenuePeriod === "monthly"
+                      ? "Monthly Revenue"
+                      : "Yearly Revenue"}
+                  </Text>
                   <Ionicons
                     name={hideRevenue ? "eye-outline" : "eye-off-outline"}
                     size={14}
@@ -1912,6 +1952,8 @@ export default function App() {
         onBackPress={goBackHome}
         onBackupDatabase={handleBackupDatabase}
         onRestoreBackup={handleRestoreBackup}
+        revenuePeriod={revenuePeriod}
+        onRevenuePeriodChange={saveRevenuePeriodPreference}
       />
     );
   }
