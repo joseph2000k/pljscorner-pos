@@ -10,6 +10,7 @@ import {
   TextInput,
   Modal,
   Image,
+  Dimensions,
 } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { CameraView, Camera } from "expo-camera";
@@ -19,6 +20,7 @@ import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import * as DocumentPicker from "expo-document-picker";
 import JSZip from "jszip";
+import { LineChart } from "react-native-chart-kit";
 import SettingsScreen from "./src/screens/SettingsScreen";
 import {
   initializeDatabase,
@@ -37,6 +39,9 @@ import {
   searchProducts,
   reopenDatabase,
   getAllSales,
+  getSalesChartData,
+  getSalesChartDataByHour,
+  getSalesChartDataByMonth,
 } from "./src/services/database";
 import { saveImage, deleteImage } from "./src/utils/imageStorage";
 import CheckoutModal from "./src/components/CheckoutModal";
@@ -81,6 +86,8 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [salesChartData, setSalesChartData] = useState(null);
+  const [chartViewType, setChartViewType] = useState("daily"); // 'daily', 'hourly', 'monthly'
 
   useEffect(() => {
     // Initialize database on app start
@@ -107,6 +114,92 @@ export default function App() {
     setProducts(allProducts);
     const allCategories = getAllCategories();
     setCategories(allCategories);
+    loadSalesChartData();
+  };
+
+  const loadSalesChartData = (viewType = chartViewType) => {
+    let chartData;
+    let labels;
+    let data;
+
+    console.log("Loading chart data for view type:", viewType);
+
+    if (viewType === "hourly") {
+      // Hourly view - Today's sales by hour
+      chartData = getSalesChartDataByHour();
+
+      if (chartData && chartData.length > 0) {
+        labels = chartData.map((item) => {
+          const hour = parseInt(item.hour);
+          return `${hour}:00`;
+        });
+        data = chartData.map((item) => parseFloat(item.revenue) || 0);
+      }
+    } else if (viewType === "monthly") {
+      // Monthly view - Last 12 months
+      chartData = getSalesChartDataByMonth();
+
+      if (chartData && chartData.length > 0) {
+        labels = chartData.map((item) => {
+          const [year, month] = item.month.split("-");
+          const monthNames = [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec",
+          ];
+          return monthNames[parseInt(month) - 1];
+        });
+        data = chartData.map((item) => parseFloat(item.revenue) || 0);
+      }
+    } else {
+      // Daily view - Last 7 days (default)
+      chartData = getSalesChartData(7);
+
+      if (chartData && chartData.length > 0) {
+        labels = chartData.map((item) => {
+          const date = new Date(item.date + "T00:00:00"); // Add time to ensure proper date parsing
+          return `${date.getMonth() + 1}/${date.getDate()}`;
+        });
+        data = chartData.map((item) => parseFloat(item.revenue) || 0);
+      }
+    }
+
+    console.log("Chart data loaded:", { chartData, labels, data });
+
+    // Format data for the chart
+    if (chartData && chartData.length > 0 && data && data.length > 0) {
+      // Ensure at least 2 data points for proper chart rendering
+      if (data.length === 1) {
+        // Add a zero data point before the actual data
+        labels.unshift("");
+        data.unshift(0);
+      }
+
+      setSalesChartData({
+        labels,
+        datasets: [{ data }],
+      });
+    } else {
+      // No data, show empty chart with placeholder
+      setSalesChartData({
+        labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+        datasets: [{ data: [0, 0, 0, 0, 0, 0, 0] }],
+      });
+    }
+  };
+
+  const handleChartViewChange = (viewType) => {
+    setChartViewType(viewType);
+    loadSalesChartData(viewType);
   };
 
   const handleBarCodeScanned = async ({ type, data }) => {
@@ -1208,21 +1301,20 @@ export default function App() {
   // Home Screen
   if (currentScreen === "home") {
     screenContent = (
-      <ScrollView style={styles.homeContainer}>
+      <View style={styles.homeContainer}>
+        {/* Compact Header */}
         <View style={styles.homeHeader}>
           <TouchableOpacity
             onPress={handleDevResetTap}
             style={styles.devResetArea}
           >
-            <Text style={styles.homeTitle}>PLJ's Corner</Text>
-            <Text style={styles.homeSubtitle}>Point of Sale System</Text>
+            <Text style={styles.homeTitle}>PLJ's Corner POS</Text>
           </TouchableOpacity>
         </View>
 
-        <View style={styles.homeContent}>
+        <ScrollView style={styles.homeScrollContent}>
           {/* Dashboard Stats */}
           <View style={styles.dashboardContainer}>
-            <Text style={styles.sectionTitle}>📊 Dashboard</Text>
             <View style={styles.statsGrid}>
               <View style={styles.statBox}>
                 <Text style={styles.statNumber}>
@@ -1249,7 +1341,7 @@ export default function App() {
                   <Text style={styles.statLabel}>Revenue</Text>
                   <Ionicons
                     name={hideRevenue ? "eye-outline" : "eye-off-outline"}
-                    size={16}
+                    size={14}
                     color="#888"
                     style={styles.hideIcon}
                   />
@@ -1264,72 +1356,157 @@ export default function App() {
             </View>
           </View>
 
-          {/* Action Buttons */}
+          {/* Sales Chart */}
+          {salesChartData && (
+            <View style={styles.chartContainer}>
+              <View style={styles.chartHeader}>
+                <Text style={styles.chartTitle}>
+                  Sales Overview
+                  {chartViewType === "hourly" && " (Today)"}
+                  {chartViewType === "daily" && " (Last 7 Days)"}
+                  {chartViewType === "monthly" && " (Last 12 Months)"}
+                </Text>
+              </View>
+
+              {/* Chart View Selector */}
+              <View style={styles.chartViewSelector}>
+                <TouchableOpacity
+                  style={[
+                    styles.chartViewButton,
+                    chartViewType === "hourly" && styles.chartViewButtonActive,
+                  ]}
+                  onPress={() => handleChartViewChange("hourly")}
+                >
+                  <Text
+                    style={[
+                      styles.chartViewButtonText,
+                      chartViewType === "hourly" &&
+                        styles.chartViewButtonTextActive,
+                    ]}
+                  >
+                    Hourly
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.chartViewButton,
+                    chartViewType === "daily" && styles.chartViewButtonActive,
+                  ]}
+                  onPress={() => handleChartViewChange("daily")}
+                >
+                  <Text
+                    style={[
+                      styles.chartViewButtonText,
+                      chartViewType === "daily" &&
+                        styles.chartViewButtonTextActive,
+                    ]}
+                  >
+                    Daily
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.chartViewButton,
+                    chartViewType === "monthly" && styles.chartViewButtonActive,
+                  ]}
+                  onPress={() => handleChartViewChange("monthly")}
+                >
+                  <Text
+                    style={[
+                      styles.chartViewButtonText,
+                      chartViewType === "monthly" &&
+                        styles.chartViewButtonTextActive,
+                    ]}
+                  >
+                    Monthly
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              <LineChart
+                data={salesChartData}
+                width={Dimensions.get("window").width - 48}
+                height={200}
+                chartConfig={{
+                  backgroundColor: "#ffffff",
+                  backgroundGradientFrom: "#ffffff",
+                  backgroundGradientTo: "#ffffff",
+                  decimalPlaces: 0,
+                  color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
+                  labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                  style: {
+                    borderRadius: 16,
+                  },
+                  propsForDots: {
+                    r: "5",
+                    strokeWidth: "2",
+                    stroke: "#007AFF",
+                  },
+                  propsForBackgroundLines: {
+                    strokeWidth: 1,
+                    stroke: "#e3e3e3",
+                    strokeDasharray: "0",
+                  },
+                }}
+                bezier
+                style={styles.chart}
+              />
+            </View>
+          )}
+
+          {/* Main Action - POS */}
           <View style={styles.actionsContainer}>
             <TouchableOpacity style={styles.primaryButton} onPress={openPOS}>
               <View style={styles.buttonContent}>
-                <Ionicons name="cart" size={24} color="#fff" />
+                <Ionicons name="cart" size={28} color="#fff" />
                 <Text style={styles.primaryButtonText}>Open POS</Text>
               </View>
             </TouchableOpacity>
 
-            <View style={styles.buttonRow}>
+            {/* Quick Actions Grid */}
+            <View style={styles.quickActionsGrid}>
               <TouchableOpacity
-                style={[styles.secondaryButton, styles.halfButton]}
+                style={styles.quickActionButton}
                 onPress={() => setCurrentScreen("products")}
               >
-                <View style={styles.buttonContent}>
-                  <Ionicons name="cube-outline" size={20} color="#007AFF" />
-                  <Text style={styles.secondaryButtonText}>Products</Text>
-                </View>
+                <Ionicons name="cube" size={28} color="#007AFF" />
+                <Text style={styles.quickActionText}>Products</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.secondaryButton, styles.halfButton]}
+                style={styles.quickActionButton}
                 onPress={openAddProductModal}
               >
-                <View style={styles.buttonContent}>
-                  <Ionicons
-                    name="add-circle-outline"
-                    size={20}
-                    color="#007AFF"
-                  />
-                  <Text style={styles.secondaryButtonText}>Add Product</Text>
-                </View>
+                <Ionicons name="add-circle" size={28} color="#34C759" />
+                <Text style={styles.quickActionText}>Add Product</Text>
               </TouchableOpacity>
-            </View>
 
-            <View style={styles.buttonRow}>
               <TouchableOpacity
-                style={[styles.secondaryButton, styles.halfButton]}
+                style={styles.quickActionButton}
                 onPress={() => setShowCategoriesModal(true)}
               >
-                <View style={styles.buttonContent}>
-                  <Ionicons name="pricetag-outline" size={20} color="#007AFF" />
-                  <Text style={styles.secondaryButtonText}>Categories</Text>
-                </View>
+                <Ionicons name="pricetag" size={28} color="#FF9500" />
+                <Text style={styles.quickActionText}>Categories</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.secondaryButton, styles.halfButton]}
+                style={styles.quickActionButton}
                 onPress={() => setShowReceiptHistory(true)}
               >
-                <View style={styles.buttonContent}>
-                  <Ionicons name="receipt-outline" size={20} color="#007AFF" />
-                  <Text style={styles.secondaryButtonText}>History</Text>
-                </View>
+                <Ionicons name="receipt" size={28} color="#5856D6" />
+                <Text style={styles.quickActionText}>History</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.quickActionButton}
+                onPress={() => setCurrentScreen("settings")}
+              >
+                <Ionicons name="settings" size={28} color="#8E8E93" />
+                <Text style={styles.quickActionText}>Settings</Text>
               </TouchableOpacity>
             </View>
-
-            <TouchableOpacity
-              style={styles.secondaryButton}
-              onPress={() => setCurrentScreen("settings")}
-            >
-              <View style={styles.buttonContent}>
-                <Ionicons name="settings-outline" size={20} color="#007AFF" />
-                <Text style={styles.secondaryButtonText}>Settings</Text>
-              </View>
-            </TouchableOpacity>
           </View>
 
           {/* Last Scanned Product */}
@@ -1368,10 +1545,10 @@ export default function App() {
               ))}
             </View>
           )}
-        </View>
+        </ScrollView>
 
         <StatusBar style="dark" />
-      </ScrollView>
+      </View>
     );
   }
 
@@ -1873,36 +2050,37 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
   },
   homeHeader: {
-    paddingTop: 60,
-    paddingBottom: 40,
+    paddingTop: 50,
+    paddingBottom: 16,
     paddingHorizontal: 20,
-    alignItems: "center",
-    backgroundColor: "#ffffff",
+    backgroundColor: "#007AFF",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 4,
   },
   devResetArea: {
     alignItems: "center",
   },
   homeTitle: {
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: "bold",
-    color: "#333",
-    marginBottom: 10,
+    color: "#fff",
     textAlign: "center",
   },
   homeSubtitle: {
-    fontSize: 16,
-    color: "#666",
+    fontSize: 14,
+    color: "#fff",
     textAlign: "center",
+    opacity: 0.9,
+  },
+  homeScrollContent: {
+    flex: 1,
   },
   homeContent: {
     flex: 1,
-    padding: 20,
-    justifyContent: "center",
+    padding: 16,
   },
   featureContainer: {
     backgroundColor: "#fff",
@@ -1947,7 +2125,10 @@ const styles = StyleSheet.create({
   },
   lastScanContainer: {
     backgroundColor: "#e8f5e8",
-    padding: 15,
+    padding: 14,
+    margin: 16,
+    marginTop: 0,
+    marginBottom: 12,
     borderRadius: 10,
     borderLeftWidth: 4,
     borderLeftColor: "#4CAF50",
@@ -1978,20 +2159,71 @@ const styles = StyleSheet.create({
   // Dashboard Styles
   dashboardContainer: {
     backgroundColor: "#fff",
-    padding: 20,
-    borderRadius: 15,
-    marginBottom: 20,
+    padding: 16,
+    margin: 16,
+    marginBottom: 12,
+    borderRadius: 12,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
   },
-  sectionTitle: {
-    fontSize: 18,
+  chartContainer: {
+    backgroundColor: "#fff",
+    padding: 16,
+    marginHorizontal: 16,
+    marginBottom: 12,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  chartHeader: {
+    marginBottom: 8,
+  },
+  chartTitle: {
+    fontSize: 16,
     fontWeight: "bold",
     color: "#333",
-    marginBottom: 15,
+    marginBottom: 8,
+  },
+  chartViewSelector: {
+    flexDirection: "row",
+    marginBottom: 12,
+    backgroundColor: "#f0f0f0",
+    borderRadius: 8,
+    padding: 3,
+  },
+  chartViewButton: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    alignItems: "center",
+  },
+  chartViewButtonActive: {
+    backgroundColor: "#007AFF",
+  },
+  chartViewButtonText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#666",
+  },
+  chartViewButtonTextActive: {
+    color: "#fff",
+  },
+  chart: {
+    marginVertical: 8,
+    borderRadius: 12,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 12,
   },
   statsGrid: {
     flexDirection: "row",
@@ -2001,20 +2233,20 @@ const styles = StyleSheet.create({
   statBox: {
     width: "48%",
     backgroundColor: "#f8f9fa",
-    padding: 15,
+    padding: 12,
     borderRadius: 10,
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 8,
   },
   statNumber: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "bold",
     color: "#007AFF",
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: "#666",
-    marginTop: 5,
+    marginTop: 4,
   },
   statLabelRow: {
     flexDirection: "row",
@@ -2029,30 +2261,57 @@ const styles = StyleSheet.create({
 
   // Action Buttons
   actionsContainer: {
-    marginBottom: 20,
+    paddingHorizontal: 16,
+    marginBottom: 16,
   },
   primaryButton: {
     backgroundColor: "#007AFF",
-    paddingVertical: 18,
-    paddingHorizontal: 30,
-    borderRadius: 25,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
     alignItems: "center",
-    marginBottom: 15,
+    marginBottom: 16,
     shadowColor: "#007AFF",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 5,
   },
   buttonContent: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 10,
   },
   primaryButtonText: {
     color: "#fff",
     fontSize: 18,
     fontWeight: "bold",
+  },
+  quickActionsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+  },
+  quickActionButton: {
+    width: "31%",
+    backgroundColor: "#fff",
+    paddingVertical: 18,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+    alignItems: "center",
+    marginBottom: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  quickActionText: {
+    color: "#333",
+    fontSize: 11,
+    fontWeight: "600",
+    marginTop: 6,
+    textAlign: "center",
   },
   secondaryButton: {
     backgroundColor: "#fff",
@@ -2083,14 +2342,15 @@ const styles = StyleSheet.create({
   // Recent Products
   recentProductsContainer: {
     backgroundColor: "#fff",
-    padding: 20,
-    borderRadius: 15,
-    marginBottom: 20,
+    padding: 16,
+    margin: 16,
+    marginTop: 0,
+    borderRadius: 12,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
   },
   productItem: {
     flexDirection: "row",

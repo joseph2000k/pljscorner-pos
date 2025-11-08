@@ -279,6 +279,76 @@ export const getSaleDetails = (saleId) => {
   }
 };
 
+// Get sales data grouped by date for charts (last 7 days)
+export const getSalesChartData = (days = 7) => {
+  try {
+    const result = db.getAllSync(
+      `
+      SELECT 
+        DATE(created_at, 'localtime') as date,
+        COUNT(*) as count,
+        SUM(total_amount) as revenue
+      FROM sales
+      WHERE DATE(created_at, 'localtime') >= DATE('now', 'localtime', '-' || ? || ' days')
+      GROUP BY DATE(created_at, 'localtime')
+      ORDER BY date ASC
+    `,
+      [days]
+    );
+    console.log("Daily chart data:", result);
+    return result;
+  } catch (error) {
+    console.error("Error getting sales chart data:", error);
+    return [];
+  }
+};
+
+// Get sales data grouped by hour for today
+export const getSalesChartDataByHour = () => {
+  try {
+    const result = db.getAllSync(
+      `
+      SELECT 
+        strftime('%H', created_at, 'localtime') as hour,
+        COUNT(*) as count,
+        SUM(total_amount) as revenue
+      FROM sales
+      WHERE DATE(created_at, 'localtime') = DATE('now', 'localtime')
+      GROUP BY strftime('%H', created_at, 'localtime')
+      ORDER BY hour ASC
+    `
+    );
+    console.log("Hourly chart data:", result);
+    return result;
+  } catch (error) {
+    console.error("Error getting sales chart data by hour:", error);
+    return [];
+  }
+};
+
+// Get sales data grouped by month (last 12 months)
+export const getSalesChartDataByMonth = () => {
+  try {
+    const result = db.getAllSync(
+      `
+      SELECT 
+        strftime('%Y-%m', created_at, 'localtime') as month,
+        COUNT(*) as count,
+        SUM(total_amount) as revenue
+      FROM sales
+      WHERE DATE(created_at, 'localtime') >= DATE('now', 'localtime', '-12 months')
+      GROUP BY strftime('%Y-%m', created_at, 'localtime')
+      ORDER BY month ASC
+    `
+    );
+    console.log("Monthly chart data:", result);
+    return result;
+  } catch (error) {
+    console.error("Error getting sales chart data by month:", error);
+    return [];
+  }
+};
+
 // Category operations
 export const getAllCategories = () => {
   try {
