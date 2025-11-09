@@ -184,6 +184,7 @@ export default function ExportReportScreen({
         "Qty",
         "Original Price",
         "Actual Price",
+        "Status",
         "Discount",
         "Subtotal",
         "Total",
@@ -207,6 +208,7 @@ export default function ExportReportScreen({
               item.quantity,
               item.originalPrice.toFixed(2),
               item.price.toFixed(2),
+              item.price === 0 ? "FREE" : "",
               item.discountAmount.toFixed(2),
               actualSubtotal.toFixed(2),
               index === 0 ? sale.totalAmount.toFixed(2) : "",
@@ -224,6 +226,7 @@ export default function ExportReportScreen({
             0,
             0,
             0,
+            "",
             0,
             0,
             sale.totalAmount.toFixed(2),
@@ -244,6 +247,7 @@ export default function ExportReportScreen({
               totalRevenue: 0,
               totalDiscount: 0,
               transactionCount: 0,
+              freeItemsCount: 0,
             };
           }
           productSummary[item.product].totalQuantity += item.quantity;
@@ -252,6 +256,10 @@ export default function ExportReportScreen({
           productSummary[item.product].totalRevenue += actualRevenue;
           productSummary[item.product].totalDiscount += item.discountAmount;
           productSummary[item.product].transactionCount += 1;
+          // Count free items (price = 0)
+          if (item.price === 0) {
+            productSummary[item.product].freeItemsCount += item.quantity;
+          }
         });
       });
 
@@ -260,6 +268,7 @@ export default function ExportReportScreen({
       summaryData.push([
         "Product Name",
         "Total Quantity Sold",
+        "Free Items",
         "Total Revenue",
         "Total Discount Given",
         "Number of Transactions",
@@ -279,6 +288,7 @@ export default function ExportReportScreen({
         summaryData.push([
           productName,
           summary.totalQuantity,
+          summary.freeItemsCount,
           summary.totalRevenue.toFixed(2),
           summary.totalDiscount.toFixed(2),
           summary.transactionCount,

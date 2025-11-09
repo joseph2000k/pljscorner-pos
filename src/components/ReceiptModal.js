@@ -72,14 +72,29 @@ const ReceiptModal = ({ visible, onClose, receipt }) => {
               {receipt.items.map((item, index) => (
                 <View key={index} style={styles.item}>
                   <View style={styles.itemHeader}>
-                    <Text style={styles.itemName}>{item.name}</Text>
-                    <Text style={styles.itemTotal}>
-                      ₱{(item.price * item.quantity).toFixed(2)}
+                    <View style={styles.itemNameContainer}>
+                      <Text style={styles.itemName}>{item.name}</Text>
+                      {item.isFree && (
+                        <View style={styles.freeTag}>
+                          <Text style={styles.freeTagText}>FREE</Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text
+                      style={[
+                        styles.itemTotal,
+                        item.isFree && styles.itemTotalFree,
+                      ]}
+                    >
+                      {item.isFree
+                        ? "FREE"
+                        : `₱${(item.price * item.quantity).toFixed(2)}`}
                     </Text>
                   </View>
                   <View style={styles.itemDetails}>
                     <Text style={styles.itemDetailText}>
-                      {item.quantity} x ₱{item.price.toFixed(2)}
+                      {item.quantity} x{" "}
+                      {item.isFree ? "FREE" : `₱${item.price.toFixed(2)}`}
                     </Text>
                   </View>
                 </View>
@@ -281,16 +296,35 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 3,
   },
+  itemNameContainer: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
   itemName: {
     fontSize: 16,
     fontWeight: "600",
     color: "#333",
-    flex: 1,
+  },
+  freeTag: {
+    backgroundColor: "#FF9500",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  freeTagText: {
+    fontSize: 10,
+    fontWeight: "bold",
+    color: "#fff",
   },
   itemTotal: {
     fontSize: 16,
     fontWeight: "bold",
     color: "#333",
+  },
+  itemTotalFree: {
+    color: "#FF9500",
   },
   itemDetails: {
     flexDirection: "row",

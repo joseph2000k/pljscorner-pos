@@ -79,6 +79,8 @@ export default function App() {
   // Cart state
   const [cartItems, setCartItems] = useState([]);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [showFreeItemConfirmation, setShowFreeItemConfirmation] =
+    useState(false);
   const [lastScannedQR, setLastScannedQR] = useState("");
   const [scanCooldown, setScanCooldown] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
@@ -369,10 +371,25 @@ export default function App() {
             ...product,
             quantity: 1,
             subtotal: product.price,
+            isFree: false, // Track if item is marked as free
           },
         ];
       }
     });
+  };
+
+  const toggleFreeItem = (productId) => {
+    setCartItems((prevItems) =>
+      prevItems.map((item) => {
+        if (item.id === productId) {
+          return {
+            ...item,
+            isFree: !item.isFree,
+          };
+        }
+        return item;
+      })
+    );
   };
 
   const removeFromCart = (productId) => {
@@ -460,7 +477,10 @@ export default function App() {
           for (let i = 0; i < categoryItems.length && remainingCount > 0; i++) {
             const item = categoryItems[i];
             const qtyToCharge = Math.min(item.quantity, remainingCount);
-            categoryTotal += qtyToCharge * item.price;
+            // Don't charge for free items
+            if (!item.isFree) {
+              categoryTotal += qtyToCharge * item.price;
+            }
             remainingCount -= qtyToCharge;
           }
         }
@@ -468,10 +488,13 @@ export default function App() {
         total += categoryTotal;
       } else {
         // No bulk discount, calculate normally
-        const categoryTotal = categoryItems.reduce(
-          (sum, item) => sum + item.price * item.quantity,
-          0
-        );
+        const categoryTotal = categoryItems.reduce((sum, item) => {
+          // Don't add free items to total
+          if (item.isFree) {
+            return sum;
+          }
+          return sum + item.price * item.quantity;
+        }, 0);
         total += categoryTotal;
       }
     });
@@ -541,6 +564,19 @@ export default function App() {
       Alert.alert("Empty Cart", "Please add items to cart before checkout.");
       return;
     }
+
+    // Check if there are any free items
+    const hasFreeItems = cartItems.some((item) => item.isFree);
+
+    if (hasFreeItems) {
+      setShowFreeItemConfirmation(true);
+    } else {
+      setShowCheckoutModal(true);
+    }
+  };
+
+  const handleConfirmFreeItems = () => {
+    setShowFreeItemConfirmation(false);
     setShowCheckoutModal(true);
   };
 
@@ -573,13 +609,11 @@ export default function App() {
 
       // Add sale items and update stock
       cartItems.forEach((item) => {
-        addSaleItem(
-          saleId,
-          item.id,
-          item.quantity,
-          item.price,
-          item.price * item.quantity
-        );
+        // Use 0 as price for free items
+        const actualPrice = item.isFree ? 0 : item.price;
+        const actualTotal = item.isFree ? 0 : item.price * item.quantity;
+
+        addSaleItem(saleId, item.id, item.quantity, actualPrice, actualTotal);
 
         // Update product stock
         const newStock = item.stock_quantity - item.quantity;
@@ -1908,10 +1942,38 @@ export default function App() {
                       )}
                       <View style={styles.cartItemInfo}>
                         <Text style={styles.cartItemName}>{item.name}</Text>
-                        <Text style={styles.cartItemPrice}>
-                          ₱{item.price.toFixed(2)} each
+                        <Text
+                          style={[
+                            styles.cartItemPrice,
+                            item.isFree && styles.cartItemPriceFree,
+                          ]}
+                        >
+                          {item.isFree
+                            ? "FREE"
+                            : `₱${item.price.toFixed(2)} each`}
                         </Text>
                       </View>
+                      <TouchableOpacity
+                        style={[
+                          styles.freeButton,
+                          item.isFree && styles.freeButtonActive,
+                        ]}
+                        onPress={() => toggleFreeItem(item.id)}
+                      >
+                        <Ionicons
+                          name={item.isFree ? "gift" : "gift-outline"}
+                          size={20}
+                          color={item.isFree ? "#fff" : "#FF9500"}
+                        />
+                        <Text
+                          style={[
+                            styles.freeButtonText,
+                            item.isFree && styles.freeButtonTextActive,
+                          ]}
+                        >
+                          {item.isFree ? "Free" : "Free"}
+                        </Text>
+                      </TouchableOpacity>
                     </View>
 
                     <View style={styles.cartItemControls}>
@@ -1935,8 +1997,15 @@ export default function App() {
                         </TouchableOpacity>
                       </View>
 
-                      <Text style={styles.cartItemSubtotal}>
-                        ₱{(item.price * item.quantity).toFixed(2)}
+                      <Text
+                        style={[
+                          styles.cartItemSubtotal,
+                          item.isFree && styles.cartItemSubtotalFree,
+                        ]}
+                      >
+                        {item.isFree
+                          ? "FREE"
+                          : `₱${(item.price * item.quantity).toFixed(2)}`}
                       </Text>
 
                       <TouchableOpacity
@@ -2247,6 +2316,54 @@ export default function App() {
         onClose={() => setShowCategoriesModal(false)}
         onCategoryAdded={handleCategoryAdded}
       />
+
+      {/* Free Item Confirmation Modal */}
+      <Modal
+        visible={showFreeItemConfirmation}
+        animationType="fade"
+        transparent={true}
+      >
+        <View style={styles.freeItemConfirmationOverlay}>
+          <View style={styles.freeItemConfirmationContainer}>
+            <Ionicons name="gift" size={60} color="#FF6B35" />
+            <Text style={styles.freeItemConfirmationTitle}>
+              Free Items Detected
+            </Text>
+            <Text style={styles.freeItemConfirmationMessage}>
+              This transaction contains free items. Please confirm to proceed
+              with checkout.
+            </Text>
+
+            <View style={styles.freeItemsList}>
+              {cartItems
+                .filter((item) => item.isFree)
+                .map((item) => (
+                  <View key={item.id} style={styles.freeItemRow}>
+                    <Text style={styles.freeItemName}>{item.name}</Text>
+                    <Text style={styles.freeItemQty}>x{item.quantity}</Text>
+                  </View>
+                ))}
+            </View>
+
+            <View style={styles.freeItemConfirmationButtons}>
+              <TouchableOpacity
+                style={styles.freeItemCancelButton}
+                onPress={() => setShowFreeItemConfirmation(false)}
+              >
+                <Text style={styles.freeItemCancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.freeItemConfirmButton}
+                onPress={handleConfirmFreeItems}
+              >
+                <Text style={styles.freeItemConfirmButtonText}>
+                  Accept & Continue
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Checkout Modal */}
       <CheckoutModal
@@ -3294,6 +3411,34 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#888",
   },
+  cartItemPriceFree: {
+    color: "#FF9500",
+    fontWeight: "bold",
+  },
+  freeButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFF3E0",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#FF9500",
+    marginLeft: 8,
+    gap: 4,
+  },
+  freeButtonActive: {
+    backgroundColor: "#FF9500",
+    borderColor: "#FF9500",
+  },
+  freeButtonText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#FF9500",
+  },
+  freeButtonTextActive: {
+    color: "#fff",
+  },
   cartItemControls: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -3331,6 +3476,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: "#4CAF50",
+  },
+  cartItemSubtotalFree: {
+    color: "#FF9500",
   },
   removeButton: {
     width: 32,
@@ -3423,5 +3571,105 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     fontWeight: "bold",
+  },
+  // Free Item Confirmation Modal Styles
+  freeItemConfirmationOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  freeItemConfirmationContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 30,
+    width: "90%",
+    maxWidth: 400,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  freeItemConfirmationTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#333",
+    marginTop: 15,
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  freeItemConfirmationMessage: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 20,
+    lineHeight: 22,
+  },
+  freeItemsList: {
+    width: "100%",
+    backgroundColor: "#FFF3E0",
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 25,
+    borderWidth: 2,
+    borderColor: "#FF9500",
+  },
+  freeItemRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#FFE0B2",
+  },
+  freeItemName: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+    flex: 1,
+  },
+  freeItemQty: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#FF6B35",
+  },
+  freeItemConfirmationButtons: {
+    flexDirection: "row",
+    width: "100%",
+    gap: 12,
+  },
+  freeItemCancelButton: {
+    flex: 1,
+    backgroundColor: "#e0e0e0",
+    paddingVertical: 15,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  freeItemCancelButtonText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#666",
+  },
+  freeItemConfirmButton: {
+    flex: 1,
+    backgroundColor: "#FF6B35",
+    paddingVertical: 15,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#FF6B35",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 5,
+  },
+  freeItemConfirmButtonText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#fff",
+    textAlign: "center",
   },
 });
