@@ -452,9 +452,9 @@ export default function App() {
         categoryInfo.bulk_discount_quantity > 0 &&
         categoryInfo.bulk_discount_price > 0
       ) {
-        // Calculate total quantity for this category
+        // Calculate total quantity for this category (excluding free items)
         const totalQuantity = categoryItems.reduce(
-          (sum, item) => sum + item.quantity,
+          (sum, item) => sum + (item.isFree ? 0 : item.quantity),
           0
         );
 
@@ -476,11 +476,11 @@ export default function App() {
 
           for (let i = 0; i < categoryItems.length && remainingCount > 0; i++) {
             const item = categoryItems[i];
+            // Skip free items
+            if (item.isFree) continue;
+
             const qtyToCharge = Math.min(item.quantity, remainingCount);
-            // Don't charge for free items
-            if (!item.isFree) {
-              categoryTotal += qtyToCharge * item.price;
-            }
+            categoryTotal += qtyToCharge * item.price;
             remainingCount -= qtyToCharge;
           }
         }
@@ -515,8 +515,11 @@ export default function App() {
         itemsByCategory[category] = { items: [], totalQty: 0, regularTotal: 0 };
       }
       itemsByCategory[category].items.push(item);
-      itemsByCategory[category].totalQty += item.quantity;
-      itemsByCategory[category].regularTotal += item.price * item.quantity;
+      // Don't count free items in quantity and total for discount calculation
+      if (!item.isFree) {
+        itemsByCategory[category].totalQty += item.quantity;
+        itemsByCategory[category].regularTotal += item.price * item.quantity;
+      }
     });
 
     const discounts = [];
