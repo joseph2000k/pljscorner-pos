@@ -1804,36 +1804,39 @@ export default function App() {
         </View>
 
         <View style={styles.posContainer}>
-          {/* Scan Button */}
-          <TouchableOpacity style={styles.scanButtonLarge} onPress={openCamera}>
-            <View style={styles.buttonContent}>
-              <Ionicons name="camera" size={24} color="#fff" />
-              <Text style={styles.scanButtonLargeText}>Scan Product</Text>
+          {/* Search Bar and Scan Button Row */}
+          <View style={styles.searchScanRow}>
+            {/* Search Bar */}
+            <View style={styles.searchContainerInline}>
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search products by name, qr, or category..."
+                placeholderTextColor="#888"
+                value={searchQuery}
+                onChangeText={handleSearch}
+                autoCorrect={false}
+              />
+              {searchQuery.length > 0 && (
+                <TouchableOpacity
+                  style={styles.clearSearchButton}
+                  onPress={() => {
+                    setSearchQuery("");
+                    setSearchResults([]);
+                    setShowSearchResults(false);
+                  }}
+                >
+                  <Ionicons name="close-circle" size={20} color="#888" />
+                </TouchableOpacity>
+              )}
             </View>
-          </TouchableOpacity>
 
-          {/* Search Bar */}
-          <View style={styles.searchContainer}>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search products by name, qr, or category..."
-              placeholderTextColor="#888"
-              value={searchQuery}
-              onChangeText={handleSearch}
-              autoCorrect={false}
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity
-                style={styles.clearSearchButton}
-                onPress={() => {
-                  setSearchQuery("");
-                  setSearchResults([]);
-                  setShowSearchResults(false);
-                }}
-              >
-                <Ionicons name="close-circle" size={20} color="#888" />
-              </TouchableOpacity>
-            )}
+            {/* Scan Button */}
+            <TouchableOpacity
+              style={styles.scanButtonCompact}
+              onPress={openCamera}
+            >
+              <Ionicons name="camera" size={24} color="#fff" />
+            </TouchableOpacity>
           </View>
 
           {/* Search Results */}
@@ -3191,6 +3194,35 @@ const styles = StyleSheet.create({
   posContainer: {
     flex: 1,
     backgroundColor: "#f5f5f5",
+  },
+  searchScanRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    margin: 15,
+    gap: 10,
+  },
+  searchContainerInline: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    paddingHorizontal: 15,
+  },
+  scanButtonCompact: {
+    backgroundColor: "#007AFF",
+    width: 50,
+    height: 50,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#007AFF",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   scanButtonLarge: {
     backgroundColor: "#007AFF",
