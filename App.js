@@ -105,6 +105,17 @@ export default function App() {
     loadRevenuePeriodPreference();
   }, []);
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) {
+      return "Good Morning";
+    } else if (hour < 18) {
+      return "Good Afternoon";
+    } else {
+      return "Good Evening";
+    }
+  };
+
   const loadRevenuePeriodPreference = async () => {
     try {
       const savedPeriod = await AsyncStorage.getItem("revenuePeriod");
@@ -1412,7 +1423,7 @@ export default function App() {
             onPress={handleDevResetTap}
             style={styles.devResetArea}
           >
-            <Text style={styles.homeTitle}>PLJ's Corner POS</Text>
+            <Text style={styles.homeTitle}>{getGreeting()}</Text>
           </TouchableOpacity>
         </View>
 
@@ -2414,13 +2425,13 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   devResetArea: {
-    alignItems: "center",
+    alignItems: "flex-start",
   },
   homeTitle: {
-    fontSize: 22,
-    fontWeight: "bold",
+    fontSize: 18,
+    fontWeight: "600",
     color: "#fff",
-    textAlign: "center",
+    textAlign: "left",
   },
   homeSubtitle: {
     fontSize: 14,
