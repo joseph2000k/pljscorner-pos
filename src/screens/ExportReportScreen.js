@@ -301,6 +301,10 @@ export default function ExportReportScreen({
         (sum, item) => sum + item.totalQuantity,
         0
       );
+      const totalFreeItems = Object.values(productSummary).reduce(
+        (sum, item) => sum + item.freeItemsCount,
+        0
+      );
       const totalRevenue = Object.values(productSummary).reduce(
         (sum, item) => sum + item.totalRevenue,
         0
@@ -318,6 +322,7 @@ export default function ExportReportScreen({
       summaryData.push([
         "TOTAL",
         totalQuantity,
+        totalFreeItems,
         totalRevenue.toFixed(2),
         totalDiscount.toFixed(2),
         totalTransactions,
@@ -408,6 +413,142 @@ export default function ExportReportScreen({
       }
 
       XLSX.utils.book_append_sheet(wb, wsSummary, "Product Summary");
+
+      // Create Payment Method Breakdown sheet
+      const paymentMethodSummary = {};
+
+      Object.values(salesGrouped).forEach((sale) => {
+        const method = sale.paymentMethod || "Unknown";
+        if (!paymentMethodSummary[method]) {
+          paymentMethodSummary[method] = {
+            transactionCount: 0,
+            totalAmount: 0,
+            totalAmountPaid: 0,
+            totalChange: 0,
+            itemsSold: 0,
+          };
+        }
+        paymentMethodSummary[method].transactionCount += 1;
+        paymentMethodSummary[method].totalAmount += sale.totalAmount;
+        paymentMethodSummary[method].totalAmountPaid += sale.amountPaid;
+        paymentMethodSummary[method].totalChange += sale.change;
+        paymentMethodSummary[method].itemsSold += sale.items.reduce(
+          (sum, item) => sum + item.quantity,
+          0
+        );
+      });
+
+      // Create payment method sheet data
+      const paymentMethodData = [];
+      paymentMethodData.push([
+        "Payment Method",
+        "Number of Transactions",
+        "Total Items Sold",
+        "Total Amount",
+        "Total Amount Paid",
+        "Total Change Given",
+      ]);
+
+      // Sort by transaction count (descending)
+      const sortedPaymentMethods = Object.entries(paymentMethodSummary).sort(
+        (a, b) => b[1].transactionCount - a[1].transactionCount
+      );
+
+      sortedPaymentMethods.forEach(([method, summary]) => {
+        paymentMethodData.push([
+          method.charAt(0).toUpperCase() + method.slice(1),
+          summary.transactionCount,
+          summary.itemsSold,
+          summary.totalAmount.toFixed(2),
+          summary.totalAmountPaid.toFixed(2),
+          summary.totalChange.toFixed(2),
+        ]);
+      });
+
+      // Add totals row
+      const totalTransactionsPayment = Object.values(
+        paymentMethodSummary
+      ).reduce((sum, item) => sum + item.transactionCount, 0);
+      const totalItemsSold = Object.values(paymentMethodSummary).reduce(
+        (sum, item) => sum + item.itemsSold,
+        0
+      );
+      const totalAmountPayment = Object.values(paymentMethodSummary).reduce(
+        (sum, item) => sum + item.totalAmount,
+        0
+      );
+      const totalAmountPaidPayment = Object.values(paymentMethodSummary).reduce(
+        (sum, item) => sum + item.totalAmountPaid,
+        0
+      );
+      const totalChangePayment = Object.values(paymentMethodSummary).reduce(
+        (sum, item) => sum + item.totalChange,
+        0
+      );
+
+      paymentMethodData.push([]);
+      paymentMethodData.push([
+        "TOTAL",
+        totalTransactionsPayment,
+        totalItemsSold,
+        totalAmountPayment.toFixed(2),
+        totalAmountPaidPayment.toFixed(2),
+        totalChangePayment.toFixed(2),
+      ]);
+
+      // Add payment method sheet to workbook
+      const wsPayment = XLSX.utils.aoa_to_sheet(paymentMethodData);
+
+      // Style header row in payment method sheet
+      const paymentRange = XLSX.utils.decode_range(wsPayment["!ref"]);
+      for (let col = paymentRange.s.c; col <= paymentRange.e.c; col++) {
+        const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+        if (!wsPayment[cellAddress]) continue;
+        wsPayment[cellAddress].s = {
+          font: {
+            bold: true,
+            color: { rgb: "FF000000" },
+            name: "Calibri",
+            sz: 11,
+          },
+          fill: {
+            patternType: "solid",
+            fgColor: { rgb: "FFFFFFFF" },
+          },
+          alignment: {
+            vertical: "center",
+            horizontal: "center",
+          },
+        };
+      }
+
+      // Style TOTAL row (last row) - black text, bold
+      const totalRowIndexPayment = paymentRange.e.r;
+      for (let col = paymentRange.s.c; col <= paymentRange.e.c; col++) {
+        const cellAddress = XLSX.utils.encode_cell({
+          r: totalRowIndexPayment,
+          c: col,
+        });
+        if (!wsPayment[cellAddress]) continue;
+        wsPayment[cellAddress].s = {
+          font: {
+            bold: true,
+            color: { rgb: "FF000000" },
+            name: "Calibri",
+            sz: 11,
+          },
+          fill: {
+            patternType: "solid",
+            fgColor: { rgb: "FFFFFFFF" },
+          },
+          alignment: {
+            vertical: "center",
+            horizontal: "center",
+          },
+        };
+      }
+
+      XLSX.utils.book_append_sheet(wb, wsPayment, "Payment Method Breakdown");
 
       // Create Product Inventory sheet
       const allProducts = getAllProducts();
