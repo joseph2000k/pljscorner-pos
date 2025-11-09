@@ -1791,16 +1791,7 @@ export default function App() {
             <Text style={styles.backButtonText}>← Back</Text>
           </TouchableOpacity>
           <Text style={styles.headerText}>Point of Sale</Text>
-          <View style={styles.cartBadgeContainer}>
-            <Ionicons name="cart" size={24} color="#4CAF50" />
-            {cartItems.length > 0 && (
-              <View style={styles.cartBadge}>
-                <Text style={styles.cartBadgeText}>
-                  {cartItems.reduce((sum, item) => sum + item.quantity, 0)}
-                </Text>
-              </View>
-            )}
-          </View>
+          <View style={styles.headerSpacer} />
         </View>
 
         <View style={styles.posContainer}>
@@ -1903,7 +1894,16 @@ export default function App() {
           {/* Cart Section */}
           <View style={styles.cartSection}>
             <View style={styles.cartHeader}>
-              <Text style={styles.cartTitle}>Shopping Cart</Text>
+              <View style={styles.cartTitleContainer}>
+                <Text style={styles.cartTitle}>Shopping Cart</Text>
+                {cartItems.length > 0 && (
+                  <View style={styles.cartItemCounter}>
+                    <Text style={styles.cartItemCounterText}>
+                      {cartItems.reduce((sum, item) => sum + item.quantity, 0)}
+                    </Text>
+                  </View>
+                )}
+              </View>
               {cartItems.length > 0 && (
                 <TouchableOpacity
                   style={styles.clearCartButton}
@@ -2897,6 +2897,9 @@ const styles = StyleSheet.create({
   placeholder: {
     width: 60, // Same width as back button for centering
   },
+  headerSpacer: {
+    width: 60, // Same width as back button for centering
+  },
   cartBadgeContainer: {
     width: 60,
     alignItems: "center",
@@ -3377,10 +3380,29 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#e0e0e0",
   },
+  cartTitleContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
   cartTitle: {
     fontSize: 18,
     fontWeight: "bold",
     color: "#333",
+  },
+  cartItemCounter: {
+    backgroundColor: "#4CAF50",
+    minWidth: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 8,
+  },
+  cartItemCounterText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "bold",
   },
   clearCartButton: {
     paddingHorizontal: 15,
