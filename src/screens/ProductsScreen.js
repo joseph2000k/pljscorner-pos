@@ -19,6 +19,7 @@ export default function ProductsScreen({
   onBack,
   onEditProduct,
   onDeleteProduct,
+  lowStockThreshold = 10,
 }) {
   const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState("");
@@ -121,7 +122,7 @@ export default function ProductsScreen({
                           styles.stockIndicator,
                           {
                             backgroundColor:
-                              product.stock_quantity < 10
+                              product.stock_quantity < lowStockThreshold
                                 ? "#ff4757"
                                 : "#2ed573",
                           },

@@ -114,6 +114,7 @@ function AppContent() {
   const [salesChartData, setSalesChartData] = useState(null);
   const [chartViewType, setChartViewType] = useState("daily"); // 'daily', 'hourly', 'monthly'
   const [revenuePeriod, setRevenuePeriod] = useState("daily"); // 'daily', 'weekly', 'monthly', 'yearly'
+  const [lowStockThreshold, setLowStockThreshold] = useState(10); // Default threshold
   const [showDiscounts, setShowDiscounts] = useState(false);
   const [recentSales, setRecentSales] = useState([]);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
@@ -124,6 +125,7 @@ function AppContent() {
     initializeDatabase();
     loadDashboardData();
     loadRevenuePeriodPreference();
+    loadLowStockThresholdPreference();
 
     // Keyboard listeners
     const keyboardDidShowListener = Keyboard.addListener(
@@ -173,6 +175,27 @@ function AppContent() {
     }
   };
 
+  const loadLowStockThresholdPreference = async () => {
+    try {
+      const savedThreshold = await AsyncStorage.getItem("lowStockThreshold");
+      if (savedThreshold) {
+        setLowStockThreshold(parseInt(savedThreshold));
+      }
+    } catch (error) {
+      console.error("Error loading low stock threshold:", error);
+    }
+  };
+
+  const saveLowStockThresholdPreference = async (threshold) => {
+    try {
+      await AsyncStorage.setItem("lowStockThreshold", threshold.toString());
+      setLowStockThreshold(threshold);
+      loadDashboardData(); // Refresh dashboard with new threshold
+    } catch (error) {
+      console.error("Error saving low stock threshold:", error);
+    }
+  };
+
   useEffect(() => {
     const getCameraPermissions = async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();
@@ -196,7 +219,7 @@ function AppContent() {
   }, [currentScreen]);
 
   const loadDashboardData = () => {
-    const stats = getDashboardStats(revenuePeriod);
+    const stats = getDashboardStats(revenuePeriod, lowStockThreshold);
     setDashboardStats(stats);
     const allProducts = getAllProducts();
     setProducts(allProducts);
@@ -1784,6 +1807,7 @@ function AppContent() {
         onBack={goBackHome}
         onEditProduct={handleEditProduct}
         onDeleteProduct={handleDeleteProduct}
+        lowStockThreshold={lowStockThreshold}
       />
     );
   }
@@ -1879,7 +1903,7 @@ function AppContent() {
                       <Text
                         style={[
                           styles.searchResultStock,
-                          product.stock_quantity < 10 &&
+                          product.stock_quantity < lowStockThreshold &&
                             styles.searchResultStockLow,
                         ]}
                       >
@@ -2106,6 +2130,8 @@ function AppContent() {
         onRestoreBackup={handleRestoreBackup}
         revenuePeriod={revenuePeriod}
         onRevenuePeriodChange={saveRevenuePeriodPreference}
+        lowStockThreshold={lowStockThreshold}
+        onLowStockThresholdChange={saveLowStockThresholdPreference}
         onExportReport={() => setCurrentScreen("export-report")}
         onAddProduct={openAddProductModal}
         onOpenCategories={() => setShowCategoriesModal(true)}

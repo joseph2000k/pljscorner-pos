@@ -510,7 +510,10 @@ export const deleteCategory = (categoryId) => {
 };
 
 // Dashboard/Analytics operations
-export const getDashboardStats = (revenuePeriod = "daily") => {
+export const getDashboardStats = (
+  revenuePeriod = "daily",
+  lowStockThreshold = 10
+) => {
   try {
     const totalProducts =
       db.getFirstSync("SELECT COUNT(*) as count FROM products")?.count || 0;
@@ -570,7 +573,8 @@ export const getDashboardStats = (revenuePeriod = "daily") => {
 
     const lowStockProducts =
       db.getFirstSync(
-        "SELECT COUNT(*) as count FROM products WHERE stock_quantity < 10"
+        "SELECT COUNT(*) as count FROM products WHERE stock_quantity < ?",
+        [lowStockThreshold]
       )?.count || 0;
 
     return {

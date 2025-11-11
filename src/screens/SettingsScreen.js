@@ -7,6 +7,7 @@ import {
   ScrollView,
   Alert,
   Platform,
+  TextInput,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -17,6 +18,8 @@ export default function SettingsScreen({
   onRestoreBackup,
   revenuePeriod,
   onRevenuePeriodChange,
+  lowStockThreshold,
+  onLowStockThresholdChange,
   onExportReport,
   onAddProduct,
   onOpenCategories,
@@ -148,6 +151,41 @@ export default function SettingsScreen({
               />
               <Text style={styles.radioLabel}>Yearly</Text>
             </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Inventory Settings */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Inventory Settings</Text>
+
+          <View style={styles.settingItem}>
+            <View style={styles.settingIconContainer}>
+              <Ionicons name="alert-circle-outline" size={24} color="#FF3B30" />
+            </View>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingTitle}>Low Stock Threshold</Text>
+              <Text style={styles.settingDescription}>
+                Alert when product quantity falls below this number
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.thresholdInput}
+              value={lowStockThreshold?.toString() || "10"}
+              onChangeText={(text) => {
+                const numValue = parseInt(text) || 0;
+                if (numValue >= 0 && numValue <= 999) {
+                  onLowStockThresholdChange(numValue);
+                }
+              }}
+              keyboardType="number-pad"
+              placeholder="Enter threshold"
+              placeholderTextColor="#999"
+              maxLength={3}
+            />
+            <Text style={styles.inputLabel}>items</Text>
           </View>
         </View>
 
@@ -311,6 +349,28 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginLeft: 12,
     color: "#333",
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: "#fff",
+  },
+  thresholdInput: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    backgroundColor: "#f9f9f9",
+    minWidth: 100,
+    marginRight: 12,
+  },
+  inputLabel: {
+    fontSize: 16,
+    color: "#666",
   },
   infoContainer: {
     padding: 16,
