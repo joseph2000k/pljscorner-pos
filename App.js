@@ -47,6 +47,7 @@ import {
   searchProducts,
   reopenDatabase,
   getAllSales,
+  getSaleDetails,
   getSalesChartData,
   getSalesChartDataByHour,
   getSalesChartDataByMonth,
@@ -189,6 +190,9 @@ export default function App() {
     setProducts(allProducts);
     const allCategories = getAllCategories();
     setCategories(allCategories);
+    const sales = getAllSales();
+    console.log("Loading recent sales:", sales.length, "sales found");
+    setRecentSales(sales.slice(0, 3)); // Get latest 3 transactions
     loadSalesChartData();
   };
 
@@ -719,6 +723,28 @@ export default function App() {
   const goBackHome = () => {
     setCurrentScreen("home");
     loadDashboardData(); // Refresh data when returning home
+  };
+
+  const handleViewTransaction = (sale) => {
+    const { sale: saleDetails, items } = getSaleDetails(sale.id);
+    if (saleDetails && items) {
+      setReceiptData({
+        saleId: saleDetails.id,
+        date: saleDetails.created_at,
+        paymentMethod: saleDetails.payment_method || "cash",
+        customerName: saleDetails.customer_name || "",
+        totalAmount: saleDetails.total_amount,
+        amountPaid: saleDetails.amount_paid || saleDetails.total_amount,
+        changeAmount: saleDetails.change_amount || 0,
+        items: items.map((item) => ({
+          name: item.product_name,
+          quantity: item.quantity,
+          price: item.unit_price,
+          isFree: item.unit_price === 0,
+        })),
+      });
+      setShowReceipt(true);
+    }
   };
 
   const goToProducts = () => {
@@ -1648,28 +1674,44 @@ export default function App() {
             </View>
           )}
 
-          {/* Recent Products */}
-          {products.length > 0 && (
-            <View style={styles.recentProductsContainer}>
-              <Text style={styles.sectionTitle}>Recent Products</Text>
-              {products.slice(0, 3).map((product) => (
-                <View key={product.id} style={styles.productItem}>
+          {/* Recent Transactions */}
+          <View style={styles.recentProductsContainer}>
+            <Text style={styles.sectionTitle}>Recent Transactions</Text>
+            {recentSales.length === 0 ? (
+              <View style={styles.productItem}>
+                <Text style={styles.productCategory}>No transactions yet</Text>
+              </View>
+            ) : (
+              recentSales.slice(0, 3).map((sale) => (
+                <TouchableOpacity
+                  key={sale.id}
+                  style={styles.productItem}
+                  onPress={() => handleViewTransaction(sale)}
+                >
                   <View>
-                    <Text style={styles.productName}>{product.name}</Text>
+                    <Text style={styles.productName}>
+                      Transaction #{sale.id}
+                    </Text>
                     <Text style={styles.productCategory}>
-                      {product.category}
+                      {new Date(sale.created_at).toLocaleDateString()} at{" "}
+                      {new Date(sale.created_at).toLocaleTimeString()}
+                    </Text>
+                    <Text style={styles.productCategory}>
+                      {sale.item_count} item{sale.item_count !== 1 ? "s" : ""}
                     </Text>
                   </View>
                   <View style={styles.productInfo}>
-                    <Text style={styles.productPrice}>₱{product.price}</Text>
+                    <Text style={styles.productPrice}>
+                      ₱{parseFloat(sale.total_amount).toFixed(2)}
+                    </Text>
                     <Text style={styles.productStock}>
-                      Stock: {product.stock_quantity}
+                      {sale.payment_method}
                     </Text>
                   </View>
-                </View>
-              ))}
-            </View>
-          )}
+                </TouchableOpacity>
+              ))
+            )}
+          </View>
 
           {/* Bottom padding for fixed navigation */}
           <View style={{ height: 100 }} />
@@ -2633,7 +2675,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
 
-  // Recent Products
+  // Recent Transactions
   recentProductsContainer: {
     backgroundColor: "#fff",
     padding: 16,
