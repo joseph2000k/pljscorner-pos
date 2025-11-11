@@ -2144,11 +2144,7 @@ export default function App() {
     screenContent = (
       <View style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={goBackToPOS}>
-            <Text style={styles.backButtonText}>← Back to POS</Text>
-          </TouchableOpacity>
           <Text style={styles.headerText}>Scanner</Text>
-          <View style={styles.placeholder} />
         </View>
 
         <View style={styles.cameraContainer}>
@@ -2279,6 +2275,13 @@ export default function App() {
             <Text style={styles.instructionText}>Point camera at qr</Text>
           )}
         </View>
+
+        <TouchableOpacity
+          style={styles.scannerDoneButton}
+          onPress={goBackToPOS}
+        >
+          <Text style={styles.scannerDoneButtonText}>Done</Text>
+        </TouchableOpacity>
 
         <StatusBar style="dark" />
       </View>
@@ -2877,7 +2880,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "center",
     backgroundColor: "#fff",
   },
   headerText: {
@@ -2891,6 +2894,17 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     color: "#007AFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  doneButton: {
+    backgroundColor: "#007AFF",
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  doneButtonText: {
+    color: "#fff",
     fontSize: 16,
     fontWeight: "600",
   },
@@ -3019,6 +3033,19 @@ const styles = StyleSheet.create({
     color: "#333",
     textAlign: "center",
     marginBottom: 20,
+  },
+  scannerDoneButton: {
+    backgroundColor: "#007AFF",
+    paddingVertical: 16,
+    marginHorizontal: 20,
+    marginBottom: Platform.OS === "android" ? 60 : 20,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  scannerDoneButtonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "600",
   },
   scannedProductContainer: {
     width: "100%",
