@@ -28,6 +28,8 @@ import { LineChart } from "react-native-chart-kit";
 import SettingsScreen from "./src/screens/SettingsScreen";
 import SalesReportScreen from "./src/screens/SalesReportScreen";
 import ExportReportScreen from "./src/screens/ExportReportScreen";
+import ProductsScreen from "./src/screens/ProductsScreen";
+import BottomNavigation from "./src/components/BottomNavigation";
 import {
   initializeDatabase,
   getProductByQR,
@@ -103,7 +105,6 @@ export default function App() {
   const [recentSales, setRecentSales] = useState([]);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(false);
-  const [productSearchQuery, setProductSearchQuery] = useState("");
 
   useEffect(() => {
     // Initialize database on app start
@@ -1675,45 +1676,14 @@ export default function App() {
         </ScrollView>
 
         {/* Fixed Bottom Navigation */}
-        {!keyboardVisible && (
-          <View style={styles.bottomNavigation}>
-            <TouchableOpacity
-              style={styles.navButton}
-              onPress={() => setCurrentScreen("sales-report")}
-            >
-              <Ionicons name="analytics-outline" size={24} color="#8E8E93" />
-              <Text style={styles.navButtonText}>Reports</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.navButton} onPress={goToProducts}>
-              <Ionicons name="cube-outline" size={24} color="#8E8E93" />
-              <Text style={styles.navButtonText}>Products</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.centerNavButton} onPress={openPOS}>
-              <View style={styles.centerNavCircle}>
-                <Ionicons name="cart" size={32} color="#fff" />
-              </View>
-              <Text style={styles.navButtonText}>POS</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.navButton}
-              onPress={() => setShowReceiptHistory(true)}
-            >
-              <Ionicons name="receipt-outline" size={24} color="#8E8E93" />
-              <Text style={styles.navButtonText}>Receipts</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.navButton}
-              onPress={() => setCurrentScreen("settings")}
-            >
-              <Ionicons name="settings-outline" size={24} color="#8E8E93" />
-              <Text style={styles.navButtonText}>Settings</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+        <BottomNavigation
+          onNavigateToReports={() => setCurrentScreen("sales-report")}
+          onNavigateToProducts={goToProducts}
+          onNavigateToPOS={openPOS}
+          onOpenReceipts={() => setShowReceiptHistory(true)}
+          onNavigateToSettings={() => setCurrentScreen("settings")}
+          keyboardVisible={keyboardVisible}
+        />
 
         <StatusBar style="dark" />
       </View>
@@ -1722,137 +1692,14 @@ export default function App() {
 
   // Products Screen
   else if (currentScreen === "products") {
-    // Filter products based on search query
-    const filteredProducts = products.filter((product) => {
-      const searchLower = productSearchQuery.toLowerCase();
-      return (
-        product.name.toLowerCase().includes(searchLower) ||
-        product.category.toLowerCase().includes(searchLower) ||
-        product.qr.toLowerCase().includes(searchLower)
-      );
-    });
-
     screenContent = (
-      <View style={styles.container}>
-        <View style={styles.posHeader}>
-          <TouchableOpacity style={styles.backButton} onPress={goBackHome}>
-            <Text style={styles.backButtonText}>← Back</Text>
-          </TouchableOpacity>
-          <Text style={styles.headerText}>Products</Text>
-          <View style={styles.placeholder} />
-        </View>
-
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <Ionicons
-            name="search"
-            size={20}
-            color="#8E8E93"
-            style={styles.searchIcon}
-          />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search products by name, category, or QR..."
-            value={productSearchQuery}
-            onChangeText={setProductSearchQuery}
-            placeholderTextColor="#8E8E93"
-          />
-          {productSearchQuery.length > 0 && (
-            <TouchableOpacity
-              onPress={() => setProductSearchQuery("")}
-              style={styles.searchClearButton}
-            >
-              <Ionicons name="close-circle" size={20} color="#8E8E93" />
-            </TouchableOpacity>
-          )}
-        </View>
-
-        <ScrollView style={styles.productsContent}>
-          {loadingProducts ? (
-            <View style={styles.loaderContainer}>
-              <ActivityIndicator size="large" color="#007AFF" />
-              <Text style={styles.loaderText}>Loading products...</Text>
-            </View>
-          ) : filteredProducts.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyStateText}>
-                {productSearchQuery
-                  ? "No products found"
-                  : "No products available"}
-              </Text>
-              <Text style={styles.emptyStateSubtext}>
-                {productSearchQuery
-                  ? "Try a different search term"
-                  : "Scan a qr to add products"}
-              </Text>
-            </View>
-          ) : (
-            filteredProducts.map((product) => (
-              <TouchableOpacity
-                key={product.id}
-                style={styles.productCard}
-                onPress={() => handleEditProduct(product)}
-              >
-                <View style={styles.productCardContent}>
-                  {product.image_uri && (
-                    <Image
-                      source={{ uri: product.image_uri }}
-                      style={styles.productCardImage}
-                      resizeMode="cover"
-                    />
-                  )}
-                  <View style={styles.productCardDetails}>
-                    <View style={styles.productHeader}>
-                      <Text style={styles.productCardName}>{product.name}</Text>
-                      <Text style={styles.productCardPrice}>
-                        ₱{product.price}
-                      </Text>
-                    </View>
-                    <Text style={styles.productCardCategory}>
-                      {product.category}
-                    </Text>
-                    <Text style={styles.productCardQR}>QR: {product.qr}</Text>
-                    <View style={styles.productCardFooter}>
-                      <View style={styles.stockInfo}>
-                        <Text style={styles.productCardStock}>
-                          Stock: {product.stock_quantity}
-                        </Text>
-                        <View
-                          style={[
-                            styles.stockIndicator,
-                            {
-                              backgroundColor:
-                                product.stock_quantity < 10
-                                  ? "#ff4757"
-                                  : "#2ed573",
-                            },
-                          ]}
-                        />
-                      </View>
-                      <View style={styles.productActions}>
-                        <TouchableOpacity
-                          style={styles.editButton}
-                          onPress={() => handleEditProduct(product)}
-                        >
-                          <Ionicons name="pencil" size={16} color="#007AFF" />
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={styles.deleteButton}
-                          onPress={() => handleDeleteProduct(product)}
-                        >
-                          <Ionicons name="trash" size={16} color="#FF3B30" />
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            ))
-          )}
-        </ScrollView>
-
-        <StatusBar style="dark" />
-      </View>
+      <ProductsScreen
+        products={products}
+        loading={loadingProducts}
+        onBack={goBackHome}
+        onEditProduct={handleEditProduct}
+        onDeleteProduct={handleDeleteProduct}
+      />
     );
   }
 
