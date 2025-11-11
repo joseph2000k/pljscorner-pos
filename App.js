@@ -103,6 +103,7 @@ export default function App() {
   const [recentSales, setRecentSales] = useState([]);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(false);
+  const [productSearchQuery, setProductSearchQuery] = useState("");
 
   useEffect(() => {
     // Initialize database on app start
@@ -1721,6 +1722,16 @@ export default function App() {
 
   // Products Screen
   else if (currentScreen === "products") {
+    // Filter products based on search query
+    const filteredProducts = products.filter((product) => {
+      const searchLower = productSearchQuery.toLowerCase();
+      return (
+        product.name.toLowerCase().includes(searchLower) ||
+        product.category.toLowerCase().includes(searchLower) ||
+        product.qr.toLowerCase().includes(searchLower)
+      );
+    });
+
     screenContent = (
       <View style={styles.container}>
         <View style={styles.posHeader}>
@@ -1731,21 +1742,52 @@ export default function App() {
           <View style={styles.placeholder} />
         </View>
 
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <Ionicons
+            name="search"
+            size={20}
+            color="#8E8E93"
+            style={styles.searchIcon}
+          />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search products by name, category, or QR..."
+            value={productSearchQuery}
+            onChangeText={setProductSearchQuery}
+            placeholderTextColor="#8E8E93"
+          />
+          {productSearchQuery.length > 0 && (
+            <TouchableOpacity
+              onPress={() => setProductSearchQuery("")}
+              style={styles.searchClearButton}
+            >
+              <Ionicons name="close-circle" size={20} color="#8E8E93" />
+            </TouchableOpacity>
+          )}
+        </View>
+
         <ScrollView style={styles.productsContent}>
           {loadingProducts ? (
             <View style={styles.loaderContainer}>
               <ActivityIndicator size="large" color="#007AFF" />
               <Text style={styles.loaderText}>Loading products...</Text>
             </View>
-          ) : products.length === 0 ? (
+          ) : filteredProducts.length === 0 ? (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyStateText}>No products found</Text>
+              <Text style={styles.emptyStateText}>
+                {productSearchQuery
+                  ? "No products found"
+                  : "No products available"}
+              </Text>
               <Text style={styles.emptyStateSubtext}>
-                Scan a qr to add products
+                {productSearchQuery
+                  ? "Try a different search term"
+                  : "Scan a qr to add products"}
               </Text>
             </View>
           ) : (
-            products.map((product) => (
+            filteredProducts.map((product) => (
               <TouchableOpacity
                 key={product.id}
                 style={styles.productCard}
@@ -2850,6 +2892,30 @@ const styles = StyleSheet.create({
   },
 
   // Products Screen
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    marginHorizontal: 15,
+    marginTop: 10,
+    marginBottom: 5,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+  },
+  searchIcon: {
+    marginRight: 10,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: "#333",
+  },
+  searchClearButton: {
+    padding: 5,
+  },
   productsContent: {
     flex: 1,
     padding: 15,
