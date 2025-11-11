@@ -1656,8 +1656,10 @@ export default function App() {
             <Text style={styles.navButtonText}>Products</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.navButton} onPress={openPOS}>
-            <Ionicons name="cart-outline" size={24} color="#8E8E93" />
+          <TouchableOpacity style={styles.centerNavButton} onPress={openPOS}>
+            <View style={styles.centerNavCircle}>
+              <Ionicons name="cart" size={32} color="#fff" />
+            </View>
             <Text style={styles.navButtonText}>POS</Text>
           </TouchableOpacity>
 
@@ -2772,6 +2774,28 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 5,
+  },
+  centerNavButton: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 5,
+    marginTop: -30,
+  },
+  centerNavCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: "#007AFF",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#007AFF",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    borderWidth: 4,
+    borderColor: "#fff",
   },
   navButtonText: {
     fontSize: 11,
