@@ -29,6 +29,7 @@ import SettingsScreen from "./src/screens/SettingsScreen";
 import SalesReportScreen from "./src/screens/SalesReportScreen";
 import ExportReportScreen from "./src/screens/ExportReportScreen";
 import ProductsScreen from "./src/screens/ProductsScreen";
+import ReceiptHistoryScreen from "./src/screens/ReceiptHistoryScreen";
 import BottomNavigation from "./src/components/BottomNavigation";
 import {
   initializeDatabase,
@@ -57,12 +58,11 @@ import {
 import { saveImage, deleteImage } from "./src/utils/imageStorage";
 import CheckoutModal from "./src/components/CheckoutModal";
 import ReceiptModal from "./src/components/ReceiptModal";
-import ReceiptHistoryModal from "./src/components/ReceiptHistoryModal";
 import CategoriesModal from "./src/components/CategoriesModal";
 import AddProductModal from "./src/components/AddProductModal";
 
 export default function App() {
-  const [currentScreen, setCurrentScreen] = useState("home"); // 'home', 'camera', 'products', 'add-product', 'pos', 'settings', 'sales-report', 'export-report'
+  const [currentScreen, setCurrentScreen] = useState("home"); // 'home', 'camera', 'products', 'add-product', 'pos', 'receipts', 'settings', 'sales-report', 'export-report'
   const [hasPermission, setHasPermission] = useState(null);
   const [scanned, setScanned] = useState(false);
   const [scannedData, setScannedData] = useState("");
@@ -90,7 +90,6 @@ export default function App() {
   const [scanCooldown, setScanCooldown] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
   const [receiptData, setReceiptData] = useState(null);
-  const [showReceiptHistory, setShowReceiptHistory] = useState(false);
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
   const [hideRevenue, setHideRevenue] = useState(true);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -1722,7 +1721,7 @@ export default function App() {
           onNavigateToReports={() => setCurrentScreen("sales-report")}
           onNavigateToProducts={goToProducts}
           onNavigateToPOS={openPOS}
-          onOpenReceipts={() => setShowReceiptHistory(true)}
+          onOpenReceipts={() => setCurrentScreen("receipts")}
           onNavigateToSettings={() => setCurrentScreen("settings")}
           keyboardVisible={keyboardVisible}
         />
@@ -1743,6 +1742,11 @@ export default function App() {
         onDeleteProduct={handleDeleteProduct}
       />
     );
+  }
+
+  // Receipt History Screen
+  else if (currentScreen === "receipts") {
+    screenContent = <ReceiptHistoryScreen onBack={goBackHome} />;
   }
 
   // POS Screen with Cart
@@ -2365,12 +2369,6 @@ export default function App() {
         visible={showReceipt}
         onClose={() => setShowReceipt(false)}
         receipt={receiptData}
-      />
-
-      {/* Receipt History Modal */}
-      <ReceiptHistoryModal
-        visible={showReceiptHistory}
-        onClose={() => setShowReceiptHistory(false)}
       />
     </>
   );
