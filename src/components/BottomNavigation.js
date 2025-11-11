@@ -7,6 +7,7 @@ import {
   Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function BottomNavigation({
   onNavigateToReports,
@@ -16,12 +17,19 @@ export default function BottomNavigation({
   onNavigateToSettings,
   keyboardVisible,
 }) {
+  const insets = useSafeAreaInsets();
+
   if (keyboardVisible) {
     return null;
   }
 
   return (
-    <View style={styles.bottomNavigation}>
+    <View
+      style={[
+        styles.bottomNavigation,
+        { paddingBottom: Math.max(insets.bottom, 10) },
+      ]}
+    >
       <TouchableOpacity style={styles.navButton} onPress={onNavigateToReports}>
         <Ionicons name="analytics-outline" size={24} color="#8E8E93" />
         <Text style={styles.navButtonText}>Reports</Text>
@@ -63,7 +71,6 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: "row",
     backgroundColor: "#fff",
-    paddingBottom: Platform.OS === "android" ? 20 : 30,
     paddingTop: 8,
     paddingHorizontal: 10,
     borderTopWidth: 1,

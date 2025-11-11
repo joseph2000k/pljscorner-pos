@@ -25,6 +25,10 @@ import * as Sharing from "expo-sharing";
 import * as DocumentPicker from "expo-document-picker";
 import JSZip from "jszip";
 import { LineChart } from "react-native-chart-kit";
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import SettingsScreen from "./src/screens/SettingsScreen";
 import SalesReportScreen from "./src/screens/SalesReportScreen";
 import ExportReportScreen from "./src/screens/ExportReportScreen";
@@ -62,6 +66,15 @@ import CategoriesModal from "./src/components/CategoriesModal";
 import AddProductModal from "./src/components/AddProductModal";
 
 export default function App() {
+  return (
+    <SafeAreaProvider>
+      <AppContent />
+    </SafeAreaProvider>
+  );
+}
+
+function AppContent() {
+  const insets = useSafeAreaInsets();
   const [currentScreen, setCurrentScreen] = useState("home"); // 'home', 'camera', 'products', 'add-product', 'pos', 'receipts', 'settings', 'sales-report', 'export-report'
   const [hasPermission, setHasPermission] = useState(null);
   const [scanned, setScanned] = useState(false);
@@ -1481,7 +1494,7 @@ export default function App() {
     screenContent = (
       <View style={styles.homeContainer}>
         {/* Compact Header */}
-        <View style={styles.homeHeader}>
+        <View style={[styles.homeHeader, { paddingTop: insets.top + 16 }]}>
           <TouchableOpacity
             onPress={handleDevResetTap}
             style={styles.devResetArea}
@@ -2407,7 +2420,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
   },
   homeHeader: {
-    paddingTop: 50,
     paddingBottom: 16,
     paddingHorizontal: 20,
     backgroundColor: "#007AFF",
