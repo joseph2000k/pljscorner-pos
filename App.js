@@ -97,6 +97,7 @@ export default function App() {
   const [salesChartData, setSalesChartData] = useState(null);
   const [chartViewType, setChartViewType] = useState("daily"); // 'daily', 'hourly', 'monthly'
   const [revenuePeriod, setRevenuePeriod] = useState("daily"); // 'daily', 'weekly', 'monthly', 'yearly'
+  const [showDiscounts, setShowDiscounts] = useState(false);
 
   useEffect(() => {
     // Initialize database on app start
@@ -1704,7 +1705,7 @@ export default function App() {
   else if (currentScreen === "products") {
     screenContent = (
       <View style={styles.container}>
-        <View style={styles.header}>
+        <View style={styles.posHeader}>
           <TouchableOpacity style={styles.backButton} onPress={goBackHome}>
             <Text style={styles.backButtonText}>← Back</Text>
           </TouchableOpacity>
@@ -1797,7 +1798,7 @@ export default function App() {
 
     screenContent = (
       <View style={styles.container}>
-        <View style={styles.header}>
+        <View style={styles.posHeader}>
           <TouchableOpacity style={styles.backButton} onPress={goBackHome}>
             <Text style={styles.backButtonText}>← Back</Text>
           </TouchableOpacity>
@@ -2043,23 +2044,32 @@ export default function App() {
             {/* Discount Information */}
             {discounts.length > 0 && (
               <View style={styles.discountSection}>
-                <View style={styles.discountTitleRow}>
+                <TouchableOpacity
+                  style={styles.discountTitleRow}
+                  onPress={() => setShowDiscounts(!showDiscounts)}
+                >
                   <Ionicons name="pricetags" size={16} color="#4CAF50" />
                   <Text style={styles.discountTitle}>
                     Bulk Discounts Applied!
                   </Text>
-                </View>
-                {discounts.map((discount, index) => (
-                  <View key={index} style={styles.discountItem}>
-                    <Text style={styles.discountText}>
-                      {discount.category}: {discount.bulkSets} set(s) of{" "}
-                      {discount.discountQty} @ ₱{discount.discountPrice}
-                    </Text>
-                    <Text style={styles.savingsText}>
-                      Save: ₱{discount.savings.toFixed(2)}
-                    </Text>
-                  </View>
-                ))}
+                  <Ionicons
+                    name={showDiscounts ? "chevron-up" : "chevron-down"}
+                    size={16}
+                    color="#4CAF50"
+                  />
+                </TouchableOpacity>
+                {showDiscounts &&
+                  discounts.map((discount, index) => (
+                    <View key={index} style={styles.discountItem}>
+                      <Text style={styles.discountText}>
+                        {discount.category}: {discount.bulkSets} set(s) of{" "}
+                        {discount.discountQty} @ ₱{discount.discountPrice}
+                      </Text>
+                      <Text style={styles.savingsText}>
+                        Save: ₱{discount.savings.toFixed(2)}
+                      </Text>
+                    </View>
+                  ))}
               </View>
             )}
 
@@ -2883,6 +2893,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#fff",
   },
+  posHeader: {
+    paddingTop: Platform.OS === "android" ? 48 : 50,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#fff",
+  },
   headerText: {
     fontSize: 20,
     fontWeight: "bold",
@@ -3609,11 +3628,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 6,
     marginBottom: 8,
+    paddingVertical: 4,
   },
   discountTitle: {
     fontSize: 14,
     fontWeight: "bold",
     color: "#2e7d32",
+    flex: 1,
   },
   discountItem: {
     flexDirection: "row",
