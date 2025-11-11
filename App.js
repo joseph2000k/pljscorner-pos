@@ -1547,7 +1547,12 @@ function AppContent() {
                   <View style={styles.statIconCircle}>
                     <Ionicons name="wallet-outline" size={20} color="#555" />
                   </View>
-                  <Text style={styles.statNumber}>
+                  <Text
+                    style={styles.statNumber}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.6}
+                  >
                     {hideRevenue
                       ? "••••••"
                       : `₱${dashboardStats.totalRevenue || "0.00"}`}
@@ -2632,12 +2637,15 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
     alignItems: "center",
     justifyContent: "center",
+    flexShrink: 0,
   },
   statNumber: {
     fontSize: 24,
     fontWeight: "700",
     color: "#1a1a1a",
     letterSpacing: -0.5,
+    flexShrink: 1,
+    flexWrap: "wrap",
   },
   statLabel: {
     fontSize: 12,
