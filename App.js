@@ -13,6 +13,7 @@ import {
   Dimensions,
   Platform,
   Keyboard,
+  ActivityIndicator,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
@@ -101,6 +102,7 @@ export default function App() {
   const [showDiscounts, setShowDiscounts] = useState(false);
   const [recentSales, setRecentSales] = useState([]);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [loadingProducts, setLoadingProducts] = useState(false);
 
   useEffect(() => {
     // Initialize database on app start
@@ -165,6 +167,16 @@ export default function App() {
     // Only request permissions when camera screen is opened
     if (currentScreen === "camera") {
       getCameraPermissions();
+    }
+
+    // Load products with delay when navigating to products screen
+    if (currentScreen === "products") {
+      setLoadingProducts(true);
+      setTimeout(() => {
+        const allProducts = getAllProducts();
+        setProducts(allProducts);
+        setLoadingProducts(false);
+      }, 500);
     }
   }, [currentScreen]);
 
@@ -705,6 +717,11 @@ export default function App() {
   const goBackHome = () => {
     setCurrentScreen("home");
     loadDashboardData(); // Refresh data when returning home
+  };
+
+  const goToProducts = () => {
+    setLoadingProducts(true);
+    setCurrentScreen("products");
   };
 
   const goBackToPOS = () => {
@@ -1667,10 +1684,7 @@ export default function App() {
               <Text style={styles.navButtonText}>Reports</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.navButton}
-              onPress={() => setCurrentScreen("products")}
-            >
+            <TouchableOpacity style={styles.navButton} onPress={goToProducts}>
               <Ionicons name="cube-outline" size={24} color="#8E8E93" />
               <Text style={styles.navButtonText}>Products</Text>
             </TouchableOpacity>
@@ -1718,7 +1732,12 @@ export default function App() {
         </View>
 
         <ScrollView style={styles.productsContent}>
-          {products.length === 0 ? (
+          {loadingProducts ? (
+            <View style={styles.loaderContainer}>
+              <ActivityIndicator size="large" color="#007AFF" />
+              <Text style={styles.loaderText}>Loading products...</Text>
+            </View>
+          ) : products.length === 0 ? (
             <View style={styles.emptyState}>
               <Text style={styles.emptyStateText}>No products found</Text>
               <Text style={styles.emptyStateSubtext}>
@@ -2834,6 +2853,19 @@ const styles = StyleSheet.create({
   productsContent: {
     flex: 1,
     padding: 15,
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: 300,
+  },
+  loaderText: {
+    marginTop: 15,
+    fontSize: 16,
+    color: "#007AFF",
+    fontWeight: "500",
+    textAlign: "center",
   },
   emptyState: {
     flex: 1,
