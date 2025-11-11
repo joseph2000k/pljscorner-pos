@@ -17,6 +17,8 @@ export default function SettingsScreen({
   revenuePeriod,
   onRevenuePeriodChange,
   onExportReport,
+  onAddProduct,
+  onOpenCategories,
 }) {
   return (
     <View style={styles.container}>
@@ -29,6 +31,40 @@ export default function SettingsScreen({
       </View>
 
       <ScrollView style={styles.content}>
+        {/* Quick Actions */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Quick Actions</Text>
+
+          <TouchableOpacity style={styles.settingItem} onPress={onAddProduct}>
+            <View style={styles.settingIconContainer}>
+              <Ionicons name="add-circle-outline" size={24} color="#34C759" />
+            </View>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingTitle}>Add Product</Text>
+              <Text style={styles.settingDescription}>
+                Add a new product to inventory
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#999" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.settingItem}
+            onPress={onOpenCategories}
+          >
+            <View style={styles.settingIconContainer}>
+              <Ionicons name="pricetag-outline" size={24} color="#FF9500" />
+            </View>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingTitle}>Categories</Text>
+              <Text style={styles.settingDescription}>
+                Manage product categories
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#999" />
+          </TouchableOpacity>
+        </View>
+
         {/* Display Settings */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Display Settings</Text>

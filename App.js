@@ -1597,67 +1597,6 @@ export default function App() {
             </View>
           )}
 
-          {/* Main Action - POS */}
-          <View style={styles.actionsContainer}>
-            <TouchableOpacity style={styles.primaryButton} onPress={openPOS}>
-              <View style={styles.buttonContent}>
-                <Ionicons name="cart" size={28} color="#fff" />
-                <Text style={styles.primaryButtonText}>Open POS</Text>
-              </View>
-            </TouchableOpacity>
-
-            {/* Quick Actions Grid */}
-            <View style={styles.quickActionsGrid}>
-              <TouchableOpacity
-                style={styles.quickActionButton}
-                onPress={() => setCurrentScreen("products")}
-              >
-                <Ionicons name="cube" size={28} color="#007AFF" />
-                <Text style={styles.quickActionText}>Products</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.quickActionButton}
-                onPress={openAddProductModal}
-              >
-                <Ionicons name="add-circle" size={28} color="#34C759" />
-                <Text style={styles.quickActionText}>Add Product</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.quickActionButton}
-                onPress={() => setShowCategoriesModal(true)}
-              >
-                <Ionicons name="pricetag" size={28} color="#FF9500" />
-                <Text style={styles.quickActionText}>Categories</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.quickActionButton}
-                onPress={() => setShowReceiptHistory(true)}
-              >
-                <Ionicons name="receipt" size={28} color="#5856D6" />
-                <Text style={styles.quickActionText}>Receipts</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.quickActionButton}
-                onPress={() => setCurrentScreen("sales-report")}
-              >
-                <Ionicons name="analytics" size={28} color="#FF3B30" />
-                <Text style={styles.quickActionText}>Sales Report</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.quickActionButton}
-                onPress={() => setCurrentScreen("settings")}
-              >
-                <Ionicons name="settings" size={28} color="#8E8E93" />
-                <Text style={styles.quickActionText}>Settings</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
           {/* Last Scanned Product */}
           {scannedProduct && (
             <View style={styles.lastScanContainer}>
@@ -1694,7 +1633,50 @@ export default function App() {
               ))}
             </View>
           )}
+
+          {/* Bottom padding for fixed navigation */}
+          <View style={{ height: 100 }} />
         </ScrollView>
+
+        {/* Fixed Bottom Navigation */}
+        <View style={styles.bottomNavigation}>
+          <TouchableOpacity
+            style={styles.navButton}
+            onPress={() => setCurrentScreen("sales-report")}
+          >
+            <Ionicons name="analytics-outline" size={24} color="#8E8E93" />
+            <Text style={styles.navButtonText}>Reports</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.navButton}
+            onPress={() => setCurrentScreen("products")}
+          >
+            <Ionicons name="cube-outline" size={24} color="#8E8E93" />
+            <Text style={styles.navButtonText}>Products</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.navButton} onPress={openPOS}>
+            <Ionicons name="cart-outline" size={24} color="#8E8E93" />
+            <Text style={styles.navButtonText}>POS</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.navButton}
+            onPress={() => setShowReceiptHistory(true)}
+          >
+            <Ionicons name="receipt-outline" size={24} color="#8E8E93" />
+            <Text style={styles.navButtonText}>Receipts</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.navButton}
+            onPress={() => setCurrentScreen("settings")}
+          >
+            <Ionicons name="settings-outline" size={24} color="#8E8E93" />
+            <Text style={styles.navButtonText}>Settings</Text>
+          </TouchableOpacity>
+        </View>
 
         <StatusBar style="dark" />
       </View>
@@ -2105,6 +2087,8 @@ export default function App() {
         revenuePeriod={revenuePeriod}
         onRevenuePeriodChange={saveRevenuePeriodPreference}
         onExportReport={() => setCurrentScreen("export-report")}
+        onAddProduct={openAddProductModal}
+        onOpenCategories={() => setShowCategoriesModal(true)}
       />
     );
   }
@@ -2762,6 +2746,44 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#666",
     marginTop: 2,
+  },
+
+  // Bottom Navigation
+  bottomNavigation: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    backgroundColor: "#fff",
+    paddingBottom: Platform.OS === "android" ? 35 : 30,
+    paddingTop: 10,
+    paddingHorizontal: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#e0e0e0",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 8,
+  },
+  navButton: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 5,
+  },
+  navButtonText: {
+    fontSize: 11,
+    color: "#8E8E93",
+    marginTop: 4,
+    fontWeight: "500",
+  },
+  navButtonTextActive: {
+    fontSize: 11,
+    color: "#007AFF",
+    marginTop: 4,
+    fontWeight: "600",
   },
 
   // Products Screen
