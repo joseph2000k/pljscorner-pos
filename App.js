@@ -1493,17 +1493,28 @@ export default function App() {
         <ScrollView style={styles.homeScrollContent}>
           {/* Dashboard Stats */}
           <View style={styles.dashboardContainer}>
+            <Text style={styles.dashboardTitle}>Dashboard</Text>
             <View style={styles.statsGrid}>
               <View style={styles.statBox}>
-                <Text style={styles.statNumber}>
-                  {dashboardStats.totalProducts || 0}
-                </Text>
+                <View style={styles.statHeader}>
+                  <View style={styles.statIconCircle}>
+                    <Ionicons name="cube-outline" size={20} color="#555" />
+                  </View>
+                  <Text style={styles.statNumber}>
+                    {dashboardStats.totalProducts || 0}
+                  </Text>
+                </View>
                 <Text style={styles.statLabel}>Products</Text>
               </View>
               <View style={styles.statBox}>
-                <Text style={styles.statNumber}>
-                  {dashboardStats.totalSales || 0}
-                </Text>
+                <View style={styles.statHeader}>
+                  <View style={styles.statIconCircle}>
+                    <Ionicons name="cart-outline" size={20} color="#555" />
+                  </View>
+                  <Text style={styles.statNumber}>
+                    {dashboardStats.totalSales || 0}
+                  </Text>
+                </View>
                 <Text style={styles.statLabel}>
                   {revenuePeriod === "daily"
                     ? "Daily Sales"
@@ -1517,12 +1528,18 @@ export default function App() {
               <TouchableOpacity
                 style={styles.statBox}
                 onPress={() => setHideRevenue(!hideRevenue)}
+                activeOpacity={0.7}
               >
-                <Text style={styles.statNumber}>
-                  {hideRevenue
-                    ? "••••••"
-                    : `₱${dashboardStats.totalRevenue || "0.00"}`}
-                </Text>
+                <View style={styles.statHeader}>
+                  <View style={styles.statIconCircle}>
+                    <Ionicons name="wallet-outline" size={20} color="#555" />
+                  </View>
+                  <Text style={styles.statNumber}>
+                    {hideRevenue
+                      ? "••••••"
+                      : `₱${dashboardStats.totalRevenue || "0.00"}`}
+                  </Text>
+                </View>
                 <View style={styles.statLabelRow}>
                   <Text style={styles.statLabel}>
                     {revenuePeriod === "daily"
@@ -1535,16 +1552,25 @@ export default function App() {
                   </Text>
                   <Ionicons
                     name={hideRevenue ? "eye-outline" : "eye-off-outline"}
-                    size={14}
+                    size={12}
                     color="#888"
                     style={styles.hideIcon}
                   />
                 </View>
               </TouchableOpacity>
               <View style={styles.statBox}>
-                <Text style={styles.statNumber}>
-                  {dashboardStats.lowStockProducts || 0}
-                </Text>
+                <View style={styles.statHeader}>
+                  <View style={styles.statIconCircle}>
+                    <Ionicons
+                      name="alert-circle-outline"
+                      size={20}
+                      color="#555"
+                    />
+                  </View>
+                  <Text style={styles.statNumber}>
+                    {dashboardStats.lowStockProducts || 0}
+                  </Text>
+                </View>
                 <Text style={styles.statLabel}>Low Stock</Text>
               </View>
             </View>
@@ -2499,6 +2525,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 3,
     elevation: 2,
+    overflow: "visible",
+  },
+  dashboardTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1a1a1a",
+    marginBottom: 16,
   },
   chartContainer: {
     backgroundColor: "#fff",
@@ -2566,31 +2599,48 @@ const styles = StyleSheet.create({
   },
   statBox: {
     width: "48%",
-    backgroundColor: "#f8f9fa",
-    padding: 12,
-    borderRadius: 10,
+    backgroundColor: "#ffffff",
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "#e5e5e5",
+  },
+  statHeader: {
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: 8,
+    width: "100%",
+  },
+  statIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#f5f5f5",
+    alignItems: "center",
+    justifyContent: "center",
   },
   statNumber: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#007AFF",
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#1a1a1a",
+    letterSpacing: -0.5,
   },
   statLabel: {
-    fontSize: 11,
+    fontSize: 12,
     color: "#666",
-    marginTop: 4,
+    fontWeight: "500",
   },
   statLabelRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    marginTop: 5,
+    justifyContent: "flex-start",
+    marginTop: 0,
   },
   hideIcon: {
     fontSize: 12,
-    marginLeft: 5,
+    marginLeft: 4,
   },
 
   // Action Buttons
