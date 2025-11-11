@@ -115,6 +115,7 @@ function AppContent() {
   const [chartViewType, setChartViewType] = useState("daily"); // 'daily', 'hourly', 'monthly'
   const [revenuePeriod, setRevenuePeriod] = useState("daily"); // 'daily', 'weekly', 'monthly', 'yearly'
   const [lowStockThreshold, setLowStockThreshold] = useState(10); // Default threshold
+  const [showLowStockOnly, setShowLowStockOnly] = useState(false);
   const [showDiscounts, setShowDiscounts] = useState(false);
   const [recentSales, setRecentSales] = useState([]);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
@@ -783,6 +784,7 @@ function AppContent() {
   };
 
   const goToProducts = () => {
+    setShowLowStockOnly(false);
     setLoadingProducts(true);
     setCurrentScreen("products");
   };
@@ -1599,7 +1601,15 @@ function AppContent() {
                   />
                 </View>
               </TouchableOpacity>
-              <View style={styles.statBox}>
+              <TouchableOpacity
+                style={styles.statBox}
+                onPress={() => {
+                  setShowLowStockOnly(true);
+                  setCurrentScreen("products");
+                  setLoadingProducts(true);
+                  setTimeout(() => setLoadingProducts(false), 300);
+                }}
+              >
                 <View style={styles.statHeader}>
                   <View style={styles.statIconCircle}>
                     <Ionicons
@@ -1613,7 +1623,7 @@ function AppContent() {
                   </Text>
                 </View>
                 <Text style={styles.statLabel}>Low Stock</Text>
-              </View>
+              </TouchableOpacity>
             </View>
           </View>
 
@@ -1804,10 +1814,14 @@ function AppContent() {
       <ProductsScreen
         products={products}
         loading={loadingProducts}
-        onBack={goBackHome}
+        onBack={() => {
+          setShowLowStockOnly(false);
+          goBackHome();
+        }}
         onEditProduct={handleEditProduct}
         onDeleteProduct={handleDeleteProduct}
         lowStockThreshold={lowStockThreshold}
+        showLowStockOnly={showLowStockOnly}
       />
     );
   }

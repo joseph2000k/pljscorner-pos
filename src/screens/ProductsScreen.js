@@ -20,18 +20,24 @@ export default function ProductsScreen({
   onEditProduct,
   onDeleteProduct,
   lowStockThreshold = 10,
+  showLowStockOnly = false,
 }) {
   const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Filter products based on search query
+  // Filter products based on search query and low stock filter
   const filteredProducts = products.filter((product) => {
     const searchLower = searchQuery.toLowerCase();
-    return (
+    const matchesSearch =
       product.name.toLowerCase().includes(searchLower) ||
       product.category.toLowerCase().includes(searchLower) ||
-      product.qr.toLowerCase().includes(searchLower)
-    );
+      product.qr.toLowerCase().includes(searchLower);
+
+    const matchesLowStock = showLowStockOnly
+      ? product.stock_quantity < lowStockThreshold
+      : true;
+
+    return matchesSearch && matchesLowStock;
   });
 
   return (
@@ -43,6 +49,16 @@ export default function ProductsScreen({
         <Text style={styles.headerText}>Products</Text>
         <View style={styles.placeholder} />
       </View>
+
+      {/* Low Stock Filter Indicator */}
+      {showLowStockOnly && (
+        <View style={styles.filterBanner}>
+          <Ionicons name="alert-circle" size={20} color="#FF3B30" />
+          <Text style={styles.filterBannerText}>
+            Showing Low Stock Items (below {lowStockThreshold})
+          </Text>
+        </View>
+      )}
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>
@@ -184,6 +200,25 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     width: 50,
+  },
+  filterBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFF3F3",
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    marginHorizontal: 15,
+    marginTop: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#FFD7D7",
+    gap: 8,
+  },
+  filterBannerText: {
+    fontSize: 14,
+    color: "#FF3B30",
+    fontWeight: "500",
+    flex: 1,
   },
   searchContainer: {
     flexDirection: "row",
