@@ -8,12 +8,14 @@ import {
   Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function SalesReportScreen({
   onBackPress,
   salesByPaymentMethod,
   revenuePeriod,
 }) {
+  const insets = useSafeAreaInsets();
   const getTotalTransactions = () => {
     return salesByPaymentMethod.reduce(
       (sum, item) => sum + item.transaction_count,
@@ -71,7 +73,7 @@ export default function SalesReportScreen({
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
         <TouchableOpacity style={styles.backButton} onPress={onBackPress}>
           <Text style={styles.backButtonText}>← Back</Text>
         </TouchableOpacity>
@@ -203,23 +205,22 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingTop: Platform.OS === "android" ? 48 : 16,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
+    paddingBottom: 15,
+    paddingHorizontal: 20,
+    backgroundColor: "#007AFF",
   },
   backButton: {
-    padding: 8,
+    padding: 5,
   },
   backButtonText: {
     fontSize: 16,
-    color: "#007AFF",
+    color: "#fff",
+    fontWeight: "500",
   },
   headerText: {
     fontSize: 20,
     fontWeight: "bold",
+    color: "#fff",
   },
   placeholder: {
     width: 60,
