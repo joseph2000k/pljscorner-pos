@@ -58,7 +58,8 @@ const AddProductModal = ({
 
   const loadCategories = () => {
     const allCategories = getAllCategories();
-    setCategories(allCategories.map((cat) => cat.name));
+    // Reverse the array to show the most recently added category first
+    setCategories(allCategories.map((cat) => cat.name).reverse());
   };
 
   const pickImage = async () => {
