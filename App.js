@@ -1638,48 +1638,6 @@ export default function App() {
           <View style={{ height: 100 }} />
         </ScrollView>
 
-        {/* Fixed Bottom Navigation */}
-        <View style={styles.bottomNavigation}>
-          <TouchableOpacity
-            style={styles.navButton}
-            onPress={() => setCurrentScreen("sales-report")}
-          >
-            <Ionicons name="analytics-outline" size={24} color="#8E8E93" />
-            <Text style={styles.navButtonText}>Reports</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.navButton}
-            onPress={() => setCurrentScreen("products")}
-          >
-            <Ionicons name="cube-outline" size={24} color="#8E8E93" />
-            <Text style={styles.navButtonText}>Products</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.centerNavButton} onPress={openPOS}>
-            <View style={styles.centerNavCircle}>
-              <Ionicons name="cart" size={32} color="#fff" />
-            </View>
-            <Text style={styles.navButtonText}>POS</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.navButton}
-            onPress={() => setShowReceiptHistory(true)}
-          >
-            <Ionicons name="receipt-outline" size={24} color="#8E8E93" />
-            <Text style={styles.navButtonText}>Receipts</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.navButton}
-            onPress={() => setCurrentScreen("settings")}
-          >
-            <Ionicons name="settings-outline" size={24} color="#8E8E93" />
-            <Text style={styles.navButtonText}>Settings</Text>
-          </TouchableOpacity>
-        </View>
-
         <StatusBar style="dark" />
       </View>
     );
@@ -2289,6 +2247,50 @@ export default function App() {
     <>
       {screenContent}
 
+      {/* Fixed Bottom Navigation - Always visible */}
+      {currentScreen !== "camera" && (
+        <View style={styles.bottomNavigation}>
+          <TouchableOpacity
+            style={styles.navButton}
+            onPress={() => setCurrentScreen("sales-report")}
+          >
+            <Ionicons name="analytics-outline" size={24} color="#8E8E93" />
+            <Text style={styles.navButtonText}>Reports</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.navButton}
+            onPress={() => setCurrentScreen("products")}
+          >
+            <Ionicons name="cube-outline" size={24} color="#8E8E93" />
+            <Text style={styles.navButtonText}>Products</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.centerNavButton} onPress={openPOS}>
+            <View style={styles.centerNavCircle}>
+              <Ionicons name="cart" size={32} color="#fff" />
+            </View>
+            <Text style={styles.navButtonText}>POS</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.navButton}
+            onPress={() => setShowReceiptHistory(true)}
+          >
+            <Ionicons name="receipt-outline" size={24} color="#8E8E93" />
+            <Text style={styles.navButtonText}>Receipts</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.navButton}
+            onPress={() => setCurrentScreen("settings")}
+          >
+            <Ionicons name="settings-outline" size={24} color="#8E8E93" />
+            <Text style={styles.navButtonText}>Settings</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* Add Product Modal - Available on all screens */}
       <AddProductModal
         visible={showAddProductModal}
@@ -2758,7 +2760,7 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: "row",
     backgroundColor: "#fff",
-    paddingBottom: Platform.OS === "android" ? 35 : 30,
+    paddingBottom: Platform.OS === "android" ? 25 : 30,
     paddingTop: 10,
     paddingHorizontal: 10,
     borderTopWidth: 1,
