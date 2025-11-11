@@ -88,13 +88,17 @@ const ReceiptModal = ({ visible, onClose, receipt }) => {
                     >
                       {item.isFree
                         ? "FREE"
-                        : `₱${(item.price * item.quantity).toFixed(2)}`}
+                        : `₱${(
+                            (item.price || 0) * (item.quantity || 0)
+                          ).toFixed(2)}`}
                     </Text>
                   </View>
                   <View style={styles.itemDetails}>
                     <Text style={styles.itemDetailText}>
                       {item.quantity} x{" "}
-                      {item.isFree ? "FREE" : `₱${item.price.toFixed(2)}`}
+                      {item.isFree
+                        ? "FREE"
+                        : `₱${(item.price || 0).toFixed(2)}`}
                     </Text>
                   </View>
                 </View>
@@ -108,7 +112,7 @@ const ReceiptModal = ({ visible, onClose, receipt }) => {
               <View style={styles.totalRow}>
                 <Text style={styles.totalLabel}>Subtotal:</Text>
                 <Text style={styles.totalValue}>
-                  ₱{(receipt.subtotal || receipt.totalAmount).toFixed(2)}
+                  ₱{(receipt.subtotal || receipt.totalAmount || 0).toFixed(2)}
                 </Text>
               </View>
 
@@ -134,7 +138,7 @@ const ReceiptModal = ({ visible, onClose, receipt }) => {
                         {discount.discountQty})
                       </Text>
                       <Text style={styles.discountValue}>
-                        -₱{discount.savings.toFixed(2)}
+                        -₱{(discount.savings || 0).toFixed(2)}
                       </Text>
                     </View>
                   ))}
@@ -144,7 +148,7 @@ const ReceiptModal = ({ visible, onClose, receipt }) => {
                         Total Savings:
                       </Text>
                       <Text style={styles.totalSavingsValue}>
-                        -₱{receipt.totalSavings.toFixed(2)}
+                        -₱{(receipt.totalSavings || 0).toFixed(2)}
                       </Text>
                     </View>
                   )}
@@ -154,7 +158,7 @@ const ReceiptModal = ({ visible, onClose, receipt }) => {
               <View style={[styles.totalRow, styles.grandTotal]}>
                 <Text style={styles.grandTotalLabel}>TOTAL:</Text>
                 <Text style={styles.grandTotalValue}>
-                  ₱{receipt.totalAmount.toFixed(2)}
+                  ₱{(receipt.totalAmount || 0).toFixed(2)}
                 </Text>
               </View>
 
@@ -163,13 +167,14 @@ const ReceiptModal = ({ visible, onClose, receipt }) => {
                   <View style={styles.totalRow}>
                     <Text style={styles.totalLabel}>Amount Paid:</Text>
                     <Text style={styles.totalValue}>
-                      ₱{receipt.amountPaid.toFixed(2)}
+                      ₱{(receipt.amountPaid || 0).toFixed(2)}
                     </Text>
                   </View>
                   <View style={styles.totalRow}>
                     <Text style={styles.totalLabel}>Change:</Text>
                     <Text style={styles.changeValue}>
-                      ₱{receipt.change.toFixed(2)}
+                      ₱
+                      {(receipt.change || receipt.changeAmount || 0).toFixed(2)}
                     </Text>
                   </View>
                 </>
