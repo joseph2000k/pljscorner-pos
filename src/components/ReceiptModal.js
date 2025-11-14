@@ -8,12 +8,18 @@ import {
   StyleSheet,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const ReceiptModal = ({ visible, onClose, receipt }) => {
+  const insets = useSafeAreaInsets();
+
   if (!receipt) return null;
 
   const formatDate = (dateString) => {
-    const date = new Date(dateString);
+    // SQLite stores timestamps in UTC format
+    // Add 'Z' to indicate UTC if not already present
+    const utcString = dateString.includes("Z") ? dateString : dateString + "Z";
+    const date = new Date(utcString);
     return date.toLocaleString("en-US", {
       year: "numeric",
       month: "short",
@@ -30,7 +36,7 @@ const ReceiptModal = ({ visible, onClose, receipt }) => {
       presentationStyle="pageSheet"
     >
       <View style={styles.modalContainer}>
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
           <Text style={styles.headerTitle}>Receipt</Text>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <Ionicons name="close" size={24} color="#333" />
@@ -188,7 +194,7 @@ const ReceiptModal = ({ visible, onClose, receipt }) => {
         </ScrollView>
 
         {/* Action Button */}
-        <View style={styles.actions}>
+        <View style={[styles.actions, { paddingBottom: insets.bottom || 20 }]}>
           <TouchableOpacity style={styles.doneButton} onPress={onClose}>
             <Text style={styles.doneButtonText}>Done</Text>
           </TouchableOpacity>
@@ -208,7 +214,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 20,
-    paddingTop: 50,
     paddingBottom: 15,
     backgroundColor: "#fff",
     borderBottomWidth: 1,

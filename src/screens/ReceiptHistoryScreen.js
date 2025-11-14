@@ -45,7 +45,10 @@ const ReceiptHistoryScreen = ({ onBack }) => {
   };
 
   const formatDate = (dateString) => {
-    const date = new Date(dateString);
+    // SQLite stores timestamps in UTC format
+    // Add 'Z' to indicate UTC if not already present
+    const utcString = dateString.includes("Z") ? dateString : dateString + "Z";
+    const date = new Date(utcString);
     return date.toLocaleString("en-US", {
       month: "short",
       day: "numeric",
