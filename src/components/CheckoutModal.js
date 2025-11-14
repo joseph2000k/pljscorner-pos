@@ -75,7 +75,7 @@ const CheckoutModal = ({
               >
                 <View style={styles.paymentButtonContent}>
                   <View style={styles.iconContainer}>
-                    <Ionicons name="cash" size={28} color="#fff" />
+                    <Text style={styles.pesoIcon}>₱</Text>
                   </View>
                   <Text style={styles.paymentButtonText}>Cash</Text>
                 </View>
@@ -223,6 +223,11 @@ const styles = StyleSheet.create({
     height: 48,
     justifyContent: "center",
     alignItems: "center",
+  },
+  pesoIcon: {
+    fontSize: 36,
+    fontWeight: "bold",
+    color: "#fff",
   },
   paymentImage: {
     width: 48,
