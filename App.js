@@ -1368,6 +1368,18 @@ function AppContent() {
     setShowEditProductModal(true);
   };
 
+  const handleUpdateStock = (productId, newStock) => {
+    const result = updateProductStock(productId, newStock);
+    if (result.success) {
+      // Refresh products list
+      const allProducts = getAllProducts();
+      setProducts(allProducts);
+      loadDashboardData();
+    } else {
+      Alert.alert("Error", "Failed to update stock");
+    }
+  };
+
   const handleUpdateProduct = async () => {
     if (
       !editingProduct.name ||
@@ -1820,6 +1832,7 @@ function AppContent() {
         }}
         onEditProduct={handleEditProduct}
         onDeleteProduct={handleDeleteProduct}
+        onUpdateStock={handleUpdateStock}
         lowStockThreshold={lowStockThreshold}
         showLowStockOnly={showLowStockOnly}
       />

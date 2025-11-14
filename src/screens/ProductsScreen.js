@@ -21,9 +21,29 @@ export default function ProductsScreen({
   onDeleteProduct,
   lowStockThreshold = 10,
   showLowStockOnly = false,
+  onUpdateStock,
 }) {
   const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState("");
+  const [stockValues, setStockValues] = useState({});
+
+  const handleStockChange = (productId, value) => {
+    setStockValues({ ...stockValues, [productId]: value });
+  };
+
+  const handleStockBlur = (productId, originalStock) => {
+    const newValue = stockValues[productId];
+    if (newValue !== undefined && newValue !== "") {
+      const newStock = parseInt(newValue);
+      if (!isNaN(newStock) && newStock >= 0 && newStock !== originalStock) {
+        onUpdateStock(productId, newStock);
+      }
+    }
+    // Clear the edited value
+    const newStockValues = { ...stockValues };
+    delete newStockValues[productId];
+    setStockValues(newStockValues);
+  };
 
   // Filter products based on search query and low stock filter
   const filteredProducts = products.filter((product) => {
@@ -130,9 +150,23 @@ export default function ProductsScreen({
                   <Text style={styles.productCardQR}>QR: {product.qr}</Text>
                   <View style={styles.productCardFooter}>
                     <View style={styles.stockInfo}>
-                      <Text style={styles.productCardStock}>
-                        Stock: {product.stock_quantity}
-                      </Text>
+                      <Text style={styles.stockLabel}>Stock:</Text>
+                      <TextInput
+                        style={styles.stockInput}
+                        value={
+                          stockValues[product.id] !== undefined
+                            ? stockValues[product.id]
+                            : product.stock_quantity.toString()
+                        }
+                        onChangeText={(value) =>
+                          handleStockChange(product.id, value)
+                        }
+                        onBlur={() =>
+                          handleStockBlur(product.id, product.stock_quantity)
+                        }
+                        keyboardType="number-pad"
+                        maxLength={5}
+                      />
                       <View
                         style={[
                           styles.stockIndicator,
@@ -147,16 +181,18 @@ export default function ProductsScreen({
                     </View>
                     <View style={styles.productActions}>
                       <TouchableOpacity
-                        style={styles.editButton}
+                        style={styles.actionButton}
                         onPress={() => onEditProduct(product)}
+                        accessibilityLabel="Edit product"
                       >
-                        <Ionicons name="pencil" size={16} color="#007AFF" />
+                        <Ionicons name="pencil" size={16} color="#666" />
                       </TouchableOpacity>
                       <TouchableOpacity
-                        style={styles.deleteButton}
+                        style={styles.actionButton}
                         onPress={() => onDeleteProduct(product)}
+                        accessibilityLabel="Delete product"
                       >
-                        <Ionicons name="trash" size={16} color="#FF3B30" />
+                        <Ionicons name="trash" size={16} color="#666" />
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -334,29 +370,41 @@ const styles = StyleSheet.create({
   stockInfo: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 6,
   },
-  productCardStock: {
+  stockLabel: {
     fontSize: 14,
     color: "#666",
-    marginRight: 8,
+  },
+  stockInput: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    fontSize: 14,
+    minWidth: 50,
+    textAlign: "center",
+    backgroundColor: "#fff",
   },
   stockIndicator: {
     width: 8,
     height: 8,
     borderRadius: 4,
+    marginLeft: 4,
   },
   productActions: {
     flexDirection: "row",
     gap: 10,
   },
-  editButton: {
-    padding: 8,
-    backgroundColor: "#E3F2FD",
+  actionButton: {
+    paddingHorizontal: 8,
+    paddingVertical: 6,
     borderRadius: 6,
-  },
-  deleteButton: {
-    padding: 8,
-    backgroundColor: "#FFEBEE",
-    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#e6e6e6",
+    backgroundColor: "transparent",
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
