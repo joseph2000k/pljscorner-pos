@@ -32,6 +32,8 @@ const CheckoutModal = ({
     onCompleteCheckout("gcash", cartTotal, 0);
   };
 
+  const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+
   return (
     <>
       <Modal
@@ -49,9 +51,14 @@ const CheckoutModal = ({
           </View>
 
           <View style={styles.checkoutContent}>
-            <Text style={styles.checkoutTotal}>
-              Total: ₱{cartTotal.toFixed(2)}
-            </Text>
+            <View style={styles.summaryContainer}>
+              <Text style={styles.checkoutTotal}>
+                Total: ₱{cartTotal.toFixed(2)}
+              </Text>
+              <Text style={styles.itemCount}>
+                {totalItems} {totalItems === 1 ? "item" : "items"}
+              </Text>
+            </View>
 
             <View style={styles.checkoutItems}>
               <Text style={styles.checkoutItemsTitle}>Items:</Text>
@@ -158,12 +165,21 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#f5f5f5",
   },
+  summaryContainer: {
+    alignItems: "center",
+    marginVertical: 20,
+  },
   checkoutTotal: {
     fontSize: 32,
     fontWeight: "bold",
     color: "#4CAF50",
     textAlign: "center",
-    marginVertical: 20,
+  },
+  itemCount: {
+    fontSize: 16,
+    color: "#666",
+    marginTop: 8,
+    textAlign: "center",
   },
   checkoutItems: {
     backgroundColor: "#fff",
