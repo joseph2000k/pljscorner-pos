@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import {
   View,
   Text,
-  ScrollView,
+  FlatList,
   TouchableOpacity,
   TextInput,
   Image,
@@ -105,27 +105,17 @@ export default function ProductsScreen({
         )}
       </View>
 
-      <ScrollView style={styles.content}>
-        {loading ? (
-          <View style={styles.loaderContainer}>
-            <ActivityIndicator size="large" color="#007AFF" />
-            <Text style={styles.loaderText}>Loading products...</Text>
-          </View>
-        ) : filteredProducts.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyStateText}>
-              {searchQuery ? "No products found" : "No products available"}
-            </Text>
-            <Text style={styles.emptyStateSubtext}>
-              {searchQuery
-                ? "Try a different search term"
-                : "Scan a QR to add products"}
-            </Text>
-          </View>
-        ) : (
-          filteredProducts.map((product) => (
+      {loading ? (
+        <View style={styles.loaderContainer}>
+          <ActivityIndicator size="large" color="#007AFF" />
+          <Text style={styles.loaderText}>Loading products...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={filteredProducts}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item: product }) => (
             <TouchableOpacity
-              key={product.id}
               style={styles.productCard}
               onPress={() => onEditProduct(product)}
             >
@@ -199,9 +189,27 @@ export default function ProductsScreen({
                 </View>
               </View>
             </TouchableOpacity>
-          ))
-        )}
-      </ScrollView>
+          )}
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateText}>
+                {searchQuery ? "No products found" : "No products available"}
+              </Text>
+              <Text style={styles.emptyStateSubtext}>
+                {searchQuery
+                  ? "Try a different search term"
+                  : "Scan a QR to add products"}
+              </Text>
+            </View>
+          }
+          contentContainerStyle={styles.listContent}
+          initialNumToRender={10}
+          maxToRenderPerBatch={10}
+          windowSize={5}
+          removeClippedSubviews={true}
+          updateCellsBatchingPeriod={50}
+        />
+      )}
 
       <StatusBar style="dark" />
     </View>
@@ -280,15 +288,14 @@ const styles = StyleSheet.create({
   searchClearButton: {
     padding: 5,
   },
-  content: {
-    flex: 1,
+  listContent: {
     padding: 15,
   },
   loaderContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingTop: 300,
+    paddingVertical: 100,
   },
   loaderText: {
     marginTop: 15,

@@ -3,7 +3,7 @@ import {
   View,
   Text,
   TouchableOpacity,
-  ScrollView,
+  FlatList,
   StyleSheet,
   RefreshControl,
   ActivityIndicator,
@@ -175,111 +175,115 @@ const ReceiptHistoryScreen = ({ onBack }) => {
           <View style={styles.placeholder} />
         </View>
 
-        <ScrollView
-          style={styles.content}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        >
-          {loading ? (
-            <View style={styles.loaderContainer}>
-              <ActivityIndicator size="large" color="#007AFF" />
-              <Text style={styles.loaderText}>Loading receipts...</Text>
-            </View>
-          ) : sales.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Ionicons name="receipt-outline" size={64} color="#ccc" />
-              <Text style={styles.emptyStateText}>No sales yet</Text>
-              <Text style={styles.emptyStateSubtext}>
-                Completed transactions will appear here
-              </Text>
-            </View>
-          ) : (
-            <View style={styles.salesList}>
-              <View style={styles.statsCard}>
-                <View style={styles.statItem}>
-                  <Text style={styles.statValue}>{sales.length}</Text>
-                  <Text style={styles.statLabel}>Total Sales</Text>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                  <Text style={styles.statValue}>
-                    ₱
-                    {sales
-                      .reduce((sum, sale) => sum + sale.total_amount, 0)
-                      .toFixed(2)}
-                  </Text>
-                  <Text style={styles.statLabel}>Total Revenue</Text>
-                </View>
-              </View>
-
-              {sales.map((sale) => (
-                <TouchableOpacity
-                  key={sale.id}
-                  style={styles.saleCard}
-                  onPress={() => handleViewReceipt(sale)}
-                >
-                  <View style={styles.saleHeader}>
-                    <View style={styles.saleLeft}>
-                      <Text style={styles.saleId}>Receipt #{sale.id}</Text>
-                      <Text style={styles.saleDate}>
-                        {formatDate(sale.created_at)}
+        {loading ? (
+          <View style={styles.loaderContainer}>
+            <ActivityIndicator size="large" color="#007AFF" />
+            <Text style={styles.loaderText}>Loading receipts...</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={sales}
+            keyExtractor={(item) => item.id.toString()}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+            renderItem={({ item: sale }) => (
+              <TouchableOpacity
+                style={styles.saleCard}
+                onPress={() => handleViewReceipt(sale)}
+              >
+                <View style={styles.saleHeader}>
+                  <View style={styles.saleLeft}>
+                    <Text style={styles.saleId}>Receipt #{sale.id}</Text>
+                    <Text style={styles.saleDate}>
+                      {formatDate(sale.created_at)}
+                    </Text>
+                  </View>
+                  <View style={styles.saleRight}>
+                    <Text style={styles.saleAmount}>
+                      ₱{sale.total_amount.toFixed(2)}
+                    </Text>
+                    <View style={styles.paymentBadge}>
+                      <Ionicons
+                        name={getPaymentIcon(sale.payment_method)}
+                        size={14}
+                        color="#007AFF"
+                        style={styles.paymentIcon}
+                      />
+                      <Text style={styles.paymentText}>
+                        {sale.payment_method?.toUpperCase() || "CASH"}
                       </Text>
-                    </View>
-                    <View style={styles.saleRight}>
-                      <Text style={styles.saleAmount}>
-                        ₱{sale.total_amount.toFixed(2)}
-                      </Text>
-                      <View style={styles.paymentBadge}>
-                        <Ionicons
-                          name={getPaymentIcon(sale.payment_method)}
-                          size={14}
-                          color="#007AFF"
-                          style={styles.paymentIcon}
-                        />
-                        <Text style={styles.paymentText}>
-                          {sale.payment_method?.toUpperCase() || "CASH"}
-                        </Text>
-                      </View>
                     </View>
                   </View>
+                </View>
 
-                  <View style={styles.saleDetails}>
+                <View style={styles.saleDetails}>
+                  <View style={styles.saleInfo}>
+                    <Text style={styles.saleInfoLabel}>Items:</Text>
+                    <Text style={styles.saleInfoValue}>
+                      {sale.item_count || 0}
+                    </Text>
+                  </View>
+                  {sale.customer_name && (
                     <View style={styles.saleInfo}>
-                      <Text style={styles.saleInfoLabel}>Items:</Text>
+                      <Text style={styles.saleInfoLabel}>Customer:</Text>
                       <Text style={styles.saleInfoValue}>
-                        {sale.item_count || 0}
-                      </Text>
-                    </View>
-                    {sale.customer_name && (
-                      <View style={styles.saleInfo}>
-                        <Text style={styles.saleInfoLabel}>Customer:</Text>
-                        <Text style={styles.saleInfoValue}>
-                          {sale.customer_name}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-
-                  {sale.products && (
-                    <View style={styles.productsPreview}>
-                      <Text
-                        style={styles.productsPreviewText}
-                        numberOfLines={1}
-                      >
-                        {sale.products}
+                        {sale.customer_name}
                       </Text>
                     </View>
                   )}
+                </View>
 
-                  <View style={styles.viewReceiptButton}>
-                    <Text style={styles.viewReceiptText}>View Receipt →</Text>
+                {sale.products && (
+                  <View style={styles.productsPreview}>
+                    <Text style={styles.productsPreviewText} numberOfLines={1}>
+                      {sale.products}
+                    </Text>
                   </View>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-        </ScrollView>
+                )}
+
+                <View style={styles.viewReceiptButton}>
+                  <Text style={styles.viewReceiptText}>View Receipt →</Text>
+                </View>
+              </TouchableOpacity>
+            )}
+            ListHeaderComponent={
+              sales.length > 0 ? (
+                <View style={styles.statsCard}>
+                  <View style={styles.statItem}>
+                    <Text style={styles.statValue}>{sales.length}</Text>
+                    <Text style={styles.statLabel}>Total Sales</Text>
+                  </View>
+                  <View style={styles.statDivider} />
+                  <View style={styles.statItem}>
+                    <Text style={styles.statValue}>
+                      ₱
+                      {sales
+                        .reduce((sum, sale) => sum + sale.total_amount, 0)
+                        .toFixed(2)}
+                    </Text>
+                    <Text style={styles.statLabel}>Total Revenue</Text>
+                  </View>
+                </View>
+              ) : null
+            }
+            ListEmptyComponent={
+              <View style={styles.emptyState}>
+                <Ionicons name="receipt-outline" size={64} color="#ccc" />
+                <Text style={styles.emptyStateText}>No sales yet</Text>
+                <Text style={styles.emptyStateSubtext}>
+                  Completed transactions will appear here
+                </Text>
+              </View>
+            }
+            contentContainerStyle={styles.listContent}
+            initialNumToRender={10}
+            maxToRenderPerBatch={10}
+            windowSize={5}
+            removeClippedSubviews={true}
+            updateCellsBatchingPeriod={50}
+          />
+        )}
       </View>
 
       <ReceiptModal
@@ -315,14 +319,14 @@ const styles = StyleSheet.create({
   placeholder: {
     width: 32,
   },
-  content: {
-    flex: 1,
+  listContent: {
+    padding: 15,
   },
   loaderContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingTop: 150,
+    paddingVertical: 100,
   },
   loaderText: {
     marginTop: 15,
@@ -349,14 +353,13 @@ const styles = StyleSheet.create({
     color: "#666",
     textAlign: "center",
   },
-  salesList: {
-    padding: 15,
-  },
   statsCard: {
     backgroundColor: "#fff",
     borderRadius: 15,
     padding: 20,
     marginBottom: 20,
+    marginHorizontal: 15,
+    marginTop: 15,
     flexDirection: "row",
     justifyContent: "space-around",
     shadowColor: "#000",
@@ -390,6 +393,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 15,
     marginBottom: 12,
+    marginHorizontal: 15,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
