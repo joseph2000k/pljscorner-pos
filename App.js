@@ -1851,11 +1851,11 @@ function AppContent() {
 
     screenContent = (
       <View style={styles.container}>
-        <View style={styles.posHeader}>
+        <View style={[styles.posHeader, { paddingTop: insets.top + 16 }]}>
           <TouchableOpacity style={styles.backButton} onPress={goBackHome}>
-            <Text style={styles.backButtonText}>← Back</Text>
+            <Text style={styles.posBackButtonText}>← Back</Text>
           </TouchableOpacity>
-          <Text style={styles.headerText}>Point of Sale</Text>
+          <Text style={styles.posHeaderText}>Point of Sale</Text>
           <View style={styles.headerSpacer} />
         </View>
 
@@ -3068,13 +3068,22 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   posHeader: {
-    paddingTop: Platform.OS === "android" ? 48 : 50,
-    paddingBottom: 20,
+    paddingBottom: 15,
     paddingHorizontal: 20,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#fff",
+    backgroundColor: "#007AFF",
+  },
+  posHeaderText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#fff",
+  },
+  posBackButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "500",
   },
   headerText: {
     fontSize: 20,
