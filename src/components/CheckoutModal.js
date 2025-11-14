@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { View, Text, Modal, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  Modal,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import CashPaymentModal from "./CashPaymentModal";
 
@@ -67,7 +74,9 @@ const CheckoutModal = ({
                 onPress={() => setShowCashModal(true)}
               >
                 <View style={styles.paymentButtonContent}>
-                  <Ionicons name="cash" size={24} color="#fff" />
+                  <View style={styles.iconContainer}>
+                    <Ionicons name="cash" size={28} color="#fff" />
+                  </View>
                   <Text style={styles.paymentButtonText}>Cash</Text>
                 </View>
               </TouchableOpacity>
@@ -76,7 +85,13 @@ const CheckoutModal = ({
                 onPress={handleCardPayment}
               >
                 <View style={styles.paymentButtonContent}>
-                  <Ionicons name="card" size={24} color="#fff" />
+                  <View style={styles.iconContainer}>
+                    <Image
+                      source={require("../../assets/visamaster.png")}
+                      style={styles.paymentImage}
+                      resizeMode="contain"
+                    />
+                  </View>
                   <Text style={styles.paymentButtonText}>Card</Text>
                 </View>
               </TouchableOpacity>
@@ -85,7 +100,13 @@ const CheckoutModal = ({
                 onPress={handleGCashPayment}
               >
                 <View style={styles.paymentButtonContent}>
-                  <Ionicons name="phone-portrait" size={24} color="#fff" />
+                  <View style={styles.iconContainer}>
+                    <Image
+                      source={require("../../assets/gcash.png")}
+                      style={styles.paymentImage}
+                      resizeMode="contain"
+                    />
+                  </View>
                   <Text style={styles.paymentButtonText}>GCash</Text>
                 </View>
               </TouchableOpacity>
@@ -196,6 +217,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+  },
+  iconContainer: {
+    width: 48,
+    height: 48,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  paymentImage: {
+    width: 48,
+    height: 48,
   },
   paymentButtonText: {
     color: "#fff",
