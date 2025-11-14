@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
+  ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import CashPaymentModal from "./CashPaymentModal";
@@ -62,16 +63,21 @@ const CheckoutModal = ({
 
             <View style={styles.checkoutItems}>
               <Text style={styles.checkoutItemsTitle}>Items:</Text>
-              {cartItems.map((item) => (
-                <View key={item.id} style={styles.checkoutItem}>
-                  <Text style={styles.checkoutItemName}>
-                    {item.name} x {item.quantity}
-                  </Text>
-                  <Text style={styles.checkoutItemPrice}>
-                    ₱{(item.price * item.quantity).toFixed(2)}
-                  </Text>
-                </View>
-              ))}
+              <ScrollView
+                style={styles.itemsScrollView}
+                nestedScrollEnabled={true}
+              >
+                {cartItems.map((item) => (
+                  <View key={item.id} style={styles.checkoutItem}>
+                    <Text style={styles.checkoutItemName}>
+                      {item.name} x {item.quantity}
+                    </Text>
+                    <Text style={styles.checkoutItemPrice}>
+                      ₱{(item.price * item.quantity).toFixed(2)}
+                    </Text>
+                  </View>
+                ))}
+              </ScrollView>
             </View>
 
             <Text style={styles.paymentMethodTitle}>Payment Method:</Text>
@@ -186,6 +192,10 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 15,
     marginBottom: 20,
+    maxHeight: 200,
+  },
+  itemsScrollView: {
+    maxHeight: 140,
   },
   checkoutItemsTitle: {
     fontSize: 18,
