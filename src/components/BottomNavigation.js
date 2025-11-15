@@ -30,9 +30,9 @@ export default function BottomNavigation({
         { paddingBottom: Math.max(insets.bottom, 10) },
       ]}
     >
-      <TouchableOpacity style={styles.navButton} onPress={onNavigateToReports}>
-        <Ionicons name="analytics-outline" size={24} color="#8E8E93" />
-        <Text style={styles.navButtonText}>Reports</Text>
+      <TouchableOpacity style={styles.navButton} onPress={onAddProduct}>
+        <Ionicons name="add-circle-outline" size={24} color="#8E8E93" />
+        <Text style={styles.navButtonText}>Add</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.navButton} onPress={onNavigateToProducts}>
@@ -55,9 +55,9 @@ export default function BottomNavigation({
         <Text style={styles.navButtonText}>Receipts</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.navButton} onPress={onAddProduct}>
-        <Ionicons name="add-circle-outline" size={24} color="#8E8E93" />
-        <Text style={styles.navButtonText}>Add</Text>
+      <TouchableOpacity style={styles.navButton} onPress={onNavigateToReports}>
+        <Ionicons name="analytics-outline" size={24} color="#8E8E93" />
+        <Text style={styles.navButtonText}>Reports</Text>
       </TouchableOpacity>
     </View>
   );
