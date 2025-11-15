@@ -105,6 +105,7 @@ function AppContent() {
   const [receiptData, setReceiptData] = useState(null);
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
   const [hideRevenue, setHideRevenue] = useState(true);
+  const [hideSales, setHideSales] = useState(true);
   const [editingProduct, setEditingProduct] = useState(null);
   const [showEditProductModal, setShowEditProductModal] = useState(false);
   const [resetTapCount, setResetTapCount] = useState(0);
@@ -1551,45 +1552,7 @@ function AppContent() {
           <View style={styles.dashboardContainer}>
             <Text style={styles.dashboardTitle}>Dashboard</Text>
             <View style={styles.statsGrid}>
-              <TouchableOpacity
-                style={styles.statBox}
-                onPress={() => {
-                  setShowLowStockOnly(false);
-                  setCurrentScreen("products");
-                  setLoadingProducts(true);
-                  setTimeout(() => setLoadingProducts(false), 300);
-                }}
-                activeOpacity={0.7}
-              >
-                <View style={styles.statHeader}>
-                  <View style={styles.statIconCircle}>
-                    <Ionicons name="cube-outline" size={20} color="#555" />
-                  </View>
-                  <Text style={styles.statNumber}>
-                    {dashboardStats.totalProducts || 0}
-                  </Text>
-                </View>
-                <Text style={styles.statLabel}>Products</Text>
-              </TouchableOpacity>
-              <View style={styles.statBox}>
-                <View style={styles.statHeader}>
-                  <View style={styles.statIconCircle}>
-                    <Ionicons name="cart-outline" size={20} color="#555" />
-                  </View>
-                  <Text style={styles.statNumber}>
-                    {dashboardStats.totalSales || 0}
-                  </Text>
-                </View>
-                <Text style={styles.statLabel}>
-                  {revenuePeriod === "daily"
-                    ? "Daily Sales"
-                    : revenuePeriod === "weekly"
-                    ? "Weekly Sales"
-                    : revenuePeriod === "monthly"
-                    ? "Monthly Sales"
-                    : "Yearly Sales"}
-                </Text>
-              </View>
+              {/* Top Left: Daily Revenue */}
               <TouchableOpacity
                 style={styles.statBox}
                 onPress={() => setHideRevenue(!hideRevenue)}
@@ -1628,6 +1591,63 @@ function AppContent() {
                   />
                 </View>
               </TouchableOpacity>
+
+              {/* Top Right: Daily Sales */}
+              <TouchableOpacity
+                style={styles.statBox}
+                onPress={() => setHideSales(!hideSales)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.statHeader}>
+                  <View style={styles.statIconCircle}>
+                    <Ionicons name="cart-outline" size={20} color="#555" />
+                  </View>
+                  <Text style={styles.statNumber}>
+                    {hideSales ? "••••" : dashboardStats.totalSales || 0}
+                  </Text>
+                </View>
+                <View style={styles.statLabelRow}>
+                  <Text style={styles.statLabel}>
+                    {revenuePeriod === "daily"
+                      ? "Daily Sales"
+                      : revenuePeriod === "weekly"
+                      ? "Weekly Sales"
+                      : revenuePeriod === "monthly"
+                      ? "Monthly Sales"
+                      : "Yearly Sales"}
+                  </Text>
+                  <Ionicons
+                    name={hideSales ? "eye-outline" : "eye-off-outline"}
+                    size={12}
+                    color="#888"
+                    style={styles.hideIcon}
+                  />
+                </View>
+              </TouchableOpacity>
+
+              {/* Lower Left: Products */}
+              <TouchableOpacity
+                style={styles.statBox}
+                onPress={() => {
+                  setShowLowStockOnly(false);
+                  setCurrentScreen("products");
+                  setLoadingProducts(true);
+                  setTimeout(() => setLoadingProducts(false), 300);
+                }}
+                activeOpacity={0.7}
+              >
+                <View style={styles.statHeader}>
+                  <View style={styles.statIconCircle}>
+                    <Ionicons name="cube-outline" size={20} color="#555" />
+                  </View>
+                  <Text style={styles.statNumber}>
+                    {dashboardStats.totalProducts || 0}
+                  </Text>
+                </View>
+                <Text style={styles.statLabel}>Products</Text>
+              </TouchableOpacity>
+
+              {/* Lower Right: Low Stock */}
               <TouchableOpacity
                 style={styles.statBox}
                 onPress={() => {
