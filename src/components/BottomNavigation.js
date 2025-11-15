@@ -14,7 +14,7 @@ export default function BottomNavigation({
   onNavigateToProducts,
   onNavigateToPOS,
   onOpenReceipts,
-  onNavigateToSettings,
+  onAddProduct,
   keyboardVisible,
 }) {
   const insets = useSafeAreaInsets();
@@ -55,9 +55,9 @@ export default function BottomNavigation({
         <Text style={styles.navButtonText}>Receipts</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.navButton} onPress={onNavigateToSettings}>
-        <Ionicons name="settings-outline" size={24} color="#8E8E93" />
-        <Text style={styles.navButtonText}>Settings</Text>
+      <TouchableOpacity style={styles.navButton} onPress={onAddProduct}>
+        <Ionicons name="add-circle-outline" size={24} color="#8E8E93" />
+        <Text style={styles.navButtonText}>Add</Text>
       </TouchableOpacity>
     </View>
   );

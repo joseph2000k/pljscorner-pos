@@ -1531,12 +1531,18 @@ function AppContent() {
     screenContent = (
       <View style={styles.homeContainer}>
         {/* Compact Header */}
-        <View style={[styles.homeHeader, { paddingTop: insets.top + 16 }]}>
+        <View style={[styles.homeHeader, { paddingTop: insets.top + 8 }]}>
           <TouchableOpacity
             onPress={handleDevResetTap}
             style={styles.devResetArea}
           >
             <Text style={styles.homeTitle}>{getGreeting()}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setCurrentScreen("settings")}
+            style={styles.headerSettingsButton}
+          >
+            <Ionicons name="settings-outline" size={24} color="#fff" />
           </TouchableOpacity>
         </View>
 
@@ -1545,7 +1551,16 @@ function AppContent() {
           <View style={styles.dashboardContainer}>
             <Text style={styles.dashboardTitle}>Dashboard</Text>
             <View style={styles.statsGrid}>
-              <View style={styles.statBox}>
+              <TouchableOpacity
+                style={styles.statBox}
+                onPress={() => {
+                  setShowLowStockOnly(false);
+                  setCurrentScreen("products");
+                  setLoadingProducts(true);
+                  setTimeout(() => setLoadingProducts(false), 300);
+                }}
+                activeOpacity={0.7}
+              >
                 <View style={styles.statHeader}>
                   <View style={styles.statIconCircle}>
                     <Ionicons name="cube-outline" size={20} color="#555" />
@@ -1555,7 +1570,7 @@ function AppContent() {
                   </Text>
                 </View>
                 <Text style={styles.statLabel}>Products</Text>
-              </View>
+              </TouchableOpacity>
               <View style={styles.statBox}>
                 <View style={styles.statHeader}>
                   <View style={styles.statIconCircle}>
@@ -1811,7 +1826,7 @@ function AppContent() {
           onNavigateToProducts={goToProducts}
           onNavigateToPOS={openPOS}
           onOpenReceipts={() => setCurrentScreen("receipts")}
-          onNavigateToSettings={() => setCurrentScreen("settings")}
+          onAddProduct={openAddProductModal}
           keyboardVisible={keyboardVisible}
         />
 
@@ -2478,7 +2493,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
   },
   homeHeader: {
-    paddingBottom: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingBottom: 10,
     paddingHorizontal: 20,
     backgroundColor: "#007AFF",
     shadowColor: "#000",
@@ -2487,8 +2505,13 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 4,
   },
+  headerSettingsButton: {
+    padding: 8,
+    borderRadius: 8,
+  },
   devResetArea: {
     alignItems: "flex-start",
+    flex: 1,
   },
   homeTitle: {
     fontSize: 18,
