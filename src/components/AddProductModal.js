@@ -13,6 +13,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { CameraView, Camera } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getAllCategories } from "../services/database";
 
 const AddProductModal = ({
@@ -24,6 +25,7 @@ const AddProductModal = ({
   onOpenCategories,
   isEditing = false,
 }) => {
+  const insets = useSafeAreaInsets();
   const [categories, setCategories] = useState([]);
   const [showQRScanner, setShowQRScanner] = useState(false);
   const [hasPermission, setHasPermission] = useState(null);
@@ -149,13 +151,15 @@ const AddProductModal = ({
       presentationStyle="pageSheet"
     >
       <View style={styles.modalContainer}>
-        <View style={styles.modalHeader}>
+        <View style={[styles.modalHeader, { paddingTop: insets.top + 8 }]}>
           <TouchableOpacity onPress={onClose}>
             <Text style={styles.modalCancelText}>Cancel</Text>
           </TouchableOpacity>
-          <Text style={styles.modalTitle}>
-            {isEditing ? "Edit Product" : "Add New Product"}
-          </Text>
+          <View style={styles.titleContainer}>
+            <Text style={styles.modalTitle}>
+              {isEditing ? "Edit Product" : "Add New Product"}
+            </Text>
+          </View>
           <TouchableOpacity onPress={onSave}>
             <Text style={styles.modalSaveText}>
               {isEditing ? "Update" : "Save"}
@@ -380,25 +384,30 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 20,
-    paddingTop: 50,
-    paddingBottom: 15,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
+    paddingHorizontal: 16,
+    paddingBottom: 10,
+    backgroundColor: "#007AFF",
+  },
+  titleContainer: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    justifyContent: "center",
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#333",
+    fontSize: 17,
+    fontWeight: "600",
+    color: "#fff",
   },
   modalCancelText: {
     fontSize: 16,
-    color: "#007AFF",
+    color: "#fff",
+    fontWeight: "400",
   },
   modalSaveText: {
     fontSize: 16,
-    color: "#007AFF",
+    color: "#fff",
     fontWeight: "600",
   },
   modalContent: {
