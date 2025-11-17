@@ -57,6 +57,7 @@ import {
   getSalesChartDataByHour,
   getSalesChartDataByMonth,
   getSalesByPaymentMethod,
+  getSalesByPaymentMethodDateRange,
   getSalesByDateRange,
 } from "./src/services/database";
 import { saveImage, deleteImage } from "./src/utils/imageStorage";
@@ -121,6 +122,7 @@ function AppContent() {
   const [recentSales, setRecentSales] = useState([]);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(false);
+  const [customDateRange, setCustomDateRange] = useState(null);
 
   useEffect(() => {
     // Initialize database on app start
@@ -760,6 +762,14 @@ function AppContent() {
   const goBackHome = () => {
     setCurrentScreen("home");
     loadDashboardData(); // Refresh data when returning home
+  };
+
+  const handleDateRangeChange = (startDate, endDate) => {
+    if (startDate && endDate) {
+      setCustomDateRange({ startDate, endDate });
+    } else {
+      setCustomDateRange(null);
+    }
   };
 
   const handleViewTransaction = (sale) => {
@@ -2203,12 +2213,20 @@ function AppContent() {
 
   // Sales Report Screen
   else if (currentScreen === "sales-report") {
-    const salesByPaymentMethod = getSalesByPaymentMethod(revenuePeriod);
+    const salesByPaymentMethod = customDateRange
+      ? getSalesByPaymentMethodDateRange(
+          customDateRange.startDate,
+          customDateRange.endDate
+        )
+      : getSalesByPaymentMethod(revenuePeriod);
+
     screenContent = (
       <SalesReportScreen
         onBackPress={goBackHome}
         salesByPaymentMethod={salesByPaymentMethod}
         revenuePeriod={revenuePeriod}
+        onDateRangeChange={handleDateRangeChange}
+        customDateRange={customDateRange}
       />
     );
   }

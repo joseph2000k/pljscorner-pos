@@ -6,16 +6,39 @@ import {
   TouchableOpacity,
   ScrollView,
   Platform,
+  Modal,
+  TextInput,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Calendar } from "react-native-calendars";
 
 export default function SalesReportScreen({
   onBackPress,
   salesByPaymentMethod,
   revenuePeriod,
+  onDateRangeChange,
+  customDateRange,
 }) {
   const insets = useSafeAreaInsets();
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [startDate, setStartDate] = useState(customDateRange?.startDate || "");
+  const [endDate, setEndDate] = useState(customDateRange?.endDate || "");
+  const [isCustomRange, setIsCustomRange] = useState(!!customDateRange);
+  const [selectingDateType, setSelectingDateType] = useState("start"); // 'start' or 'end'
+  const [markedDates, setMarkedDates] = useState({});
+
+  // Sync with parent's customDateRange when it changes
+  useEffect(() => {
+    if (customDateRange) {
+      setStartDate(customDateRange.startDate);
+      setEndDate(customDateRange.endDate);
+      setIsCustomRange(true);
+      updateMarkedDates(customDateRange.startDate, customDateRange.endDate);
+    } else {
+      setIsCustomRange(false);
+    }
+  }, [customDateRange]);
   const getTotalTransactions = () => {
     return salesByPaymentMethod.reduce(
       (sum, item) => sum + item.transaction_count,
@@ -57,6 +80,9 @@ export default function SalesReportScreen({
   };
 
   const getPeriodLabel = () => {
+    if (isCustomRange && startDate && endDate) {
+      return `${formatDisplayDate(startDate)} - ${formatDisplayDate(endDate)}`;
+    }
     switch (revenuePeriod) {
       case "daily":
         return "Today";
@@ -71,6 +97,117 @@ export default function SalesReportScreen({
     }
   };
 
+  const formatDisplayDate = (dateStr) => {
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  const onDayPress = (day) => {
+    if (selectingDateType === "start") {
+      setStartDate(day.dateString);
+      setSelectingDateType("end");
+      updateMarkedDates(day.dateString, endDate);
+    } else {
+      // If selecting end date, make sure it's after start date
+      if (startDate && day.dateString >= startDate) {
+        setEndDate(day.dateString);
+        updateMarkedDates(startDate, day.dateString);
+      } else if (!startDate) {
+        setEndDate(day.dateString);
+        updateMarkedDates("", day.dateString);
+      }
+    }
+  };
+
+  const updateMarkedDates = (start, end) => {
+    const marked = {};
+
+    if (start) {
+      marked[start] = {
+        startingDay: true,
+        color: "#007AFF",
+        textColor: "white",
+      };
+    }
+
+    if (end) {
+      marked[end] = {
+        endingDay: true,
+        color: "#007AFF",
+        textColor: "white",
+      };
+    }
+
+    // Mark days in between
+    if (start && end && start !== end) {
+      const startDateObj = new Date(start);
+      const endDateObj = new Date(end);
+      const currentDate = new Date(startDateObj);
+      currentDate.setDate(currentDate.getDate() + 1);
+
+      while (currentDate < endDateObj) {
+        const dateString = currentDate.toISOString().split("T")[0];
+        marked[dateString] = {
+          color: "#B3D9FF",
+          textColor: "#333",
+        };
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      // Update start and end to show period
+      if (start === end) {
+        marked[start] = {
+          color: "#007AFF",
+          textColor: "white",
+        };
+      } else {
+        marked[start] = {
+          startingDay: true,
+          color: "#007AFF",
+          textColor: "white",
+        };
+        marked[end] = {
+          endingDay: true,
+          color: "#007AFF",
+          textColor: "white",
+        };
+      }
+    }
+
+    setMarkedDates(marked);
+  };
+
+  const handleApplyDateRange = () => {
+    if (startDate && endDate) {
+      setIsCustomRange(true);
+      setShowDatePicker(false);
+      if (onDateRangeChange) {
+        onDateRangeChange(startDate, endDate);
+      }
+    }
+  };
+
+  const handleResetToDefault = () => {
+    setIsCustomRange(false);
+    setStartDate("");
+    setEndDate("");
+    setMarkedDates({});
+    setSelectingDateType("start");
+    if (onDateRangeChange) {
+      onDateRangeChange(null, null);
+    }
+  };
+
+  const openDatePicker = () => {
+    setSelectingDateType("start");
+    setShowDatePicker(true);
+  };
+
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
@@ -78,7 +215,12 @@ export default function SalesReportScreen({
           <Text style={styles.backButtonText}>← Back</Text>
         </TouchableOpacity>
         <Text style={styles.headerText}>Sales Report</Text>
-        <View style={styles.placeholder} />
+        <TouchableOpacity
+          style={styles.calendarButton}
+          onPress={openDatePicker}
+        >
+          <Ionicons name="calendar" size={24} color="#fff" />
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content}>
@@ -192,6 +334,112 @@ export default function SalesReportScreen({
           )}
         </View>
       </ScrollView>
+
+      {/* Date Range Picker Modal */}
+      <Modal
+        visible={showDatePicker}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowDatePicker(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View
+            style={[styles.modalContent, { paddingBottom: insets.bottom + 20 }]}
+          >
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Date Range</Text>
+              <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                <Ionicons name="close" size={24} color="#333" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Date Selection Tabs */}
+            <View style={styles.dateTypeTabs}>
+              <TouchableOpacity
+                style={[
+                  styles.dateTypeTab,
+                  selectingDateType === "start" && styles.dateTypeTabActive,
+                ]}
+                onPress={() => setSelectingDateType("start")}
+              >
+                <Text
+                  style={[
+                    styles.dateTypeTabText,
+                    selectingDateType === "start" &&
+                      styles.dateTypeTabTextActive,
+                  ]}
+                >
+                  Start Date
+                </Text>
+                {startDate && (
+                  <Text style={styles.selectedDateText}>
+                    {formatDisplayDate(startDate)}
+                  </Text>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.dateTypeTab,
+                  selectingDateType === "end" && styles.dateTypeTabActive,
+                ]}
+                onPress={() => setSelectingDateType("end")}
+              >
+                <Text
+                  style={[
+                    styles.dateTypeTabText,
+                    selectingDateType === "end" && styles.dateTypeTabTextActive,
+                  ]}
+                >
+                  End Date
+                </Text>
+                {endDate && (
+                  <Text style={styles.selectedDateText}>
+                    {formatDisplayDate(endDate)}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            {/* Calendar */}
+            <Calendar
+              onDayPress={onDayPress}
+              markedDates={markedDates}
+              markingType="period"
+              theme={{
+                selectedDayBackgroundColor: "#007AFF",
+                todayTextColor: "#007AFF",
+                arrowColor: "#007AFF",
+                textDayFontSize: 16,
+                textMonthFontSize: 18,
+                textDayHeaderFontSize: 14,
+              }}
+              style={styles.calendar}
+            />
+
+            <View style={styles.modalButtons}>
+              {isCustomRange && (
+                <TouchableOpacity
+                  style={styles.resetButton}
+                  onPress={handleResetToDefault}
+                >
+                  <Text style={styles.resetButtonText}>Reset to Default</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity
+                style={[
+                  styles.applyButton,
+                  (!startDate || !endDate) && styles.applyButtonDisabled,
+                ]}
+                onPress={handleApplyDateRange}
+                disabled={!startDate || !endDate}
+              >
+                <Text style={styles.applyButtonText}>Apply</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -224,6 +472,9 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     width: 60,
+  },
+  calendarButton: {
+    padding: 5,
   },
   content: {
     flex: 1,
@@ -367,5 +618,107 @@ const styles = StyleSheet.create({
   progressBar: {
     height: "100%",
     borderRadius: 3,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  dateTypeTabs: {
+    flexDirection: "row",
+    marginBottom: 20,
+    gap: 10,
+  },
+  dateTypeTab: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: "#f0f0f0",
+    alignItems: "center",
+  },
+  dateTypeTabActive: {
+    backgroundColor: "#007AFF",
+  },
+  dateTypeTabText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#666",
+  },
+  dateTypeTabTextActive: {
+    color: "#fff",
+  },
+  selectedDateText: {
+    fontSize: 12,
+    color: "#fff",
+    marginTop: 4,
+  },
+  calendar: {
+    borderRadius: 8,
+    marginBottom: 20,
+  },
+  dateInputContainer: {
+    marginBottom: 20,
+  },
+  dateInputWrapper: {
+    marginBottom: 16,
+  },
+  dateLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 8,
+  },
+  dateInput: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    backgroundColor: "#f8f9fa",
+  },
+  modalButtons: {
+    gap: 10,
+  },
+  applyButton: {
+    backgroundColor: "#007AFF",
+    padding: 16,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  applyButtonDisabled: {
+    backgroundColor: "#ccc",
+  },
+  applyButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  resetButton: {
+    backgroundColor: "#f0f0f0",
+    padding: 16,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  resetButtonText: {
+    color: "#333",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

@@ -640,6 +640,33 @@ export const getSalesByPaymentMethod = (period = "daily") => {
   }
 };
 
+// Get sales by payment method for custom date range
+export const getSalesByPaymentMethodDateRange = (startDate, endDate) => {
+  try {
+    const result = db.getAllSync(
+      `
+      SELECT 
+        payment_method,
+        COUNT(*) as transaction_count,
+        SUM(total_amount) as total_amount
+      FROM sales
+      WHERE DATE(created_at, 'localtime') BETWEEN DATE(?) AND DATE(?)
+      GROUP BY payment_method
+      ORDER BY payment_method
+      `,
+      [startDate, endDate]
+    );
+
+    return result;
+  } catch (error) {
+    console.error(
+      "Error getting sales by payment method for date range:",
+      error
+    );
+    return [];
+  }
+};
+
 // Get detailed sales data by date range for export
 export const getSalesByDateRange = (startDate, endDate) => {
   try {
