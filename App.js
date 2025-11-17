@@ -57,6 +57,7 @@ import {
   getSalesChartDataByHour,
   getSalesChartDataByMonth,
   getSalesByPaymentMethod,
+  getAllSaleDates,
   getSalesByPaymentMethodDateRange,
   getSalesByDateRange,
 } from "./src/services/database";
@@ -123,6 +124,7 @@ function AppContent() {
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [customDateRange, setCustomDateRange] = useState(null);
+  const [saleDates, setSaleDates] = useState([]);
 
   useEffect(() => {
     // Initialize database on app start
@@ -232,6 +234,13 @@ function AppContent() {
     const sales = getAllSales();
     console.log("Loading recent sales:", sales.length, "sales found");
     setRecentSales(sales.slice(0, 3)); // Get latest 3 transactions
+    // Load sale dates for calendar marking
+    try {
+      const dates = getAllSaleDates();
+      setSaleDates(dates || []);
+    } catch (e) {
+      setSaleDates([]);
+    }
     loadSalesChartData();
   };
 
@@ -2227,6 +2236,7 @@ function AppContent() {
         revenuePeriod={revenuePeriod}
         onDateRangeChange={handleDateRangeChange}
         customDateRange={customDateRange}
+        saleDates={saleDates}
       />
     );
   }

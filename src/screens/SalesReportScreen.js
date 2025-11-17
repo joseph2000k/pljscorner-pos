@@ -19,6 +19,7 @@ export default function SalesReportScreen({
   revenuePeriod,
   onDateRangeChange,
   customDateRange,
+  saleDates,
 }) {
   const insets = useSafeAreaInsets();
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -180,6 +181,28 @@ export default function SalesReportScreen({
     }
 
     setMarkedDates(marked);
+  };
+
+  // Build dots for dates that have sales (saleDates is array of YYYY-MM-DD)
+  const getSaleDateDots = () => {
+    if (!saleDates || !Array.isArray(saleDates)) return {};
+    const dots = {};
+    saleDates.forEach((d) => {
+      // if this date is already in markedDates, merge the dot info
+      dots[d] = { marked: true, dotColor: "#007AFF" };
+    });
+    return dots;
+  };
+
+  // Merge range highlights (markedDates) with sale date dots
+  const getMarkedDates = () => {
+    const dots = getSaleDateDots();
+    const range = markedDates || {};
+    const merged = { ...dots };
+    Object.keys(range).forEach((date) => {
+      merged[date] = { ...merged[date], ...range[date] };
+    });
+    return merged;
   };
 
   const handleApplyDateRange = () => {
@@ -404,7 +427,7 @@ export default function SalesReportScreen({
             {/* Calendar */}
             <Calendar
               onDayPress={onDayPress}
-              markedDates={markedDates}
+              markedDates={getMarkedDates()}
               markingType="period"
               theme={{
                 selectedDayBackgroundColor: "#007AFF",

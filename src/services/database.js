@@ -381,6 +381,19 @@ export const getSalesChartData = (days = 7) => {
   }
 };
 
+// Get all sale dates (YYYY-MM-DD) for calendar marking
+export const getAllSaleDates = () => {
+  try {
+    const result = db.getAllSync(
+      `SELECT DISTINCT DATE(created_at, 'localtime') as sale_date FROM sales ORDER BY sale_date ASC`
+    );
+    return result.map((r) => r.sale_date);
+  } catch (error) {
+    console.error("Error getting all sale dates:", error);
+    return [];
+  }
+};
+
 // Get sales data grouped by hour for today
 export const getSalesChartDataByHour = () => {
   try {
